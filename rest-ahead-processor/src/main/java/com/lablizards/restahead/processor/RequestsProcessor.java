@@ -7,6 +7,7 @@ import com.lablizards.restahead.annotations.verbs.Post;
 import com.lablizards.restahead.annotations.verbs.Put;
 import com.lablizards.restahead.generation.ServiceGenerator;
 import com.lablizards.restahead.processing.ServiceCollector;
+import com.lablizards.restahead.requests.VerbMapping;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -14,6 +15,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Processor entry point for HTTP annotations.
@@ -68,12 +70,8 @@ public class RequestsProcessor extends AbstractProcessor {
      */
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Set.of(
-            Delete.class.getCanonicalName(),
-            Get.class.getCanonicalName(),
-            Patch.class.getCanonicalName(),
-            Post.class.getCanonicalName(),
-            Put.class.getCanonicalName()
-        );
+        return VerbMapping.ANNOTATION_VERBS.stream()
+            .map(Class::getCanonicalName)
+            .collect(Collectors.toSet());
     }
 }

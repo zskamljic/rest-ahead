@@ -1,10 +1,5 @@
 package com.lablizards.restahead.generation;
 
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.annotations.verbs.Get;
-import com.lablizards.restahead.annotations.verbs.Patch;
-import com.lablizards.restahead.annotations.verbs.Post;
-import com.lablizards.restahead.annotations.verbs.Put;
 import com.lablizards.restahead.requests.RequestSpec;
 import com.lablizards.restahead.requests.VerbMapping;
 import com.squareup.javapoet.MethodSpec;
@@ -15,7 +10,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,14 +18,6 @@ import java.util.Optional;
  * Used to generate methods annotated with HTTP annotations.
  */
 public class MethodGenerator {
-    private static final List<Class<? extends Annotation>> ANNOTATION_VERBS = List.of(
-        Delete.class,
-        Get.class,
-        Patch.class,
-        Post.class,
-        Put.class
-    );
-
     private final Messager messager;
 
     /**
@@ -95,7 +81,7 @@ public class MethodGenerator {
      * @return the specification if annotations are valid, Optional.empty() otherwise.
      */
     private Optional<RequestSpec> getRequestSpec(ExecutableElement function) {
-        var presentAnnotations = ANNOTATION_VERBS.stream()
+        var presentAnnotations = VerbMapping.ANNOTATION_VERBS.stream()
             .map(function::getAnnotation)
             .filter(Objects::nonNull)
             .toList();

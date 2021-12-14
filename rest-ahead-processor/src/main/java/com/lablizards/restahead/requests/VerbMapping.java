@@ -12,11 +12,20 @@ import com.lablizards.restahead.client.requests.PostRequest;
 import com.lablizards.restahead.client.requests.PutRequest;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 /**
  * Utility to provide mappers for annotations, requests and specifications.
  */
 public class VerbMapping {
+    public static final List<Class<? extends Annotation>> ANNOTATION_VERBS = List.of(
+        Delete.class,
+        Get.class,
+        Patch.class,
+        Post.class,
+        Put.class
+    );
+
     private VerbMapping() {
     }
 

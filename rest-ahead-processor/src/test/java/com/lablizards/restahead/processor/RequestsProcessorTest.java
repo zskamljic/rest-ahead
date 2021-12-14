@@ -54,4 +54,16 @@ class RequestsProcessorTest {
             .failsToCompile()
             .withErrorContaining("abstract");
     }
+
+    @Test
+    void interfaceWithNonAnnotatedMethodFailsToCompile() {
+        var source = JavaFileObjects.forResource("InterfaceWithNotAnnotatedMethod.java");
+
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(List.of(source))
+            .processedWith(new RequestsProcessor())
+            .failsToCompile()
+            .withErrorContaining("no HTTP verb annotation");
+    }
 }

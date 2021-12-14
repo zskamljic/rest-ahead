@@ -1,6 +1,7 @@
 package com.lablizards.restahead.generation;
 
 import com.lablizards.restahead.client.RestClient;
+import com.lablizards.restahead.requests.VerbMapping;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -17,6 +18,7 @@ import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Used to generate implementation for services.
@@ -51,6 +53,10 @@ public class ServiceGenerator {
         TypeElement serviceDeclaration,
         List<ExecutableElement> methodDeclarations
     ) {
+        if (declarationInvalid(serviceDeclaration, methodDeclarations)) {
+
+        }
+
         var methods = methodGenerator.generateMethods(methodDeclarations);
 
         var generatedAnnotation = createGeneratedAnnotation();
@@ -69,6 +75,33 @@ public class ServiceGenerator {
         } catch (IOException e) {
             messager.printMessage(Diagnostic.Kind.ERROR, "Unable to write class: " + e.getMessage());
         }
+    }
+
+    /**
+     * Checks if service declaration is not valid, such as methods missing annotations.
+     *
+     * @param serviceDeclaration the service to check
+     * @param methodDeclarations the methods being processed
+     * @return true if any issue is found, false otherwise
+     */
+    private boolean declarationInvalid(TypeElement serviceDeclaration, List<ExecutableElement> methodDeclarations) {
+        var functions = serviceDeclaration.getEnclosedElements()
+            .stream()
+            .filter(element -> element instanceof ExecutableElement)
+            .map(element -> ((ExecutableElement) element))
+            .toList();
+        var invalid = false;
+        for (var function : functions) {
+            var annotations = VerbMapping.ANNOTATION_VERBS.stream()
+                .map(function::getAnnotation)
+                .filter(Objects::nonNull)
+                .toList();
+            if (annotations.isEmpty()) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "Function has no HTTP verb annotation", function);
+                invalid = true;
+            }
+        }
+        return invalid;
     }
 
     /**
