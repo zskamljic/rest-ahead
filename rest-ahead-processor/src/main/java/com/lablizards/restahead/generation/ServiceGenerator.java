@@ -40,7 +40,7 @@ public class ServiceGenerator {
         this.messager = messager;
         this.filer = filer;
         this.elementUtils = elementUtils;
-        this.methodGenerator = new MethodGenerator(messager);
+        this.methodGenerator = new MethodGenerator(messager, elementUtils);
     }
 
     /**

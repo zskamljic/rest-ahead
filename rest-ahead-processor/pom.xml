@@ -77,4 +77,16 @@
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>testing only</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <properties>
+                <argLine>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</argLine>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>

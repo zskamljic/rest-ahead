@@ -9,27 +9,36 @@ import com.squareup.javapoet.TypeName;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Used to generate methods annotated with HTTP annotations.
  */
 public class MethodGenerator {
     private final Messager messager;
+    private final Elements elementUtils;
     private final ResponseConverterGenerator converterGenerator;
+    private final List<? extends TypeMirror> expectedExceptions;
 
     /**
      * Create a new instance, reporting all data to given messager.
      *
-     * @param messager the messager to report notes, errors etc. to
+     * @param messager     the messager to report notes, errors etc. to
+     * @param elementUtils the element utils to fetch type info from
      */
-    public MethodGenerator(Messager messager) {
+    public MethodGenerator(Messager messager, Elements elementUtils) {
         this.messager = messager;
+        this.elementUtils = elementUtils;
         converterGenerator = new ResponseConverterGenerator(messager);
+        expectedExceptions = expectedExceptions();
     }
 
     /**
@@ -64,12 +73,18 @@ public class MethodGenerator {
      */
     private MethodSpec generateMethodBody(ExecutableElement function, RequestSpec requestSpec) {
         var returnType = TypeName.get(function.getReturnType());
+        var declaredExceptions = function.getThrownTypes();
+        var missingExceptions = findMissingExceptions(declaredExceptions);
 
         var builder = MethodSpec.methodBuilder(function.getSimpleName().toString())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(Override.class)
             .addStatement("var httpRequest = new $T($S)", requestSpec.request(), requestSpec.path())
-            .beginControlFlow("try");
+            .addExceptions(declaredExceptions.stream().map(TypeName::get).toList());
+
+        if (!missingExceptions.isEmpty()) {
+            builder.beginControlFlow("try");
+        }
 
         if (returnType == TypeName.VOID) {
             builder.addStatement("client.execute(httpRequest)");
@@ -78,11 +93,28 @@ public class MethodGenerator {
             converterGenerator.generateReturnStatement(returnType, builder, function);
         }
 
-        return builder.nextControlFlow("catch ($T | $T exception)", IOException.class, InterruptedException.class)
-            .addStatement("throw new $T(exception)", RestException.class)
-            .endControlFlow()
-            .returns(TypeName.get(function.getReturnType()))
+        if (!missingExceptions.isEmpty()) {
+            var exceptionsTemplate = missingExceptions.stream()
+                .map(e -> "$T")
+                .collect(Collectors.joining(" | "));
+            builder.nextControlFlow("catch (" + exceptionsTemplate + " exception)", missingExceptions.toArray(Object[]::new))
+                .addStatement("throw new $T(exception)", RestException.class)
+                .endControlFlow();
+        }
+        return builder.returns(TypeName.get(function.getReturnType()))
             .build();
+    }
+
+    /**
+     * Checks if {@link IOException} and {@link InterruptedException} are both declared.
+     *
+     * @param declaredExceptions the exceptions on template method
+     * @return true if either of the exception is missing, false if all are present
+     */
+    private List<? extends TypeMirror> findMissingExceptions(List<? extends TypeMirror> declaredExceptions) {
+        return expectedExceptions.stream()
+            .filter(Predicate.not(declaredExceptions::contains))
+            .toList();
     }
 
     /**
@@ -105,5 +137,18 @@ public class MethodGenerator {
         var annotation = presentAnnotations.get(0);
         var requestSpec = VerbMapping.annotationToVerb(annotation);
         return Optional.of(requestSpec);
+    }
+
+    /**
+     * Generates a list of expected exceptions for all calls.
+     *
+     * @return the list of exceptions
+     */
+    private List<? extends TypeMirror> expectedExceptions() {
+        var ioException = elementUtils.getTypeElement(IOException.class.getCanonicalName())
+            .asType();
+        var interruptedException = elementUtils.getTypeElement(InterruptedException.class.getCanonicalName())
+            .asType();
+        return List.of(ioException, interruptedException);
     }
 }

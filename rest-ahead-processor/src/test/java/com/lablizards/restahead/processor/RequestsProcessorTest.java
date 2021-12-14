@@ -62,6 +62,14 @@ class RequestsProcessorTest {
             .withErrorContaining("not supported");
     }
 
+    @Test
+    void interfaceWithThrowsCompiles() {
+        commonCompilationAssertion("InterfaceWithThrows.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("InterfaceWithThrows$Impl.java"));
+    }
+
     private CompileTester commonCompilationAssertion(String... files) {
         var sources = Arrays.stream(files)
             .map(JavaFileObjects::forResource)

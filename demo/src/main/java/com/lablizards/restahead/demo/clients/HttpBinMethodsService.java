@@ -7,12 +7,14 @@ import com.lablizards.restahead.annotations.verbs.Post;
 import com.lablizards.restahead.annotations.verbs.Put;
 import com.lablizards.restahead.client.Response;
 
+import java.io.IOException;
+
 public interface HttpBinMethodsService {
     @Delete("/delete")
-    Response delete();
+    Response delete() throws IOException;
 
     @Get("/get")
-    Response get();
+    Response get() throws IOException, InterruptedException;
 
     @Patch("/patch")
     Response patch();
