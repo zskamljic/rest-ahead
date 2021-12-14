@@ -8,10 +8,10 @@ public class Runner {
         var service = RestAhead.builder("https://httpbin.org")
             .build(HttpBinMethodsService.class);
 
-        service.delete();
-        service.get();
-        service.patch();
-        service.post();
-        service.put();
+        System.out.println(service.delete());
+        System.out.println(service.get());
+        System.out.println(service.patch());
+        System.out.println(service.post());
+        System.out.println(service.put());
     }
 }

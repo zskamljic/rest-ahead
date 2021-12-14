@@ -53,9 +53,7 @@ public class ServiceGenerator {
         TypeElement serviceDeclaration,
         List<ExecutableElement> methodDeclarations
     ) {
-        if (declarationInvalid(serviceDeclaration, methodDeclarations)) {
-
-        }
+        if (declarationInvalid(serviceDeclaration, methodDeclarations)) return;
 
         var methods = methodGenerator.generateMethods(methodDeclarations);
 

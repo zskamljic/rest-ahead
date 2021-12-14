@@ -1,69 +1,75 @@
 package com.lablizards.restahead.processor;
 
 import com.google.common.truth.Truth;
+import com.google.testing.compile.CompileTester;
 import com.google.testing.compile.JavaFileObjects;
 import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import javax.annotation.processing.AbstractProcessor;
+import java.util.Arrays;
 
 class RequestsProcessorTest {
+    private final AbstractProcessor requestProcessor = new RequestsProcessor();
+    private final AbstractProcessor generatedProcessor = new GeneratedProcessor();
+
     @Test
     void generateServiceSucceeds() {
-        var validSource = JavaFileObjects.forResource("ValidService.java");
-
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(List.of(validSource))
-            .processedWith(new RequestsProcessor())
-            .compilesWithoutError();
+        commonCompilationAssertion("ValidService.java")
+            .compilesWithoutWarnings();
     }
 
     @Test
     void generateServiceFailsForAbstractClass() {
-        var source = JavaFileObjects.forResource("MethodClass.java");
-
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(List.of(source))
-            .processedWith(new RequestsProcessor())
+        commonCompilationAssertion("MethodClass.java")
             .failsToCompile()
             .withErrorContaining("interfaces");
     }
 
     @Test
     void interfaceWithDefaultFailsToCompile() {
-        var source = JavaFileObjects.forResource("MethodService.java");
-
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(List.of(source))
-            .processedWith(new RequestsProcessor())
+        commonCompilationAssertion("MethodService.java")
             .failsToCompile()
             .withErrorContaining("abstract");
     }
 
     @Test
     void classWithMethodFailsToCompile() {
-        var source = JavaFileObjects.forResource("NormalClassMethod.java");
-
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(List.of(source))
-            .processedWith(new RequestsProcessor())
+        commonCompilationAssertion("NormalClassMethod.java")
             .failsToCompile()
             .withErrorContaining("abstract");
     }
 
     @Test
     void interfaceWithNonAnnotatedMethodFailsToCompile() {
-        var source = JavaFileObjects.forResource("InterfaceWithNotAnnotatedMethod.java");
-
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(List.of(source))
-            .processedWith(new RequestsProcessor())
+        commonCompilationAssertion("InterfaceWithNotAnnotatedMethod.java")
             .failsToCompile()
             .withErrorContaining("no HTTP verb annotation");
+    }
+
+    @Test
+    void interfaceWithResponseCompiles() {
+        commonCompilationAssertion("ServiceWithResponse.java")
+            .compilesWithoutWarnings();
+    }
+
+    @Test
+    void interfaceWithUnknownResponseFailsToCompile() {
+        commonCompilationAssertion("ServiceWithUnknownResponse.java")
+            .failsToCompile()
+            .withErrorContaining("Convert type")
+            .and()
+            .withErrorContaining("not supported");
+    }
+
+    private CompileTester commonCompilationAssertion(String... files) {
+        var sources = Arrays.stream(files)
+            .map(JavaFileObjects::forResource)
+            .toList();
+
+        return Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(sources)
+            .processedWith(requestProcessor, generatedProcessor);
     }
 }

@@ -5,20 +5,21 @@ import com.lablizards.restahead.annotations.verbs.Get;
 import com.lablizards.restahead.annotations.verbs.Patch;
 import com.lablizards.restahead.annotations.verbs.Post;
 import com.lablizards.restahead.annotations.verbs.Put;
+import com.lablizards.restahead.client.Response;
 
 public interface HttpBinMethodsService {
     @Delete("/delete")
-    void delete();
+    Response delete();
 
     @Get("/get")
-    void get();
+    Response get();
 
     @Patch("/patch")
-    void patch();
+    Response patch();
 
     @Post("/post")
-    void post();
+    Response post();
 
     @Put("/put")
-    void put();
+    Response put();
 }

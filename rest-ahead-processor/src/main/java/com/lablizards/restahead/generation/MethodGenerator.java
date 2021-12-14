@@ -1,5 +1,6 @@
 package com.lablizards.restahead.generation;
 
+import com.lablizards.restahead.exceptions.RestException;
 import com.lablizards.restahead.requests.RequestSpec;
 import com.lablizards.restahead.requests.VerbMapping;
 import com.squareup.javapoet.MethodSpec;
@@ -19,6 +20,7 @@ import java.util.Optional;
  */
 public class MethodGenerator {
     private final Messager messager;
+    private final ResponseConverterGenerator converterGenerator;
 
     /**
      * Create a new instance, reporting all data to given messager.
@@ -27,6 +29,7 @@ public class MethodGenerator {
      */
     public MethodGenerator(Messager messager) {
         this.messager = messager;
+        converterGenerator = new ResponseConverterGenerator(messager);
     }
 
     /**
@@ -60,15 +63,23 @@ public class MethodGenerator {
      * @return the generated function body
      */
     private MethodSpec generateMethodBody(ExecutableElement function, RequestSpec requestSpec) {
-        return MethodSpec.methodBuilder(function.getSimpleName().toString())
+        var returnType = TypeName.get(function.getReturnType());
+
+        var builder = MethodSpec.methodBuilder(function.getSimpleName().toString())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(Override.class)
             .addStatement("var httpRequest = new $T($S)", requestSpec.request(), requestSpec.path())
-            .beginControlFlow("try")
-            .addStatement("var response = client.execute(httpRequest)")
-            .addStatement("$T.out.println(response)", System.class)
-            .nextControlFlow("catch ($T | $T exception)", IOException.class, InterruptedException.class)
-            .addStatement("exception.printStackTrace()")
+            .beginControlFlow("try");
+
+        if (returnType == TypeName.VOID) {
+            builder.addStatement("client.execute(httpRequest)");
+        } else {
+            builder.addStatement("var response = client.execute(httpRequest)");
+            converterGenerator.generateReturnStatement(returnType, builder, function);
+        }
+
+        return builder.nextControlFlow("catch ($T | $T exception)", IOException.class, InterruptedException.class)
+            .addStatement("throw new $T(exception)", RestException.class)
             .endControlFlow()
             .returns(TypeName.get(function.getReturnType()))
             .build();
