@@ -53,7 +53,7 @@ public class ServiceGenerator {
         TypeElement serviceDeclaration,
         List<ExecutableElement> methodDeclarations
     ) {
-        if (declarationInvalid(serviceDeclaration, methodDeclarations)) return;
+        if (isServiceDeclarationInvalid(serviceDeclaration)) return;
 
         var methods = methodGenerator.generateMethods(methodDeclarations);
 
@@ -79,10 +79,9 @@ public class ServiceGenerator {
      * Checks if service declaration is not valid, such as methods missing annotations.
      *
      * @param serviceDeclaration the service to check
-     * @param methodDeclarations the methods being processed
      * @return true if any issue is found, false otherwise
      */
-    private boolean declarationInvalid(TypeElement serviceDeclaration, List<ExecutableElement> methodDeclarations) {
+    private boolean isServiceDeclarationInvalid(TypeElement serviceDeclaration) {
         var functions = serviceDeclaration.getEnclosedElements()
             .stream()
             .filter(element -> element instanceof ExecutableElement)

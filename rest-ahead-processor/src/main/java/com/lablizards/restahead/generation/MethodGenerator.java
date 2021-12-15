@@ -27,6 +27,7 @@ public class MethodGenerator {
     private final Elements elementUtils;
     private final ResponseConverterGenerator converterGenerator;
     private final List<? extends TypeMirror> expectedExceptions;
+    private final PathValidator pathValidator;
 
     /**
      * Create a new instance, reporting all data to given messager.
@@ -38,6 +39,7 @@ public class MethodGenerator {
         this.messager = messager;
         this.elementUtils = elementUtils;
         converterGenerator = new ResponseConverterGenerator(messager);
+        pathValidator = new PathValidator(messager);
         expectedExceptions = expectedExceptions();
     }
 
@@ -136,7 +138,26 @@ public class MethodGenerator {
 
         var annotation = presentAnnotations.get(0);
         var requestSpec = VerbMapping.annotationToVerb(annotation);
+        if (requestContainsErrors(function, requestSpec.path())) {
+            return Optional.empty();
+        }
         return Optional.of(requestSpec);
+    }
+
+    /**
+     * Check if there are any request errors based on the request line and parameters.
+     *
+     * @param function the function being validated
+     * @param path     the path of the request
+     * @return true if any errors are found, false otherwise
+     */
+    private boolean requestContainsErrors(ExecutableElement function, String path) {
+        var parameters = function.getParameters();
+        if (!parameters.isEmpty()) {
+            messager.printMessage(Diagnostic.Kind.ERROR, "Function parameters are not yet supported", function);
+            return true;
+        }
+        return pathValidator.containsErrors(function, path);
     }
 
     /**

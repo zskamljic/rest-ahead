@@ -70,6 +70,13 @@ class RequestsProcessorTest {
             .generatesSources(JavaFileObjects.forResource("InterfaceWithThrows$Impl.java"));
     }
 
+    @Test
+    void interfaceWithInvalidPathFailsToCompile() {
+        commonCompilationAssertion("InvalidPath.java")
+            .failsToCompile()
+            .withErrorContaining("path");
+    }
+
     private CompileTester commonCompilationAssertion(String... files) {
         var sources = Arrays.stream(files)
             .map(JavaFileObjects::forResource)
