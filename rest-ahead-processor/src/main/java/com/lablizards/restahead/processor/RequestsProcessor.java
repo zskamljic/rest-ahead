@@ -1,10 +1,5 @@
 package com.lablizards.restahead.processor;
 
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.annotations.verbs.Get;
-import com.lablizards.restahead.annotations.verbs.Patch;
-import com.lablizards.restahead.annotations.verbs.Post;
-import com.lablizards.restahead.annotations.verbs.Put;
 import com.lablizards.restahead.generation.ServiceGenerator;
 import com.lablizards.restahead.processing.ServiceCollector;
 import com.lablizards.restahead.requests.VerbMapping;
@@ -35,8 +30,9 @@ public class RequestsProcessor extends AbstractProcessor {
         var messager = processingEnv.getMessager();
         var filer = processingEnv.getFiler();
         var elementUtils = processingEnv.getElementUtils();
+        var types = processingEnv.getTypeUtils();
         serviceCollector = new ServiceCollector(messager);
-        serviceGenerator = new ServiceGenerator(messager, filer, elementUtils);
+        serviceGenerator = new ServiceGenerator(messager, filer, elementUtils, types);
     }
 
     /**

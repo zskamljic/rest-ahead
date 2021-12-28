@@ -35,17 +35,17 @@ public class VerbMapping {
      * @param annotation the annotation from which to extract the verb and path
      * @return the request specification
      */
-    public static RequestSpec annotationToVerb(Annotation annotation) {
+    public static RequestLine annotationToVerb(Annotation annotation) {
         if (annotation instanceof Delete delete) {
-            return new RequestSpec(DeleteRequest.class, delete.value());
+            return new RequestLine(DeleteRequest.class, delete.value());
         } else if (annotation instanceof Get get) {
-            return new RequestSpec(GetRequest.class, get.value());
+            return new RequestLine(GetRequest.class, get.value());
         } else if (annotation instanceof Patch patch) {
-            return new RequestSpec(PatchRequest.class, patch.value());
+            return new RequestLine(PatchRequest.class, patch.value());
         } else if (annotation instanceof Post post) {
-            return new RequestSpec(PostRequest.class, post.value());
+            return new RequestLine(PostRequest.class, post.value());
         } else if (annotation instanceof Put put) {
-            return new RequestSpec(PutRequest.class, put.value());
+            return new RequestLine(PutRequest.class, put.value());
         } else {
             throw new IllegalArgumentException("Annotation was not a valid verb: " + annotation);
         }

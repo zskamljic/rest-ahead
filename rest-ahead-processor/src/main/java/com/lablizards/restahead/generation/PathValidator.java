@@ -29,7 +29,7 @@ public class PathValidator {
      * @return if there are any errors reported
      */
     public boolean containsErrors(ExecutableElement function, String path) {
-        if (path.isEmpty()) return false;
+        if (path == null || path.isEmpty()) return false;
 
         try {
             new URI(path);

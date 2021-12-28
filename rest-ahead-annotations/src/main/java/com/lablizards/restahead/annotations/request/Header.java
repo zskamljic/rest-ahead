@@ -1,4 +1,4 @@
-package com.lablizards.restahead.annotations.verbs;
+package com.lablizards.restahead.annotations.request;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,10 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Perform a GET request on path specified by param or "/" if not set
+ * Add a header to the request.
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
-public @interface Get {
-    String value() default "";
+@Target(ElementType.PARAMETER)
+public @interface Header {
+    String value();
 }

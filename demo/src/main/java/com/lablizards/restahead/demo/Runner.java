@@ -12,7 +12,7 @@ public class Runner {
 
         System.out.println(service.delete());
         System.out.println(service.get());
-        System.out.println(service.patch());
+        System.out.println(service.patch("application/json", ""));
         System.out.println(service.post());
         System.out.println(service.put());
     }

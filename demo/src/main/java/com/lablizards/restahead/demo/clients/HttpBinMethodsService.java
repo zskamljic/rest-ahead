@@ -1,5 +1,6 @@
 package com.lablizards.restahead.demo.clients;
 
+import com.lablizards.restahead.annotations.request.Header;
 import com.lablizards.restahead.annotations.verbs.Delete;
 import com.lablizards.restahead.annotations.verbs.Get;
 import com.lablizards.restahead.annotations.verbs.Patch;
@@ -17,7 +18,7 @@ public interface HttpBinMethodsService {
     Response get() throws IOException, InterruptedException;
 
     @Patch("/patch")
-    Response patch();
+    Response patch(@Header("Accept") String... accept);
 
     @Post("/post")
     Response post();

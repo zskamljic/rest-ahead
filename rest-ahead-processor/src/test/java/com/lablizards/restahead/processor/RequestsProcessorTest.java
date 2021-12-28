@@ -1,18 +1,9 @@
 package com.lablizards.restahead.processor;
 
-import com.google.common.truth.Truth;
-import com.google.testing.compile.CompileTester;
 import com.google.testing.compile.JavaFileObjects;
-import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.processing.AbstractProcessor;
-import java.util.Arrays;
-
-class RequestsProcessorTest {
-    private final AbstractProcessor requestProcessor = new RequestsProcessor();
-    private final AbstractProcessor generatedProcessor = new GeneratedProcessor();
-
+class RequestsProcessorTest extends CommonProcessorTest {
     @Test
     void generateServiceSucceeds() {
         commonCompilationAssertion("ValidService.java")
@@ -21,70 +12,44 @@ class RequestsProcessorTest {
 
     @Test
     void generateServiceFailsForAbstractClass() {
-        commonCompilationAssertion("MethodClass.java")
+        commonCompilationAssertion("basic/MethodClass.java")
             .failsToCompile()
             .withErrorContaining("interfaces");
     }
 
     @Test
     void interfaceWithDefaultFailsToCompile() {
-        commonCompilationAssertion("MethodService.java")
+        commonCompilationAssertion("basic/MethodService.java")
             .failsToCompile()
             .withErrorContaining("abstract");
     }
 
     @Test
     void classWithMethodFailsToCompile() {
-        commonCompilationAssertion("NormalClassMethod.java")
+        commonCompilationAssertion("basic/NormalClassMethod.java")
             .failsToCompile()
             .withErrorContaining("abstract");
     }
 
     @Test
     void interfaceWithNonAnnotatedMethodFailsToCompile() {
-        commonCompilationAssertion("InterfaceWithNotAnnotatedMethod.java")
+        commonCompilationAssertion("basic/InterfaceWithNotAnnotatedMethod.java")
             .failsToCompile()
             .withErrorContaining("no HTTP verb annotation");
     }
 
     @Test
-    void interfaceWithResponseCompiles() {
-        commonCompilationAssertion("ServiceWithResponse.java")
-            .compilesWithoutWarnings();
-    }
-
-    @Test
-    void interfaceWithUnknownResponseFailsToCompile() {
-        commonCompilationAssertion("ServiceWithUnknownResponse.java")
-            .failsToCompile()
-            .withErrorContaining("Convert type")
-            .and()
-            .withErrorContaining("not supported");
-    }
-
-    @Test
     void interfaceWithThrowsCompiles() {
-        commonCompilationAssertion("InterfaceWithThrows.java")
+        commonCompilationAssertion("basic/InterfaceWithThrows.java")
             .compilesWithoutWarnings()
             .and()
-            .generatesSources(JavaFileObjects.forResource("InterfaceWithThrows$Impl.java"));
+            .generatesSources(JavaFileObjects.forResource("basic/InterfaceWithThrows$Impl.java"));
     }
 
     @Test
-    void interfaceWithInvalidPathFailsToCompile() {
-        commonCompilationAssertion("InvalidPath.java")
+    void interfaceWithMultipleAnnotationsFailsToCompile() {
+        commonCompilationAssertion("basic/MultipleAnnotations.java")
             .failsToCompile()
-            .withErrorContaining("path");
-    }
-
-    private CompileTester commonCompilationAssertion(String... files) {
-        var sources = Arrays.stream(files)
-            .map(JavaFileObjects::forResource)
-            .toList();
-
-        return Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(sources)
-            .processedWith(requestProcessor, generatedProcessor);
+            .withErrorContaining("Exactly one verb annotation must be present on method");
     }
 }

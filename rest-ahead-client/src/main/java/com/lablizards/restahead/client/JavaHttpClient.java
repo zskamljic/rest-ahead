@@ -44,6 +44,7 @@ public class JavaHttpClient implements RestClient {
         } else if (request instanceof PutRequest) {
             requestBuilder.PUT(HttpRequest.BodyPublishers.noBody());
         }
+        request.getHeaders().forEach((name, values) -> values.forEach(value -> requestBuilder.header(name, value)));
         var httpRequest = requestBuilder.build();
         var httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
         return new Response(

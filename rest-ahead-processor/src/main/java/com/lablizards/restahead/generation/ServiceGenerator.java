@@ -15,6 +15,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.List;
@@ -35,12 +36,13 @@ public class ServiceGenerator {
      * @param messager     the messager where info, errors etc. should be reported
      * @param filer        the filer to use when writing generated files
      * @param elementUtils utilities to retrieve misc data about Element
+     * @param types        an instance of the Types utility
      */
-    public ServiceGenerator(Messager messager, Filer filer, Elements elementUtils) {
+    public ServiceGenerator(Messager messager, Filer filer, Elements elementUtils, Types types) {
         this.messager = messager;
         this.filer = filer;
         this.elementUtils = elementUtils;
-        this.methodGenerator = new MethodGenerator(messager, elementUtils);
+        this.methodGenerator = new MethodGenerator(messager, elementUtils, types);
     }
 
     /**
@@ -84,8 +86,8 @@ public class ServiceGenerator {
     private boolean isServiceDeclarationInvalid(TypeElement serviceDeclaration) {
         var functions = serviceDeclaration.getEnclosedElements()
             .stream()
-            .filter(element -> element instanceof ExecutableElement)
-            .map(element -> ((ExecutableElement) element))
+            .filter(ExecutableElement.class::isInstance)
+            .map(ExecutableElement.class::cast)
             .toList();
         var invalid = false;
         for (var function : functions) {

@@ -1,9 +1,15 @@
 package com.lablizards.restahead.generation;
 
+import com.lablizards.restahead.annotations.request.Header;
 import com.lablizards.restahead.exceptions.RestException;
+import com.lablizards.restahead.requests.RequestLine;
+import com.lablizards.restahead.requests.RequestParameters;
 import com.lablizards.restahead.requests.RequestSpec;
 import com.lablizards.restahead.requests.VerbMapping;
+import com.lablizards.restahead.requests.parameters.HeaderSpec;
+import com.lablizards.restahead.requests.parameters.RequestParameter;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 
 import javax.annotation.processing.Messager;
@@ -11,8 +17,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,18 +36,21 @@ public class MethodGenerator {
     private final ResponseConverterGenerator converterGenerator;
     private final List<? extends TypeMirror> expectedExceptions;
     private final PathValidator pathValidator;
+    private final HeaderValidator headerValidator;
 
     /**
      * Create a new instance, reporting all data to given messager.
      *
      * @param messager     the messager to report notes, errors etc. to
      * @param elementUtils the element utils to fetch type info from
+     * @param types        the types utility
      */
-    public MethodGenerator(Messager messager, Elements elementUtils) {
+    public MethodGenerator(Messager messager, Elements elementUtils, Types types) {
         this.messager = messager;
         this.elementUtils = elementUtils;
         converterGenerator = new ResponseConverterGenerator(messager);
         pathValidator = new PathValidator(messager);
+        headerValidator = new HeaderValidator(messager, elementUtils, types);
         expectedExceptions = expectedExceptions();
     }
 
@@ -81,9 +92,12 @@ public class MethodGenerator {
         var builder = MethodSpec.methodBuilder(function.getSimpleName().toString())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(Override.class)
-            .addStatement("var httpRequest = new $T($S)", requestSpec.request(), requestSpec.path())
             .addExceptions(declaredExceptions.stream().map(TypeName::get).toList());
 
+        addParametersToFunction(builder, requestSpec.parameters());
+
+        var requestLine = requestSpec.requestLine();
+        addRequestInitialization(builder, requestLine, requestSpec.parameters().headers());
         if (!missingExceptions.isEmpty()) {
             builder.beginControlFlow("try");
         }
@@ -104,6 +118,68 @@ public class MethodGenerator {
                 .endControlFlow();
         }
         return builder.returns(TypeName.get(function.getReturnType()))
+            .build();
+    }
+
+    /**
+     * Add request initialization lines.
+     *
+     * @param builder     the method builder
+     * @param requestLine the request line info
+     * @param headers     the headers to add to the request
+     */
+    private void addRequestInitialization(
+        MethodSpec.Builder builder,
+        RequestLine requestLine,
+        List<HeaderSpec> headers
+    ) {
+        builder.addStatement("var httpRequest = new $T($S)", requestLine.request(), requestLine.path());
+        if (headers.isEmpty()) return;
+
+        for (var header : headers) {
+            if (header.isIterable()) {
+                builder.beginControlFlow("for (var headerItem : $L)", header.parameterName());
+                builder.addStatement("httpRequest.addHeader($S, $T.valueOf(headerItem))", header.headerName(), String.class);
+                builder.endControlFlow();
+            } else {
+                builder.addStatement(
+                    "httpRequest.addHeader($S, $T.valueOf($L))", header.headerName(), String.class, header.parameterName()
+                );
+            }
+        }
+    }
+
+    /**
+     * Adds the parameters to the generated function
+     *
+     * @param builder    the method builder
+     * @param parameters the parameters to add
+     */
+    private void addParametersToFunction(MethodSpec.Builder builder, RequestParameters parameters) {
+        builder.addParameters(createParameters(parameters));
+    }
+
+    /**
+     * Create {@link  ParameterSpec} instances for the given parameters
+     *
+     * @param parameters the parameters to create specs for
+     * @return the generated specs
+     */
+    private List<ParameterSpec> createParameters(RequestParameters parameters) {
+        return parameters.parameters()
+            .stream()
+            .map(this::createParameter)
+            .toList();
+    }
+
+    /**
+     * Creates {@link ParameterSpec} for the given parameter
+     *
+     * @param parameter the parameter to get the name and type from
+     * @return the spec for parameter
+     */
+    private ParameterSpec createParameter(RequestParameter parameter) {
+        return ParameterSpec.builder(TypeName.get(parameter.type()), parameter.name())
             .build();
     }
 
@@ -136,28 +212,14 @@ public class MethodGenerator {
             return Optional.empty();
         }
 
+        var parameters = getMethodParameters(function);
+
         var annotation = presentAnnotations.get(0);
-        var requestSpec = VerbMapping.annotationToVerb(annotation);
-        if (requestContainsErrors(function, requestSpec.path())) {
+        var requestLine = VerbMapping.annotationToVerb(annotation);
+        if (pathValidator.containsErrors(function, requestLine.path())) {
             return Optional.empty();
         }
-        return Optional.of(requestSpec);
-    }
-
-    /**
-     * Check if there are any request errors based on the request line and parameters.
-     *
-     * @param function the function being validated
-     * @param path     the path of the request
-     * @return true if any errors are found, false otherwise
-     */
-    private boolean requestContainsErrors(ExecutableElement function, String path) {
-        var parameters = function.getParameters();
-        if (!parameters.isEmpty()) {
-            messager.printMessage(Diagnostic.Kind.ERROR, "Function parameters are not yet supported", function);
-            return true;
-        }
-        return pathValidator.containsErrors(function, path);
+        return Optional.of(new RequestSpec(requestLine, parameters));
     }
 
     /**
@@ -171,5 +233,28 @@ public class MethodGenerator {
         var interruptedException = elementUtils.getTypeElement(InterruptedException.class.getCanonicalName())
             .asType();
         return List.of(ioException, interruptedException);
+    }
+
+    /**
+     * Extracts the parameters, reporting errors if any parameter does not fit into the request.
+     *
+     * @param function the function from which to get the parameters
+     */
+    private RequestParameters getMethodParameters(ExecutableElement function) {
+        var parameters = function.getParameters();
+
+        var allParameters = parameters.stream()
+            .map(parameter -> new RequestParameter(parameter.asType(), parameter.getSimpleName().toString()))
+            .toList();
+
+        var headers = new ArrayList<HeaderSpec>();
+        for (var parameter : parameters) {
+            var header = parameter.getAnnotation(Header.class);
+            if (header == null) continue;
+
+            headerValidator.getHeaderSpec(header.value(), parameter).ifPresent(headers::add);
+        }
+
+        return new RequestParameters(allParameters, headers);
     }
 }
