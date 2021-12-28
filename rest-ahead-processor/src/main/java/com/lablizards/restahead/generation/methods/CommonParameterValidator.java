@@ -19,7 +19,7 @@ import java.util.UUID;
 /**
  * Used to validate common parameters such as headers and queries.
  */
-abstract public class CommonParameterValidator {
+abstract class CommonParameterValidator {
     private static final List<Class<?>> ALLOWED_TYPES = List.of(
         String.class, UUID.class
     );

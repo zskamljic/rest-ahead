@@ -66,8 +66,8 @@ public abstract sealed class Request permits DeleteRequest, GetRequest, PatchReq
      * @param value the query parameter value
      */
     public void addQuery(String name, String value) {
-        headers.putIfAbsent(name, new ArrayList<>());
-        headers.get(name).add(value);
+        query.putIfAbsent(name, new ArrayList<>());
+        query.get(name).add(value);
     }
 
     /**
@@ -77,7 +77,7 @@ public abstract sealed class Request permits DeleteRequest, GetRequest, PatchReq
      * @param values the values for the given query
      */
     public void addQueryItems(String name, List<String> values) {
-        headers.merge(name, new ArrayList<>(values), (l1, l2) -> {
+        query.merge(name, new ArrayList<>(values), (l1, l2) -> {
             l1.addAll(l2);
             return l1;
         });

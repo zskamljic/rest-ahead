@@ -2,7 +2,7 @@ package com.lablizards.restahead.processor;
 
 import org.junit.jupiter.api.Test;
 
-public class ParametersProcessorTest extends CommonProcessorTest {
+class ParametersProcessorTest extends CommonProcessorTest {
     @Test
     void interfaceWithInvalidPathFailsToCompile() {
         commonCompilationAssertion("parameters/Parameters.java")

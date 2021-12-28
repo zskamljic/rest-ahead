@@ -39,12 +39,50 @@ class RequestTest {
     }
 
     @Test
-    void addHeadersRetaomsAll() {
+    void addHeadersRetainsAll() {
         var request = new GetRequest("");
 
         request.addHeaders(NAME, List.of("one", "two"));
         request.addHeader(NAME, "three");
 
         assertEquals(Map.of(NAME, List.of("one", "two", "three")), request.getHeaders());
+    }
+
+    @Test
+    void addHeaderAddsQueries() {
+        var request = new GetRequest("");
+
+        request.addQuery(NAME, "one");
+
+        assertEquals(Map.of(NAME, List.of("one")), request.getQueries());
+    }
+
+    @Test
+    void addQueryConsecutiveRetainsValues() {
+        var request = new GetRequest("");
+
+        request.addQuery(NAME, "one");
+        request.addQuery(NAME, "two");
+
+        assertEquals(Map.of(NAME, List.of("one", "two")), request.getQueries());
+    }
+
+    @Test
+    void addQueryAddsAll() {
+        var request = new GetRequest("");
+
+        request.addQueryItems(NAME, List.of("one", "two"));
+
+        assertEquals(Map.of(NAME, List.of("one", "two")), request.getQueries());
+    }
+
+    @Test
+    void addQueryRetainsAll() {
+        var request = new GetRequest("");
+
+        request.addQueryItems(NAME, List.of("one", "two"));
+        request.addQuery(NAME, "three");
+
+        assertEquals(Map.of(NAME, List.of("one", "two", "three")), request.getQueries());
     }
 }
