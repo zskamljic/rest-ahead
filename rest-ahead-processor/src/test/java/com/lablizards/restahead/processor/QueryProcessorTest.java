@@ -34,4 +34,10 @@ class QueryProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("query/ValidQuery.java")
             .compilesWithoutWarnings();
     }
+
+    @Test
+    void iterablesAndPrimitivesCompile() {
+        commonCompilationAssertion("query/CollectionAndArray.java")
+            .compilesWithoutWarnings();
+    }
 }

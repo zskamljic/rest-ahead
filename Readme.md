@@ -8,6 +8,11 @@ The aim of this project is to have as much validation done at compile time, rath
 code is generated at compile time there is no need for reflection. The generated code can be inspected for a no-magic
 approach, which also means easier debugging and easier integration with tools like [GraalVM](https://www.graalvm.org/)
 
+## Features
+
+- [Headers](#headers)
+- [Query](#queries)
+
 ## Introduction
 
 Much like other clients, the service is declared as following:
@@ -66,6 +71,20 @@ interface Service {
     // Can also use List, Set etc.
     @Get
     void performGetCollection(@Header("Some-Header") Collection<String> headers);
+}
+```
+
+### Queries
+
+Queries can be added to a request in two ways, seen below. Collections, arrays and varargs types are allowed.
+
+```java
+interface Service {
+    @Get("/query?q=value")
+    void getWithQuery(); // will use the preset value from path
+
+    @Get("/query")
+    void getWithParam(@Query("q") String query); // will use the parameter
 }
 ```
 

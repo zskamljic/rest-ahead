@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Used to validate common parameters such as headers and queries.
+ */
 abstract public class CommonParameterValidator {
     private static final List<Class<?>> ALLOWED_TYPES = List.of(
         String.class, UUID.class
@@ -38,6 +41,13 @@ abstract public class CommonParameterValidator {
             .toList();
     }
 
+    /**
+     * Extract the parameter spec for given variable
+     *
+     * @param parameter the parameter to fetch info from
+     * @param value     the value used for HTTP name
+     * @return empty for invalid setup, non empty for valid config
+     */
     protected Optional<RequestParameterSpec> extractSpec(VariableElement parameter, String value) {
         var type = isInvalidType(parameter.asType());
         if (type == HeaderType.INVALID) {

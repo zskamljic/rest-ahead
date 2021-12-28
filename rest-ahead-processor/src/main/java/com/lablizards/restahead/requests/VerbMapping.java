@@ -15,8 +15,6 @@ import com.lablizards.restahead.requests.request.RequestLine;
 import com.lablizards.restahead.requests.request.RequestSpec;
 
 import java.lang.annotation.Annotation;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
 /**

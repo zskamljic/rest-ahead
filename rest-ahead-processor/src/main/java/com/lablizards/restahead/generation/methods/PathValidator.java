@@ -29,6 +29,7 @@ public class PathValidator {
 
     /**
      * Check if any errors are present in the path, or if the function does not match required format.
+     * Updates the data if needed and constructs a final request spec.
      *
      * @param function    the function for which path is validated
      * @param requestLine the request line being validated

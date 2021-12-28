@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Used to perform parameter specific logic
+ */
 public class ParameterHandler {
     private static final List<Class<? extends Annotation>> EXPECTED_ANNOTATIONS = List.of(
         Header.class, Query.class
@@ -28,6 +31,13 @@ public class ParameterHandler {
     private final HeaderValidator headerValidator;
     private final QueryValidator queryValidator;
 
+    /**
+     * Create a new instance.
+     *
+     * @param messager the messager where errors are reported
+     * @param elementUtils the elements used to lookup class info
+     * @param types an instance of types utility
+     */
     public ParameterHandler(Messager messager, Elements elementUtils, Types types) {
         this.messager = messager;
         headerValidator = new HeaderValidator(messager, elementUtils, types);
@@ -75,6 +85,13 @@ public class ParameterHandler {
         return new RequestParameters(allParameters, headers, queries);
     }
 
+    /**
+     * Generate and qualify parameter based on annotation
+     * @param parameter the parameter to report errors on
+     * @param annotation the annotation to qualify
+     * @param headers the list to collect headers in
+     * @param queries the list to collect queries in
+     */
     private void handleAnnotation(
         VariableElement parameter,
         Annotation annotation,

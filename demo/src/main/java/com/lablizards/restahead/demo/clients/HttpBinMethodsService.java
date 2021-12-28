@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public interface HttpBinMethodsService {
     @Delete("/delete")
-    Response delete(@Query("q") String search) throws IOException;
+    Response delete(@Query("q") String... search) throws IOException;
 
     @Get("/get")
     Response get() throws IOException, InterruptedException;
