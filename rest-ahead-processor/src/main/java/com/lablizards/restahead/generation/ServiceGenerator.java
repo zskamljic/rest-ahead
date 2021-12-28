@@ -1,6 +1,7 @@
 package com.lablizards.restahead.generation;
 
 import com.lablizards.restahead.client.RestClient;
+import com.lablizards.restahead.generation.methods.MethodGenerator;
 import com.lablizards.restahead.requests.VerbMapping;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;

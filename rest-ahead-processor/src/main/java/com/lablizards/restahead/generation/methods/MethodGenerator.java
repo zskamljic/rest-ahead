@@ -1,13 +1,12 @@
-package com.lablizards.restahead.generation;
+package com.lablizards.restahead.generation.methods;
 
-import com.lablizards.restahead.annotations.request.Header;
 import com.lablizards.restahead.exceptions.RestException;
-import com.lablizards.restahead.requests.RequestLine;
+import com.lablizards.restahead.generation.ResponseConverterGenerator;
 import com.lablizards.restahead.requests.RequestParameters;
-import com.lablizards.restahead.requests.RequestSpec;
 import com.lablizards.restahead.requests.VerbMapping;
-import com.lablizards.restahead.requests.parameters.HeaderSpec;
-import com.lablizards.restahead.requests.parameters.RequestParameter;
+import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
+import com.lablizards.restahead.requests.request.RequestLine;
+import com.lablizards.restahead.requests.request.RequestSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -20,7 +19,6 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,9 +32,9 @@ public class MethodGenerator {
     private final Messager messager;
     private final Elements elementUtils;
     private final ResponseConverterGenerator converterGenerator;
-    private final List<? extends TypeMirror> expectedExceptions;
     private final PathValidator pathValidator;
-    private final HeaderValidator headerValidator;
+    private final ParameterHandler parameterHandler;
+    private final List<? extends TypeMirror> expectedExceptions;
 
     /**
      * Create a new instance, reporting all data to given messager.
@@ -50,7 +48,7 @@ public class MethodGenerator {
         this.elementUtils = elementUtils;
         converterGenerator = new ResponseConverterGenerator(messager);
         pathValidator = new PathValidator(messager);
-        headerValidator = new HeaderValidator(messager, elementUtils, types);
+        parameterHandler = new ParameterHandler(messager, elementUtils, types);
         expectedExceptions = expectedExceptions();
     }
 
@@ -97,7 +95,7 @@ public class MethodGenerator {
         addParametersToFunction(builder, requestSpec.parameters());
 
         var requestLine = requestSpec.requestLine();
-        addRequestInitialization(builder, requestLine, requestSpec.parameters().headers());
+        addRequestInitialization(builder, requestLine, requestSpec.parameters());
         if (!missingExceptions.isEmpty()) {
             builder.beginControlFlow("try");
         }
@@ -126,26 +124,41 @@ public class MethodGenerator {
      *
      * @param builder     the method builder
      * @param requestLine the request line info
-     * @param headers     the headers to add to the request
+     * @param parameters  the request parameters
      */
     private void addRequestInitialization(
         MethodSpec.Builder builder,
         RequestLine requestLine,
-        List<HeaderSpec> headers
+        RequestParameters parameters
     ) {
         builder.addStatement("var httpRequest = new $T($S)", requestLine.request(), requestLine.path());
-        if (headers.isEmpty()) return;
 
-        for (var header : headers) {
+        for (var header : parameters.headers()) {
             if (header.isIterable()) {
-                builder.beginControlFlow("for (var headerItem : $L)", header.parameterName());
-                builder.addStatement("httpRequest.addHeader($S, $T.valueOf(headerItem))", header.headerName(), String.class);
+                builder.beginControlFlow("for (var headerItem : $L)", header.codeName());
+                builder.addStatement("httpRequest.addHeader($S, $T.valueOf(headerItem))", header.httpName(), String.class);
                 builder.endControlFlow();
             } else {
                 builder.addStatement(
-                    "httpRequest.addHeader($S, $T.valueOf($L))", header.headerName(), String.class, header.parameterName()
+                    "httpRequest.addHeader($S, $T.valueOf($L))", header.httpName(), String.class, header.codeName()
                 );
             }
+        }
+        for (var query : parameters.query()) {
+            if (query.isIterable()) {
+                builder.beginControlFlow("for (var headerItem : $L)", query.codeName());
+                builder.addStatement("httpRequest.addQuery($S, $T.valueOf(headerItem))", query.httpName(), String.class);
+                builder.endControlFlow();
+            } else {
+                builder.addStatement(
+                    "httpRequest.addQuery($S, $T.valueOf($L))", query.httpName(), String.class, query.codeName()
+                );
+            }
+        }
+        for (var query : parameters.presetQueries()) {
+            builder.addStatement(
+                "httpRequest.addQuery($S, $S)", query.name(), query.value()
+            );
         }
     }
 
@@ -160,7 +173,7 @@ public class MethodGenerator {
     }
 
     /**
-     * Create {@link  ParameterSpec} instances for the given parameters
+     * Create {@link  RequestParameterSpec} instances for the given parameters
      *
      * @param parameters the parameters to create specs for
      * @return the generated specs
@@ -168,19 +181,8 @@ public class MethodGenerator {
     private List<ParameterSpec> createParameters(RequestParameters parameters) {
         return parameters.parameters()
             .stream()
-            .map(this::createParameter)
+            .map(parameterHandler::createParameter)
             .toList();
-    }
-
-    /**
-     * Creates {@link ParameterSpec} for the given parameter
-     *
-     * @param parameter the parameter to get the name and type from
-     * @return the spec for parameter
-     */
-    private ParameterSpec createParameter(RequestParameter parameter) {
-        return ParameterSpec.builder(TypeName.get(parameter.type()), parameter.name())
-            .build();
     }
 
     /**
@@ -212,14 +214,11 @@ public class MethodGenerator {
             return Optional.empty();
         }
 
-        var parameters = getMethodParameters(function);
+        var parameters = parameterHandler.getMethodParameters(function);
 
         var annotation = presentAnnotations.get(0);
         var requestLine = VerbMapping.annotationToVerb(annotation);
-        if (pathValidator.containsErrors(function, requestLine.path())) {
-            return Optional.empty();
-        }
-        return Optional.of(new RequestSpec(requestLine, parameters));
+        return pathValidator.validatePathAndExtractQuery(function, requestLine, parameters);
     }
 
     /**
@@ -233,31 +232,5 @@ public class MethodGenerator {
         var interruptedException = elementUtils.getTypeElement(InterruptedException.class.getCanonicalName())
             .asType();
         return List.of(ioException, interruptedException);
-    }
-
-    /**
-     * Extracts the parameters, reporting errors if any parameter does not fit into the request.
-     *
-     * @param function the function from which to get the parameters
-     */
-    private RequestParameters getMethodParameters(ExecutableElement function) {
-        var parameters = function.getParameters();
-
-        var allParameters = parameters.stream()
-            .map(parameter -> new RequestParameter(parameter.asType(), parameter.getSimpleName().toString()))
-            .toList();
-
-        var headers = new ArrayList<HeaderSpec>();
-        for (var parameter : parameters) {
-            var header = parameter.getAnnotation(Header.class);
-            if (header == null) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "Unknown parameter, missing annotation", parameter);
-                continue;
-            }
-
-            headerValidator.getHeaderSpec(header.value(), parameter).ifPresent(headers::add);
-        }
-
-        return new RequestParameters(allParameters, headers);
     }
 }

@@ -1,6 +1,7 @@
 package com.lablizards.restahead.demo.clients;
 
 import com.lablizards.restahead.annotations.request.Header;
+import com.lablizards.restahead.annotations.request.Query;
 import com.lablizards.restahead.annotations.verbs.Delete;
 import com.lablizards.restahead.annotations.verbs.Get;
 import com.lablizards.restahead.annotations.verbs.Patch;
@@ -12,7 +13,7 @@ import java.io.IOException;
 
 public interface HttpBinMethodsService {
     @Delete("/delete")
-    Response delete() throws IOException;
+    Response delete(@Query("q") String search) throws IOException;
 
     @Get("/get")
     Response get() throws IOException, InterruptedException;

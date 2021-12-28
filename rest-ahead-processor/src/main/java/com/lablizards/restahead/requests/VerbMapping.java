@@ -10,8 +10,13 @@ import com.lablizards.restahead.client.requests.GetRequest;
 import com.lablizards.restahead.client.requests.PatchRequest;
 import com.lablizards.restahead.client.requests.PostRequest;
 import com.lablizards.restahead.client.requests.PutRequest;
+import com.lablizards.restahead.client.requests.Request;
+import com.lablizards.restahead.requests.request.RequestLine;
+import com.lablizards.restahead.requests.request.RequestSpec;
 
 import java.lang.annotation.Annotation;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -36,18 +41,26 @@ public class VerbMapping {
      * @return the request specification
      */
     public static RequestLine annotationToVerb(Annotation annotation) {
+        Class<? extends Request> request;
+        String path;
         if (annotation instanceof Delete delete) {
-            return new RequestLine(DeleteRequest.class, delete.value());
+            request = DeleteRequest.class;
+            path = delete.value();
         } else if (annotation instanceof Get get) {
-            return new RequestLine(GetRequest.class, get.value());
+            request = GetRequest.class;
+            path = get.value();
         } else if (annotation instanceof Patch patch) {
-            return new RequestLine(PatchRequest.class, patch.value());
+            request = PatchRequest.class;
+            path = patch.value();
         } else if (annotation instanceof Post post) {
-            return new RequestLine(PostRequest.class, post.value());
+            request = PostRequest.class;
+            path = post.value();
         } else if (annotation instanceof Put put) {
-            return new RequestLine(PutRequest.class, put.value());
+            request = PutRequest.class;
+            path = put.value();
         } else {
             throw new IllegalArgumentException("Annotation was not a valid verb: " + annotation);
         }
+        return new RequestLine(request, path);
     }
 }

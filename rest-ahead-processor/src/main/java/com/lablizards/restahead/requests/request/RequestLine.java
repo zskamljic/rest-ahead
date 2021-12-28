@@ -1,4 +1,4 @@
-package com.lablizards.restahead.requests;
+package com.lablizards.restahead.requests.request;
 
 import com.lablizards.restahead.client.requests.Request;
 

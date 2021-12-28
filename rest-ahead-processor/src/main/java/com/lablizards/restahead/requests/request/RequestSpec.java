@@ -1,4 +1,7 @@
-package com.lablizards.restahead.requests;
+package com.lablizards.restahead.requests.request;
+
+import com.lablizards.restahead.requests.RequestParameters;
+import com.lablizards.restahead.requests.request.RequestLine;
 
 /**
  * Call specification

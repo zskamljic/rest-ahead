@@ -7,6 +7,6 @@ public class ParametersProcessorTest extends CommonProcessorTest {
     void interfaceWithInvalidPathFailsToCompile() {
         commonCompilationAssertion("parameters/Parameters.java")
             .failsToCompile()
-            .withErrorContaining("Unknown parameter");
+            .withErrorContaining("Exactly one annotation expected");
     }
 }

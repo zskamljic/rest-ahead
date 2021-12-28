@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link RestClient} using {@link HttpClient} present in JDK.
@@ -31,8 +32,14 @@ public class JavaHttpClient implements RestClient {
 
     @Override
     public Response execute(Request request) throws IOException, InterruptedException {
+        var queryString = request.getQueries()
+            .entrySet()
+            .stream()
+            .flatMap(entry -> entry.getValue().stream().map(value -> "%s=%s".formatted(entry.getKey(), value)))
+            .collect(Collectors.joining("&"));
+
         var requestBuilder = HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + request.getPath()));
+            .uri(URI.create(baseUrl + request.getPath() + "?" + queryString));
         if (request instanceof DeleteRequest) {
             requestBuilder.DELETE();
         } else if (request instanceof GetRequest) {
