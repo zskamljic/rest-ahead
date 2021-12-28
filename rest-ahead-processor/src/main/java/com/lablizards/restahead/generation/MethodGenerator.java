@@ -250,7 +250,10 @@ public class MethodGenerator {
         var headers = new ArrayList<HeaderSpec>();
         for (var parameter : parameters) {
             var header = parameter.getAnnotation(Header.class);
-            if (header == null) continue;
+            if (header == null) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "Unknown parameter, missing annotation", parameter);
+                continue;
+            }
 
             headerValidator.getHeaderSpec(header.value(), parameter).ifPresent(headers::add);
         }
