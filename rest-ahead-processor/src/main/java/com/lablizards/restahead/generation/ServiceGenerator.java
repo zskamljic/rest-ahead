@@ -1,12 +1,15 @@
 package com.lablizards.restahead.generation;
 
+import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.client.RestClient;
+import com.lablizards.restahead.conversion.Converter;
 import com.lablizards.restahead.generation.methods.MethodGenerator;
 import com.lablizards.restahead.requests.VerbMapping;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
@@ -119,14 +122,20 @@ public class ServiceGenerator {
         AnnotationSpec generatedAnnotation,
         List<MethodSpec> methods
     ) {
-        return TypeSpec.classBuilder(typeName)
+        var hasCustomTypes = hasCustomTypes(methods);
+
+        var builder = TypeSpec.classBuilder(typeName)
             .addSuperinterface(serviceDeclaration.asType())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(generatedAnnotation)
             .addMethods(methods)
             .addField(createClientField())
-            .addMethod(createConstructor())
-            .build();
+            .addMethod(createConstructor(hasCustomTypes));
+        if (hasCustomTypes) {
+            builder.addField(createConverterField());
+        }
+
+        return builder.build();
     }
 
     /**
@@ -150,16 +159,34 @@ public class ServiceGenerator {
             .build();
     }
 
+    private boolean hasCustomTypes(List<MethodSpec> methods) {
+        return methods.stream()
+            .map(method -> method.returnType)
+            .distinct()
+            .anyMatch(type -> !type.equals(TypeName.VOID) && !type.equals(TypeName.get(Response.class)));
+    }
+
+    private FieldSpec createConverterField() {
+        return FieldSpec.builder(Converter.class, "converter", Modifier.PRIVATE, Modifier.FINAL)
+            .build();
+    }
+
     /**
      * Creates the constructor for the service.
      *
      * @return the constructor specification.
      */
-    private MethodSpec createConstructor() {
-        return MethodSpec.methodBuilder("<init>")
+    private MethodSpec createConstructor(boolean hasCustomTypes) {
+        var builder = MethodSpec.methodBuilder("<init>")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(RestClient.class, "client")
-            .addStatement("this.client = client")
-            .build();
+            .addStatement("this.client = client");
+
+        if (hasCustomTypes) {
+            builder.addParameter(Converter.class, "converter")
+                .addStatement("this.converter = converter");
+        }
+
+        return builder.build();
     }
 }

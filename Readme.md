@@ -11,6 +11,7 @@ approach, which also means easier debugging and easier integration with tools li
 ## Features
 
 - [Headers](#headers)
+- [Responses](#response-types)
 - [Query](#queries)
 
 ## Introduction
@@ -42,12 +43,33 @@ var response = service.performGet();
 There are multiple options you have when generating requests, all of which will be done automatically when building your
 project.
 
-### Function return type
+### Response types
 
-Currently, there are two supported return types, selected based on your interface declaration:
+Out of the box, two types are supported:
 
 - void
 - Response
+
+Other types require you to specify an instance of Converter (rest-ahead-jackson-converter contains an implementation for
+Jackson library). This will allow you to use virtually any type that the converter can construct.
+
+Example of using a return type:
+
+```java
+interface Service {
+    @Get
+    void requestIgnoringResponse();
+
+    @Get
+    Response requestFullResponse();
+
+    @Get
+    Map<String, Object> performGet();
+
+    @Get
+    CustomResponseType performGetWithSpecificTarget();
+}
+```
 
 ### Headers
 

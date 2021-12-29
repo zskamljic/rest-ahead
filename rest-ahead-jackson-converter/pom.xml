@@ -9,15 +9,20 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>rest-ahead-client</artifactId>
+    <artifactId>rest-ahead-jackson-converter</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.lablizards</groupId>
-            <artifactId>rest-ahead-annotations</artifactId>
+            <artifactId>rest-ahead-client</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.13.1</version>
+        </dependency>
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -17,6 +17,7 @@
         <module>demo</module>
         <module>rest-ahead-processor</module>
         <module>rest-ahead-annotations</module>
+        <module>rest-ahead-jackson-converter</module>
     </modules>
 
     <properties>
@@ -25,6 +26,8 @@
         <maven.compiler.target>17</maven.compiler.target>
         <junit.version>5.8.2</junit.version>
         <mockito.version>4.2.0</mockito.version>
+        <compiler.plugin.version>3.8.1</compiler.plugin.version>
+        <surefire.version>2.22.2</surefire.version>
 
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>

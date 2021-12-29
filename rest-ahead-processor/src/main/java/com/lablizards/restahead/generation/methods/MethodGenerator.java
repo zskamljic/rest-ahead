@@ -46,7 +46,7 @@ public class MethodGenerator {
     public MethodGenerator(Messager messager, Elements elementUtils, Types types) {
         this.messager = messager;
         this.elementUtils = elementUtils;
-        converterGenerator = new ResponseConverterGenerator(messager);
+        converterGenerator = new ResponseConverterGenerator(elementUtils);
         pathValidator = new PathValidator(messager);
         parameterHandler = new ParameterHandler(messager, elementUtils, types);
         expectedExceptions = expectedExceptions();
@@ -104,7 +104,7 @@ public class MethodGenerator {
             builder.addStatement("client.execute(httpRequest)");
         } else {
             builder.addStatement("var response = client.execute(httpRequest)");
-            converterGenerator.generateReturnStatement(returnType, builder, function);
+            converterGenerator.generateReturnStatement(function.getReturnType(), builder, function);
         }
 
         if (!missingExceptions.isEmpty()) {

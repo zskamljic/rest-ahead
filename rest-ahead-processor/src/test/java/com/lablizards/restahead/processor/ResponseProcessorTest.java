@@ -1,5 +1,6 @@
 package com.lablizards.restahead.processor;
 
+import com.google.testing.compile.JavaFileObjects;
 import org.junit.jupiter.api.Test;
 
 class ResponseProcessorTest extends CommonProcessorTest {
@@ -10,11 +11,18 @@ class ResponseProcessorTest extends CommonProcessorTest {
     }
 
     @Test
-    void interfaceWithUnknownResponseFailsToCompile() {
+    void interfaceWithUnknownResponseCompiles() {
         commonCompilationAssertion("response/ServiceWithUnknownResponse.java")
-            .failsToCompile()
-            .withErrorContaining("Convert type")
+            .compilesWithoutWarnings()
             .and()
-            .withErrorContaining("not supported");
+            .generatesSources(JavaFileObjects.forResource("response/ServiceWithUnknownResponse$Impl.java"));
+    }
+
+    @Test
+    void interfaceWithGenericResponseCompiles() {
+        commonCompilationAssertion("response/ServiceWithGenericResponse.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("response/ServiceWithGenericResponse$Impl.java"));
     }
 }
