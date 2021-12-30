@@ -4,15 +4,17 @@ import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.conversion.GenericReference;
 import com.lablizards.restahead.exceptions.RequestFailedException;
 import com.squareup.javapoet.MethodSpec;
+import com.sun.jdi.VoidType;
 
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 /**
  * Create a response for the specified type.
  */
-public class ResponseConverterGenerator {
+public class ResponseHandler {
     private final TypeMirror responseType;
 
     /**
@@ -20,7 +22,7 @@ public class ResponseConverterGenerator {
      *
      * @param elementUtils the Elements to use for class lookup
      */
-    public ResponseConverterGenerator(Elements elementUtils) {
+    public ResponseHandler(Elements elementUtils) {
         responseType = elementUtils.getTypeElement(Response.class.getCanonicalName())
             .asType();
     }
@@ -46,6 +48,10 @@ public class ResponseConverterGenerator {
             builder.addStatement("var responseTypeReference = new $T<$T>(){}", GenericReference.class, returnType);
             builder.addStatement("return converter.deserialize(response, responseTypeReference.getType())");
         }
+    }
+
+    public boolean isCustomResponse(TypeMirror returnType) {
+        return !returnType.equals(responseType) && returnType.getKind() != TypeKind.VOID;
     }
 
     private boolean isSimpleType(TypeMirror returnType) {

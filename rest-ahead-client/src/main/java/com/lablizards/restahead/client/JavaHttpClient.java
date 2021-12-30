@@ -7,11 +7,11 @@ import com.lablizards.restahead.client.requests.PostRequest;
 import com.lablizards.restahead.client.requests.PutRequest;
 import com.lablizards.restahead.client.requests.Request;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +31,7 @@ public class JavaHttpClient implements RestClient {
     }
 
     @Override
-    public Response execute(Request request) throws IOException, InterruptedException {
+    public Future<Response> execute(Request request) {
         var queryString = request.getQueries()
             .entrySet()
             .stream()
@@ -53,11 +53,7 @@ public class JavaHttpClient implements RestClient {
         }
         request.getHeaders().forEach((name, values) -> values.forEach(value -> requestBuilder.header(name, value)));
         var httpRequest = requestBuilder.build();
-        var httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-        return new Response(
-            httpResponse.statusCode(),
-            httpResponse.headers().map(),
-            httpResponse.body()
-        );
+        return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
+            .thenApply(response -> new Response(response.statusCode(), response.headers().map(), response.body()));
     }
 }

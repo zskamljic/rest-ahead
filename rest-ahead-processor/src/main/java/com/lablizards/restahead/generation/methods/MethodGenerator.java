@@ -1,7 +1,7 @@
 package com.lablizards.restahead.generation.methods;
 
 import com.lablizards.restahead.exceptions.RestException;
-import com.lablizards.restahead.generation.ResponseConverterGenerator;
+import com.lablizards.restahead.generation.ResponseHandler;
 import com.lablizards.restahead.requests.RequestParameters;
 import com.lablizards.restahead.requests.VerbMapping;
 import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
@@ -19,9 +19,11 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -30,11 +32,13 @@ import java.util.stream.Collectors;
  */
 public class MethodGenerator {
     private final Messager messager;
-    private final Elements elementUtils;
-    private final ResponseConverterGenerator converterGenerator;
+    private final ResponseHandler responseHandler;
     private final PathValidator pathValidator;
     private final ParameterHandler parameterHandler;
-    private final List<? extends TypeMirror> expectedExceptions;
+
+    private final TypeMirror executionException;
+    private final TypeMirror interruptedException;
+    private final TypeMirror ioException;
 
     /**
      * Create a new instance, reporting all data to given messager.
@@ -45,11 +49,12 @@ public class MethodGenerator {
      */
     public MethodGenerator(Messager messager, Elements elementUtils, Types types) {
         this.messager = messager;
-        this.elementUtils = elementUtils;
-        converterGenerator = new ResponseConverterGenerator(elementUtils);
+        responseHandler = new ResponseHandler(elementUtils);
         pathValidator = new PathValidator(messager);
         parameterHandler = new ParameterHandler(messager, elementUtils, types);
-        expectedExceptions = expectedExceptions();
+        executionException = elementUtils.getTypeElement(ExecutionException.class.getCanonicalName()).asType();
+        interruptedException = elementUtils.getTypeElement(InterruptedException.class.getCanonicalName()).asType();
+        ioException = elementUtils.getTypeElement(IOException.class.getCanonicalName()).asType();
     }
 
     /**
@@ -83,9 +88,9 @@ public class MethodGenerator {
      * @return the generated function body
      */
     private MethodSpec generateMethodBody(ExecutableElement function, RequestSpec requestSpec) {
-        var returnType = TypeName.get(function.getReturnType());
         var declaredExceptions = function.getThrownTypes();
-        var missingExceptions = findMissingExceptions(declaredExceptions);
+        var isCustomReturn = responseHandler.isCustomResponse(function.getReturnType());
+        var missingExceptions = findMissingExceptions(isCustomReturn, declaredExceptions);
 
         var builder = MethodSpec.methodBuilder(function.getSimpleName().toString())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -100,22 +105,32 @@ public class MethodGenerator {
             builder.beginControlFlow("try");
         }
 
+        var returnType = TypeName.get(function.getReturnType());
         if (returnType == TypeName.VOID) {
-            builder.addStatement("client.execute(httpRequest)");
+            builder.addStatement("client.execute(httpRequest).get()");
         } else {
-            builder.addStatement("var response = client.execute(httpRequest)");
-            converterGenerator.generateReturnStatement(function.getReturnType(), builder);
+            builder.addStatement("var response = client.execute(httpRequest).get()");
+            responseHandler.generateReturnStatement(function.getReturnType(), builder);
         }
 
         if (!missingExceptions.isEmpty()) {
-            var exceptionsTemplate = missingExceptions.stream()
-                .map(e -> "$T")
-                .collect(Collectors.joining(" | "));
-            builder.nextControlFlow("catch (" + exceptionsTemplate + " exception)", missingExceptions.toArray(Object[]::new))
-                .addStatement("throw new $T(exception)", RestException.class)
-                .endControlFlow();
+            if (missingExceptions.contains(executionException)) {
+                builder.nextControlFlow("catch ($T exception)", ExecutionException.class)
+                    .addStatement("throw new $T(exception.getCause())", RestException.class);
+            }
+            var remaining = missingExceptions.stream()
+                .filter(Predicate.not(executionException::equals))
+                .toList();
+            if (!remaining.isEmpty()) {
+                var exceptionsTemplate = remaining.stream()
+                    .map(e -> "$T")
+                    .collect(Collectors.joining(" | "));
+                builder.nextControlFlow("catch (" + exceptionsTemplate + " exception)", remaining.toArray(Object[]::new))
+                    .addStatement("throw new $T(exception)", RestException.class);
+            }
+            builder.endControlFlow();
         }
-        return builder.returns(TypeName.get(function.getReturnType()))
+        return builder.returns(returnType)
             .build();
     }
 
@@ -188,10 +203,15 @@ public class MethodGenerator {
     /**
      * Checks if {@link IOException} and {@link InterruptedException} are both declared.
      *
+     * @param isCustomReturn     if the response type is converted
      * @param declaredExceptions the exceptions on template method
      * @return true if either of the exception is missing, false if all are present
      */
-    private List<? extends TypeMirror> findMissingExceptions(List<? extends TypeMirror> declaredExceptions) {
+    private List<? extends TypeMirror> findMissingExceptions(boolean isCustomReturn, List<? extends TypeMirror> declaredExceptions) {
+        var expectedExceptions = new ArrayList<>(List.of(executionException, interruptedException));
+        if (isCustomReturn) {
+            expectedExceptions.add(ioException);
+        }
         return expectedExceptions.stream()
             .filter(Predicate.not(declaredExceptions::contains))
             .toList();
@@ -219,18 +239,5 @@ public class MethodGenerator {
         var annotation = presentAnnotations.get(0);
         var requestLine = VerbMapping.annotationToVerb(annotation);
         return pathValidator.validatePathAndExtractQuery(function, requestLine, parameters);
-    }
-
-    /**
-     * Generates a list of expected exceptions for all calls.
-     *
-     * @return the list of exceptions
-     */
-    private List<? extends TypeMirror> expectedExceptions() {
-        var ioException = elementUtils.getTypeElement(IOException.class.getCanonicalName())
-            .asType();
-        var interruptedException = elementUtils.getTypeElement(InterruptedException.class.getCanonicalName())
-            .asType();
-        return List.of(ioException, interruptedException);
     }
 }
