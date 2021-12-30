@@ -4,6 +4,7 @@ import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.client.requests.DeleteRequest;
 import com.lablizards.restahead.conversion.Converter;
 import com.lablizards.restahead.conversion.GenericReference;
+import com.lablizards.restahead.exceptions.RequestFailedException;
 import com.lablizards.restahead.exceptions.RestException;
 import java.io.IOException;
 import java.lang.InterruptedException;
@@ -29,6 +30,9 @@ public final class ServiceWithGenericResponse$Impl implements ServiceWithGeneric
         var httpRequest = new DeleteRequest("/delete");
         try {
             var response = client.execute(httpRequest);
+            if (response.status() < 200 || response.status() >= 300) {
+                throw new RequestFailedException(response.status(), response.body());
+            }
             var responseTypeReference = new GenericReference<Map<String, Object>>(){};
             return converter.deserialize(response, responseTypeReference.getType());
         } catch (IOException | InterruptedException exception) {

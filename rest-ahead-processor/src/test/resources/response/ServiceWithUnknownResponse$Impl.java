@@ -3,6 +3,7 @@ package com.lablizards.restahead.demo;
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.client.requests.DeleteRequest;
 import com.lablizards.restahead.conversion.Converter;
+import com.lablizards.restahead.exceptions.RequestFailedException;
 import com.lablizards.restahead.exceptions.RestException;
 import java.io.IOException;
 import java.lang.InterruptedException;
@@ -25,6 +26,9 @@ public final class ServiceWithUnknownResponse$Impl implements ServiceWithUnknown
         var httpRequest = new DeleteRequest("/delete");
         try {
             var response = client.execute(httpRequest);
+            if (response.status() < 200 || response.status() >= 300) {
+                throw new RequestFailedException(response.status(), response.body());
+            }
             return converter.deserialize(response, ServiceWithUnknownResponse.TestResponse.class);
         } catch (IOException | InterruptedException exception) {
             throw new RestException(exception);

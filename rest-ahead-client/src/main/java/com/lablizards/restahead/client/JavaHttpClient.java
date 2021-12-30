@@ -56,6 +56,7 @@ public class JavaHttpClient implements RestClient {
         var httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
         return new Response(
             httpResponse.statusCode(),
+            httpResponse.headers().map(),
             httpResponse.body()
         );
     }

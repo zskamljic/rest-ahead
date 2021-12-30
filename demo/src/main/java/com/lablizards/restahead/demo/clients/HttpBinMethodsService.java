@@ -7,24 +7,21 @@ import com.lablizards.restahead.annotations.verbs.Get;
 import com.lablizards.restahead.annotations.verbs.Patch;
 import com.lablizards.restahead.annotations.verbs.Post;
 import com.lablizards.restahead.annotations.verbs.Put;
-import com.lablizards.restahead.client.Response;
-
-import java.io.IOException;
-import java.util.Map;
+import com.lablizards.restahead.demo.models.HttpBinResponse;
 
 public interface HttpBinMethodsService {
     @Delete("/delete")
-    Map<String, Object> delete(@Query("q") String... search) throws IOException;
+    HttpBinResponse delete(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Get("/get")
-    Object get() throws IOException, InterruptedException;
+    HttpBinResponse get(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Patch("/patch")
-    Response patch(@Header("Accept") String... accept);
+    HttpBinResponse patch(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Post("/post")
-    Response post();
+    HttpBinResponse post(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Put("/put")
-    Response put();
+    HttpBinResponse put(@Query("q") String query, @Header("Test-Header") String headers);
 }

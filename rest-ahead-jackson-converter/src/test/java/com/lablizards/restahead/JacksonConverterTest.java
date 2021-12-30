@@ -17,7 +17,7 @@ class JacksonConverterTest {
     void deserializeWorksForNormalType() throws IOException {
         var converter = new JacksonConverter();
 
-        var result = converter.deserialize(new Response(200, new ByteArrayInputStream("""
+        var result = converter.deserialize(new Response(200, Map.of(), new ByteArrayInputStream("""
             {
                 "a": true
             }
@@ -30,7 +30,7 @@ class JacksonConverterTest {
     void deserializeWorksForGenericTypes() throws IOException {
         var converter = new JacksonConverter();
 
-        Map<String, Boolean> result = converter.deserialize(new Response(200, new ByteArrayInputStream("""
+        Map<String, Boolean> result = converter.deserialize(new Response(200, Map.of(), new ByteArrayInputStream("""
             {
                 "a": true
             }

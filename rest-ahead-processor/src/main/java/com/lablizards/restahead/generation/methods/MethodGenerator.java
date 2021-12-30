@@ -104,7 +104,7 @@ public class MethodGenerator {
             builder.addStatement("client.execute(httpRequest)");
         } else {
             builder.addStatement("var response = client.execute(httpRequest)");
-            converterGenerator.generateReturnStatement(function.getReturnType(), builder, function);
+            converterGenerator.generateReturnStatement(function.getReturnType(), builder);
         }
 
         if (!missingExceptions.isEmpty()) {

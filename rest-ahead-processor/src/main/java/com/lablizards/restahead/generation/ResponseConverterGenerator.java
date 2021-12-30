@@ -2,9 +2,9 @@ package com.lablizards.restahead.generation;
 
 import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.conversion.GenericReference;
+import com.lablizards.restahead.exceptions.RequestFailedException;
 import com.squareup.javapoet.MethodSpec;
 
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -30,12 +30,17 @@ public class ResponseConverterGenerator {
      *
      * @param returnType the type to return
      * @param builder    the method builder
-     * @param function   the function for which code is generated
      */
-    public void generateReturnStatement(TypeMirror returnType, MethodSpec.Builder builder, ExecutableElement function) {
+    public void generateReturnStatement(TypeMirror returnType, MethodSpec.Builder builder) {
         if (returnType.equals(responseType)) {
             builder.addStatement("return response");
-        } else if (isSimpleType(returnType)) {
+            return;
+        }
+        builder.beginControlFlow("if (response.status() < 200 || response.status() >= 300)")
+            .addStatement("throw new $T(response.status(), response.body())", RequestFailedException.class)
+            .endControlFlow();
+
+        if (isSimpleType(returnType)) {
             builder.addStatement("return converter.deserialize(response, $T.class)", returnType);
         } else {
             builder.addStatement("var responseTypeReference = new $T<$T>(){}", GenericReference.class, returnType);

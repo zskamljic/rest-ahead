@@ -134,6 +134,9 @@ public interface HttpBinService {
 }
 ```
 
+A failed request, with custom responses will throw RequestFailedException, that contains a code and the input stream
+from the request.
+
 ### Custom client
 
 The `RestAhead` builder declares an interface `RestClient` that allows you to implement custom clients. By default, if
