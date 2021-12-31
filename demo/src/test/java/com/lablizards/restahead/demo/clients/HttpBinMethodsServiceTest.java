@@ -6,6 +6,8 @@ import com.lablizards.restahead.demo.models.HttpBinResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ExecutionException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -27,33 +29,33 @@ class HttpBinMethodsServiceTest {
     }
 
     @Test
-    void deleteRequestSucceeds() {
+    void deleteRequestSucceeds() throws ExecutionException, InterruptedException {
         var response = service.delete(QUERY, HEADER);
-        performAssertions(response, true);
+        performAssertions(response.get(), true);
     }
 
     @Test
-    void getRequestSucceeds() {
+    void getRequestSucceeds() throws ExecutionException, InterruptedException {
         var response = service.get(QUERY, HEADER);
-        performAssertions(response, false);
+        performAssertions(response.get(), false);
     }
 
     @Test
-    void patchRequestSucceeds() {
+    void patchRequestSucceeds() throws ExecutionException, InterruptedException {
         var response = service.patch(QUERY, HEADER);
-        performAssertions(response, true);
+        performAssertions(response.get(), true);
     }
 
     @Test
-    void postRequestSucceeds() {
+    void postRequestSucceeds() throws ExecutionException, InterruptedException {
         var response = service.post(QUERY, HEADER);
-        performAssertions(response, true);
+        performAssertions(response.get(), true);
     }
 
     @Test
-    void putRequestSucceeds() {
+    void putRequestSucceeds() throws ExecutionException, InterruptedException {
         var response = service.put(QUERY, HEADER);
-        performAssertions(response, true);
+        performAssertions(response.get(), true);
     }
 
     void performAssertions(HttpBinResponse response, boolean hasBody) {

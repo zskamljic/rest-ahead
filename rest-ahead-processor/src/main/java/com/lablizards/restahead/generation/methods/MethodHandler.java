@@ -1,44 +1,32 @@
 package com.lablizards.restahead.generation.methods;
 
-import com.lablizards.restahead.exceptions.RestException;
 import com.lablizards.restahead.generation.ResponseHandler;
 import com.lablizards.restahead.requests.RequestParameters;
 import com.lablizards.restahead.requests.VerbMapping;
-import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
 import com.lablizards.restahead.requests.request.RequestLine;
 import com.lablizards.restahead.requests.request.RequestSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Used to generate methods annotated with HTTP annotations.
  */
-public class MethodGenerator {
+public class MethodHandler {
     private final Messager messager;
     private final ResponseHandler responseHandler;
     private final PathValidator pathValidator;
     private final ParameterHandler parameterHandler;
-
-    private final TypeMirror executionException;
-    private final TypeMirror interruptedException;
-    private final TypeMirror ioException;
 
     /**
      * Create a new instance, reporting all data to given messager.
@@ -47,14 +35,11 @@ public class MethodGenerator {
      * @param elementUtils the element utils to fetch type info from
      * @param types        the types utility
      */
-    public MethodGenerator(Messager messager, Elements elementUtils, Types types) {
+    public MethodHandler(Messager messager, Elements elementUtils, Types types) {
         this.messager = messager;
-        responseHandler = new ResponseHandler(elementUtils);
+        responseHandler = new ResponseHandler(messager, elementUtils, types);
         pathValidator = new PathValidator(messager);
         parameterHandler = new ParameterHandler(messager, elementUtils, types);
-        executionException = elementUtils.getTypeElement(ExecutionException.class.getCanonicalName()).asType();
-        interruptedException = elementUtils.getTypeElement(InterruptedException.class.getCanonicalName()).asType();
-        ioException = elementUtils.getTypeElement(IOException.class.getCanonicalName()).asType();
     }
 
     /**
@@ -88,49 +73,20 @@ public class MethodGenerator {
      * @return the generated function body
      */
     private MethodSpec generateMethodBody(ExecutableElement function, RequestSpec requestSpec) {
-        var declaredExceptions = function.getThrownTypes();
-        var isCustomReturn = responseHandler.isCustomResponse(function.getReturnType());
-        var missingExceptions = findMissingExceptions(isCustomReturn, declaredExceptions);
-
-        var builder = MethodSpec.methodBuilder(function.getSimpleName().toString())
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addAnnotation(Override.class)
-            .addExceptions(declaredExceptions.stream().map(TypeName::get).toList());
-
-        addParametersToFunction(builder, requestSpec.parameters());
+        var builder = MethodSpec.overriding(function)
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
         var requestLine = requestSpec.requestLine();
         addRequestInitialization(builder, requestLine, requestSpec.parameters());
-        if (!missingExceptions.isEmpty()) {
-            builder.beginControlFlow("try");
-        }
 
-        var returnType = TypeName.get(function.getReturnType());
-        if (returnType == TypeName.VOID) {
+        var returnType = function.getReturnType();
+        if (returnType.getKind() == TypeKind.VOID) {
             builder.addStatement("client.execute(httpRequest).get()");
         } else {
-            builder.addStatement("var response = client.execute(httpRequest).get()");
-            responseHandler.generateReturnStatement(function.getReturnType(), builder);
+            builder.addStatement("var response = client.execute(httpRequest)");
+            responseHandler.generateReturnStatement(returnType, builder, function);
         }
-
-        if (!missingExceptions.isEmpty()) {
-            if (missingExceptions.contains(executionException)) {
-                builder.nextControlFlow("catch ($T exception)", ExecutionException.class)
-                    .addStatement("throw new $T(exception.getCause())", RestException.class);
-            }
-            var remaining = missingExceptions.stream()
-                .filter(Predicate.not(executionException::equals))
-                .toList();
-            if (!remaining.isEmpty()) {
-                var exceptionsTemplate = remaining.stream()
-                    .map(e -> "$T")
-                    .collect(Collectors.joining(" | "));
-                builder.nextControlFlow("catch (" + exceptionsTemplate + " exception)", remaining.toArray(Object[]::new))
-                    .addStatement("throw new $T(exception)", RestException.class);
-            }
-            builder.endControlFlow();
-        }
-        return builder.returns(returnType)
+        return builder.returns(TypeName.get(returnType))
             .build();
     }
 
@@ -175,46 +131,6 @@ public class MethodGenerator {
                 "httpRequest.addQuery($S, $S)", query.name(), query.value()
             );
         }
-    }
-
-    /**
-     * Adds the parameters to the generated function
-     *
-     * @param builder    the method builder
-     * @param parameters the parameters to add
-     */
-    private void addParametersToFunction(MethodSpec.Builder builder, RequestParameters parameters) {
-        builder.addParameters(createParameters(parameters));
-    }
-
-    /**
-     * Create {@link  RequestParameterSpec} instances for the given parameters
-     *
-     * @param parameters the parameters to create specs for
-     * @return the generated specs
-     */
-    private List<ParameterSpec> createParameters(RequestParameters parameters) {
-        return parameters.parameters()
-            .stream()
-            .map(parameterHandler::createParameter)
-            .toList();
-    }
-
-    /**
-     * Checks if {@link IOException} and {@link InterruptedException} are both declared.
-     *
-     * @param isCustomReturn     if the response type is converted
-     * @param declaredExceptions the exceptions on template method
-     * @return true if either of the exception is missing, false if all are present
-     */
-    private List<? extends TypeMirror> findMissingExceptions(boolean isCustomReturn, List<? extends TypeMirror> declaredExceptions) {
-        var expectedExceptions = new ArrayList<>(List.of(executionException, interruptedException));
-        if (isCustomReturn) {
-            expectedExceptions.add(ioException);
-        }
-        return expectedExceptions.stream()
-            .filter(Predicate.not(declaredExceptions::contains))
-            .toList();
     }
 
     /**

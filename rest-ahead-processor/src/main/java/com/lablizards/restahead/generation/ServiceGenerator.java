@@ -3,7 +3,7 @@ package com.lablizards.restahead.generation;
 import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.conversion.Converter;
-import com.lablizards.restahead.generation.methods.MethodGenerator;
+import com.lablizards.restahead.generation.methods.MethodHandler;
 import com.lablizards.restahead.requests.VerbMapping;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
@@ -32,7 +32,7 @@ public class ServiceGenerator {
     private final Messager messager;
     private final Filer filer;
     private final Elements elementUtils;
-    private final MethodGenerator methodGenerator;
+    private final MethodHandler methodHandler;
 
     /**
      * Default constructor.
@@ -46,7 +46,7 @@ public class ServiceGenerator {
         this.messager = messager;
         this.filer = filer;
         this.elementUtils = elementUtils;
-        this.methodGenerator = new MethodGenerator(messager, elementUtils, types);
+        this.methodHandler = new MethodHandler(messager, elementUtils, types);
     }
 
     /**
@@ -61,7 +61,7 @@ public class ServiceGenerator {
     ) {
         if (isServiceDeclarationInvalid(serviceDeclaration)) return;
 
-        var methods = methodGenerator.generateMethods(methodDeclarations);
+        var methods = methodHandler.generateMethods(methodDeclarations);
 
         var generatedAnnotation = createGeneratedAnnotation();
 
@@ -71,6 +71,7 @@ public class ServiceGenerator {
         var servicePackage = elementUtils.getPackageOf(serviceDeclaration);
         var packageName = servicePackage.isUnnamed() ? "" : servicePackage.getQualifiedName().toString();
         var javaFile = JavaFile.builder(packageName, type)
+            .indent("    ")
             .build();
 
         try {
@@ -177,7 +178,7 @@ public class ServiceGenerator {
      * @return the constructor specification.
      */
     private MethodSpec createConstructor(boolean hasCustomTypes) {
-        var builder = MethodSpec.methodBuilder("<init>")
+        var builder = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PUBLIC)
             .addParameter(RestClient.class, "client")
             .addStatement("this.client = client");

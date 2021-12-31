@@ -11,7 +11,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +31,7 @@ public class JavaHttpClient implements RestClient {
     }
 
     @Override
-    public Future<Response> execute(Request request) {
+    public CompletableFuture<Response> execute(Request request) {
         var queryString = request.getQueries()
             .entrySet()
             .stream()

@@ -5,10 +5,12 @@ import com.lablizards.restahead.annotations.verbs.Get;
 import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.demo.models.AuthResponse;
 
+import java.util.concurrent.Future;
+
 public interface AuthorizationService {
     @Get("/basic-auth/user/password")
-    Response getBasicAuth(@Header("Authorization") String authorization);
+    Future<Response> getBasicAuth(@Header("Authorization") String authorization);
 
     @Get("/bearer")
-    AuthResponse getBearer(@Header("Authorization") String authorization);
+    Future<AuthResponse> getBearer(@Header("Authorization") String authorization);
 }

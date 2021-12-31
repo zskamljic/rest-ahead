@@ -2,6 +2,7 @@ package com.lablizards.restahead.client;
 
 import com.lablizards.restahead.client.requests.Request;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
@@ -14,5 +15,5 @@ public interface RestClient {
      * @param request the request to perform
      * @return response from executing the request
      */
-    Future<Response> execute(Request request);
+    CompletableFuture<Response> execute(Request request);
 }

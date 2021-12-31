@@ -6,11 +6,12 @@ import com.lablizards.restahead.exceptions.RequestFailedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class AuthorizationServiceTest {
     private static final String TOKEN = "token";
@@ -25,29 +26,36 @@ class AuthorizationServiceTest {
     }
 
     @Test
-    void basicAuthHandles401() {
+    void basicAuthHandles401() throws ExecutionException, InterruptedException {
         var response = service.getBasicAuth("");
 
-        assertEquals(401, response.status());
+        assertEquals(401, response.get().status());
     }
 
     @Test
-    void basicAuthSucceeds() {
+    void basicAuthSucceeds() throws ExecutionException, InterruptedException {
         var response = service.getBasicAuth("Basic dXNlcjpwYXNzd29yZA==");
 
-        assertEquals(200, response.status());
+        assertEquals(200, response.get().status());
     }
 
     @Test
-    void bearerAuthSucceeds() {
+    void bearerAuthSucceeds() throws ExecutionException, InterruptedException {
         var response = service.getBearer("Bearer " + TOKEN);
 
-        assertTrue(response.authenticated());
-        assertEquals(TOKEN, response.token());
+        assertTrue(response.get().authenticated());
+        assertEquals(TOKEN, response.get().token());
     }
 
     @Test
     void bearerThrowsForNonSuccess() {
-        assertThrows(RequestFailedException.class, () -> service.getBearer(""));
+        try {
+            service.getBearer("").get();
+        } catch (ExecutionException e) {
+            assertInstanceOf(RequestFailedException.class, e.getCause());
+        } catch (InterruptedException e) {
+            fail();
+        }
+        // assertThrows(ExecutionException.class, () -> service.getBearer("").get());
     }
 }
