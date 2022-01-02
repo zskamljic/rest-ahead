@@ -1,6 +1,6 @@
 package com.lablizards.restahead.requests.request;
 
-import com.lablizards.restahead.requests.RequestParameters;
+import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
 
 /**
  * Call specification
@@ -10,6 +10,6 @@ import com.lablizards.restahead.requests.RequestParameters;
  */
 public record RequestSpec(
     RequestLine requestLine,
-    RequestParameters parameters
+    ParameterDeclaration parameters
 ) {
 }

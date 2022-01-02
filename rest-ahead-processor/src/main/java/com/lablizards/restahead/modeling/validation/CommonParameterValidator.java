@@ -1,6 +1,6 @@
-package com.lablizards.restahead.generation.methods;
+package com.lablizards.restahead.modeling.validation;
 
-import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
+import com.lablizards.restahead.modeling.declaration.RequestParameterSpec;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.TypeElement;
@@ -29,14 +29,14 @@ abstract class CommonParameterValidator {
     private final Types types;
     private final TypeMirror collectionMirror;
 
-    protected CommonParameterValidator(Messager messager, Elements elementUtils, Types types) {
+    protected CommonParameterValidator(Messager messager, Elements elements, Types types) {
         this.messager = messager;
         this.types = types;
-        collectionMirror = elementUtils.getTypeElement(Collection.class.getCanonicalName()).asType();
+        collectionMirror = elements.getTypeElement(Collection.class.getCanonicalName()).asType();
 
         allowedMirrors = ALLOWED_TYPES.stream()
             .map(Class::getCanonicalName)
-            .map(elementUtils::getTypeElement)
+            .map(elements::getTypeElement)
             .map(TypeElement::asType)
             .toList();
     }

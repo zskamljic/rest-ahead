@@ -1,4 +1,4 @@
-package com.lablizards.restahead.requests.parameters;
+package com.lablizards.restahead.modeling.declaration;
 
 /**
  * Contains the header information.

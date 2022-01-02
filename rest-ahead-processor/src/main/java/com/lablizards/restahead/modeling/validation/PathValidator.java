@@ -1,9 +1,10 @@
-package com.lablizards.restahead.generation.methods;
+package com.lablizards.restahead.modeling.validation;
 
-import com.lablizards.restahead.requests.RequestParameters;
+import com.lablizards.restahead.modeling.declaration.CallDeclaration;
+import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
+import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
 import com.lablizards.restahead.requests.request.PresetQuery;
 import com.lablizards.restahead.requests.request.RequestLine;
-import com.lablizards.restahead.requests.request.RequestSpec;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -34,15 +35,17 @@ public class PathValidator {
      * @param function    the function for which path is validated
      * @param requestLine the request line being validated
      * @param parameters  the parameters in the given request
+     * @param returnType
      * @return empty optional in case of errors or requestSpec if no errors are discovered
      */
-    public Optional<RequestSpec> validatePathAndExtractQuery(
+    public Optional<CallDeclaration> validatePathAndExtractQuery(
         ExecutableElement function,
         RequestLine requestLine,
-        RequestParameters parameters
+        ParameterDeclaration parameters,
+        ReturnDeclaration returnType
     ) {
         if (requestLine.path() == null || requestLine.path().isEmpty()) {
-            return Optional.of(new RequestSpec(requestLine, parameters));
+            return Optional.of(new CallDeclaration(function, requestLine, parameters, returnType));
         }
 
         try {
@@ -64,7 +67,6 @@ public class PathValidator {
             messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage(), function);
             return Optional.empty();
         }
-        return Optional.of(new RequestSpec(requestLine, parameters));
+        return Optional.of(new CallDeclaration(function, requestLine, parameters, returnType));
     }
-
 }

@@ -1,7 +1,9 @@
 package com.lablizards.restahead.generation.methods;
 
 import com.lablizards.restahead.client.requests.Request;
-import com.lablizards.restahead.requests.RequestParameters;
+import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
+import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
+import com.lablizards.restahead.modeling.validation.PathValidator;
 import com.lablizards.restahead.requests.request.RequestLine;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,7 +43,10 @@ class PathValidatorTest {
     })
     void pathReturnsCorrectForString(boolean invalid, String path) {
         var result = pathValidator.validatePathAndExtractQuery(
-            function, new RequestLine(Request.class, path), new RequestParameters(List.of(), List.of(), List.of())
+            function,
+            new RequestLine(Request.class, path),
+            new ParameterDeclaration(List.of(), List.of(), List.of()),
+            new ReturnDeclaration(Optional.empty())
         );
 
         assertEquals(invalid, result.isEmpty());

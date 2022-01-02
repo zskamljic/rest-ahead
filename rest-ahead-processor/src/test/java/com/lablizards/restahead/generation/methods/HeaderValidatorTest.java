@@ -1,5 +1,6 @@
 package com.lablizards.restahead.generation.methods;
 
+import com.lablizards.restahead.modeling.validation.HeaderValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

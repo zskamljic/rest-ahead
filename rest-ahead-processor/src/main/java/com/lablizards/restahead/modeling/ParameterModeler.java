@@ -1,12 +1,11 @@
-package com.lablizards.restahead.generation.methods;
+package com.lablizards.restahead.modeling;
 
 import com.lablizards.restahead.annotations.request.Header;
 import com.lablizards.restahead.annotations.request.Query;
-import com.lablizards.restahead.requests.RequestParameters;
-import com.lablizards.restahead.requests.parameters.RequestParameter;
-import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
+import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
+import com.lablizards.restahead.modeling.declaration.RequestParameterSpec;
+import com.lablizards.restahead.modeling.validation.HeaderValidator;
+import com.lablizards.restahead.modeling.validation.QueryValidator;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -20,9 +19,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Used to perform parameter specific logic
+ * Used to extract parameter info from the declaration.
  */
-public class ParameterHandler {
+public class ParameterModeler {
     private static final List<Class<? extends Annotation>> EXPECTED_ANNOTATIONS = List.of(
         Header.class, Query.class
     );
@@ -31,28 +30,10 @@ public class ParameterHandler {
     private final HeaderValidator headerValidator;
     private final QueryValidator queryValidator;
 
-    /**
-     * Create a new instance.
-     *
-     * @param messager the messager where errors are reported
-     * @param elementUtils the elements used to lookup class info
-     * @param types an instance of types utility
-     */
-    public ParameterHandler(Messager messager, Elements elementUtils, Types types) {
+    public ParameterModeler(Messager messager, Elements elements, Types types) {
         this.messager = messager;
-        headerValidator = new HeaderValidator(messager, elementUtils, types);
-        queryValidator = new QueryValidator(messager, elementUtils, types);
-    }
-
-    /**
-     * Creates {@link ParameterSpec} for the given parameter
-     *
-     * @param parameter the parameter to get the name and type from
-     * @return the spec for parameter
-     */
-    public ParameterSpec createParameter(RequestParameter parameter) {
-        return ParameterSpec.builder(TypeName.get(parameter.type()), parameter.name())
-            .build();
+        headerValidator = new HeaderValidator(messager, elements, types);
+        queryValidator = new QueryValidator(messager, elements, types);
     }
 
     /**
@@ -60,12 +41,8 @@ public class ParameterHandler {
      *
      * @param function the function from which to get the parameters
      */
-    public RequestParameters getMethodParameters(ExecutableElement function) {
+    public ParameterDeclaration getMethodParameters(ExecutableElement function) {
         var parameters = function.getParameters();
-
-        var allParameters = parameters.stream()
-            .map(parameter -> new RequestParameter(parameter.asType(), parameter.getSimpleName().toString()))
-            .toList();
 
         var headers = new ArrayList<RequestParameterSpec>();
         var queries = new ArrayList<RequestParameterSpec>();
@@ -82,15 +59,16 @@ public class ParameterHandler {
             handleAnnotation(parameter, annotation, headers, queries);
         }
 
-        return new RequestParameters(allParameters, headers, queries);
+        return new ParameterDeclaration(headers, queries);
     }
 
     /**
      * Generate and qualify parameter based on annotation
-     * @param parameter the parameter to report errors on
+     *
+     * @param parameter  the parameter to report errors on
      * @param annotation the annotation to qualify
-     * @param headers the list to collect headers in
-     * @param queries the list to collect queries in
+     * @param headers    the list to collect headers in
+     * @param queries    the list to collect queries in
      */
     private void handleAnnotation(
         VariableElement parameter,

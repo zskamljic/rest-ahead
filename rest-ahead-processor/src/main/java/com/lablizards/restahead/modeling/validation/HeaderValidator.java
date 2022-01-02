@@ -1,6 +1,7 @@
-package com.lablizards.restahead.generation.methods;
+package com.lablizards.restahead.modeling.validation;
 
-import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
+import com.lablizards.restahead.modeling.declaration.RequestParameterSpec;
+import com.lablizards.restahead.modeling.validation.CommonParameterValidator;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.VariableElement;
@@ -25,11 +26,11 @@ public class HeaderValidator extends CommonParameterValidator {
      * Create a new instance.
      *
      * @param messager     the messager where errors will be reported to
-     * @param elementUtils the Elements object used to fetch type info
+     * @param elements the Elements object used to fetch type info
      * @param types        an instance of the Types utility
      */
-    public HeaderValidator(Messager messager, Elements elementUtils, Types types) {
-        super(messager, elementUtils, types);
+    public HeaderValidator(Messager messager, Elements elements, Types types) {
+        super(messager, elements, types);
     }
 
     /**

@@ -1,6 +1,6 @@
-package com.lablizards.restahead.generation.methods;
+package com.lablizards.restahead.modeling.validation;
 
-import com.lablizards.restahead.requests.parameters.RequestParameterSpec;
+import com.lablizards.restahead.modeling.declaration.RequestParameterSpec;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.VariableElement;
@@ -18,11 +18,11 @@ public class QueryValidator extends CommonParameterValidator {
      * Construct a new instance.
      *
      * @param messager     the message to send errors to
-     * @param elementUtils the elements to use for class lookup
+     * @param elements the elements to use for class lookup
      * @param types        an instance of Types utility
      */
-    public QueryValidator(Messager messager, Elements elementUtils, Types types) {
-        super(messager, elementUtils, types);
+    public QueryValidator(Messager messager, Elements elements, Types types) {
+        super(messager, elements, types);
     }
 
     /**

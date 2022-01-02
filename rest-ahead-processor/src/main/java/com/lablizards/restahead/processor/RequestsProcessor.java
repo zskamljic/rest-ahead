@@ -1,14 +1,18 @@
 package com.lablizards.restahead.processor;
 
 import com.lablizards.restahead.generation.ServiceGenerator;
-import com.lablizards.restahead.processing.ServiceCollector;
+import com.lablizards.restahead.modeling.ServiceModeler;
 import com.lablizards.restahead.requests.VerbMapping;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,8 +20,9 @@ import java.util.stream.Collectors;
  * Processor entry point for HTTP annotations.
  */
 public class RequestsProcessor extends AbstractProcessor {
-    private ServiceCollector serviceCollector;
+    private ServiceModeler serviceModeler;
     private ServiceGenerator serviceGenerator;
+    private Messager messager;
 
     /**
      * Initialize the implementation, extracting required fields from {@link ProcessingEnvironment}.
@@ -27,12 +32,12 @@ public class RequestsProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        var messager = processingEnv.getMessager();
+        messager = processingEnv.getMessager();
         var filer = processingEnv.getFiler();
-        var elementUtils = processingEnv.getElementUtils();
+        var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
-        serviceCollector = new ServiceCollector(messager);
-        serviceGenerator = new ServiceGenerator(messager, filer, elementUtils, types);
+        serviceModeler = new ServiceModeler(messager, elements, types);
+        serviceGenerator = new ServiceGenerator(messager, filer);
     }
 
     /**
@@ -44,8 +49,15 @@ public class RequestsProcessor extends AbstractProcessor {
      */
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        var classesWithMethods = serviceCollector.collectServices(annotations, roundEnv);
-        classesWithMethods.forEach((key, value) -> serviceGenerator.generateService(key, value));
+        try {
+            var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv);
+            serviceDeclarations.forEach(serviceGenerator::generateService);
+        } catch (IndexOutOfBoundsException e) {
+            var stringWriter = new StringWriter();
+            var printWriter = new PrintWriter(stringWriter);
+            e.printStackTrace(printWriter);
+            messager.printMessage(Diagnostic.Kind.ERROR, "Error when generating: " + stringWriter.getBuffer().toString());
+        }
         return true;
     }
 

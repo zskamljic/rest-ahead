@@ -1,4 +1,9 @@
-package com.lablizards.restahead.processing;
+package com.lablizards.restahead.modeling;
+
+import com.lablizards.restahead.modeling.declaration.CallDeclaration;
+import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
+import com.lablizards.restahead.modeling.declaration.ServiceDeclaration;
+import com.lablizards.restahead.requests.VerbMapping;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -7,21 +12,29 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.NoType;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * Used to collect annotated methods together with their declaring class.
  */
-public class ServiceCollector {
+public class ServiceModeler {
     private final Messager messager;
+    private final Elements elements;
+    private final MethodModeler methodModeler;
 
-    public ServiceCollector(Messager messager) {
+    public ServiceModeler(Messager messager, Elements elements, Types types) {
         this.messager = messager;
+        this.elements = elements;
+        methodModeler = new MethodModeler(messager, elements, types);
     }
 
     /**
@@ -29,9 +42,9 @@ public class ServiceCollector {
      *
      * @param annotations the annotations for which the code should be attributed
      * @param roundEnv    the environment from which to extrac the data
-     * @return declared methods associated by their declaring class
+     * @return service declarations discovered
      */
-    public Map<TypeElement, List<ExecutableElement>> collectServices(
+    public List<ServiceDeclaration> collectServices(
         Set<? extends TypeElement> annotations,
         RoundEnvironment roundEnv
     ) {
@@ -40,7 +53,67 @@ public class ServiceCollector {
             var annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             findDeclaringElements(annotation, annotatedElements, declaringElements);
         }
-        return declaringElements;
+
+        if (hasInvalidDeclarations(declaringElements)) return List.of();
+
+        return declaringElements.entrySet()
+            .stream()
+            .flatMap(entry -> createServiceDeclaration(entry.getKey(), entry.getValue()).stream())
+            .toList();
+    }
+
+    /**
+     * Checks if there's any invalid declarations present in the list.
+     *
+     * @param declaringElements the classes
+     * @return if any errors are present or not
+     */
+    private boolean hasInvalidDeclarations(Map<TypeElement, List<ExecutableElement>> declaringElements) {
+        var hasInvalid = false;
+        for (var entry : declaringElements.entrySet()) {
+            var functions = entry.getKey()
+                .getEnclosedElements()
+                .stream()
+                .filter(ExecutableElement.class::isInstance)
+                .map(ExecutableElement.class::cast)
+                .toList();
+            for (var function : functions) {
+                var annotation = VerbMapping.ANNOTATION_VERBS.stream()
+                    .map(function::getAnnotation)
+                    .filter(Objects::nonNull)
+                    .toList();
+                if (annotation.isEmpty()) {
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Function has no HTTP verb annotation", function);
+                    hasInvalid = true;
+                }
+                if (annotation.size() != 1) {
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Exactly one HTTP verb annotation should be present", function);
+                }
+            }
+        }
+        return hasInvalid;
+    }
+
+    private Optional<ServiceDeclaration> createServiceDeclaration(TypeElement typeElement, List<ExecutableElement> functions) {
+        var calls = functions.stream()
+            .map(methodModeler::getCallDeclaration)
+            .flatMap(Optional::stream)
+            .toList();
+
+        // There were errors in creation of the service declaration
+        if (calls.size() != functions.size()) return Optional.empty();
+
+        var servicePackage = elements.getPackageOf(typeElement);
+        var packageName = servicePackage.isUnnamed() ? "" : servicePackage.getQualifiedName().toString();
+        return Optional.of(new ServiceDeclaration(
+            packageName,
+            typeElement,
+            calls,
+            calls.stream()
+                .map(CallDeclaration::returnDeclaration)
+                .map(ReturnDeclaration::targetConversion)
+                .anyMatch(Optional::isPresent)
+        ));
     }
 
     /**
@@ -79,6 +152,7 @@ public class ServiceCollector {
 
             if (!(declaringType.getSuperclass() instanceof NoType)) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "Only interfaces support code generation at this time", element);
+                continue;
             }
 
             declaringElements.compute(declaringType, (typeElement, executableElements) -> {
