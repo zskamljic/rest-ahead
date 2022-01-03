@@ -3,7 +3,6 @@ package com.lablizards.restahead.client;
 import com.lablizards.restahead.client.requests.Request;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 /**
  * Instances of RestClient should handle {@link Request} instances and return raw responses.

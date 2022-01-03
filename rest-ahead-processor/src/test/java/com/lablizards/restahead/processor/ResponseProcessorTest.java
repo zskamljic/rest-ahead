@@ -25,4 +25,12 @@ class ResponseProcessorTest extends CommonProcessorTest {
             .and()
             .generatesSources(JavaFileObjects.forResource("response/ServiceWithGenericResponse$Impl.java"));
     }
+
+    @Test
+    void futureGenericResponseCompiles() {
+        commonCompilationAssertion("response/FutureGenericResponse.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("response/FutureGenericResponse$Impl.java"));
+    }
 }
