@@ -10,6 +10,7 @@ approach, which also means easier debugging and easier integration with tools li
 
 ## Features
 
+- [Adapters](#adapters)
 - [Headers](#headers)
 - [Responses](#response-types)
 - [Query](#queries)
@@ -21,7 +22,7 @@ Much like other clients, the service is declared as following:
 ```java
 public interface HttpBinService {
     @Get("/get")
-    Response performGet();
+    Future<Response> performGet();
 }
 ```
 
@@ -45,10 +46,11 @@ project.
 
 ### Response types
 
-Out of the box, two types are supported:
+Out of the box the following types are supported:
 
 - void
 - Response
+- Future&lt;Response&gt;
 
 Other types require you to specify an instance of Converter (rest-ahead-jackson-converter contains an implementation for
 Jackson library). This will allow you to use virtually any type that the converter can construct.
@@ -110,15 +112,63 @@ interface Service {
 }
 ```
 
+### Adapters
+
+The default type for all services is `Future<Response>`. While the value can be mapped to `Future<YourObject>` using a
+converter directly, sometimes interop with other libraries is required, or maybe you need a blocking call and don't want
+to type `.get()` all the time, as well as catch the exceptions. For these cases a default adapter is included, to allow
+for blocking calls as evident here:
+
+```java
+import java.util.concurrent.CompletableFuture;
+
+interface SampleBlocking {
+    @Get
+    Future<Response> getFuture();
+
+    @Get
+    CompletableFuture<Response> getCompletableFuture();
+
+    @Get
+    Response getBlocking();
+}
+```
+
+All three examples above will perform the same request, but `Future` and `CompletableFuture` will attempt to do this in
+non-blocking manner (this depends on the client, default JavaHttpClient supports this), but the last, `Response` will
+execute a blocking call.
+
+If you wish to declare your own adapters simply create a class with a method annotated with `@Adapter`:
+
+```java
+public class CustomAdapter {
+    @Adapter
+    public <T> Supplier<T> adapt(Future<T> future) {
+        return () -> {
+            try {
+                return future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RestException(e);
+            }
+        };
+    }
+}
+```
+
+Adapter will also need to be added to RestAhead builder, via the `addAdapter(Object object)` method. Exceptions can be
+thrown by declared adapters and can be propagated via the service (see [Call exceptions](#call-exceptions)).
+
 ### Call exceptions
 
 By default, no exceptions need to be declared to execute calls, but beware! An unchecked exception (RestException) will
 be thrown in case there was an exception thrown during execution. You can also add `throws` declaration for either or
-both exceptions that are likely to occur: `IOException`, `InterruptedException`, to make sure they are handled. If
-either of these is not specified in the signature, `RestException` will still be thrown, wrapping the other one, for
+both exceptions that are likely to occur: `ExecutionException`, `InterruptedException`, to make sure they are handled.
+If either of these is not specified in the signature, `RestException` will still be thrown, wrapping the other one, for
 example:
 
 ```java
+import java.util.concurrent.ExecutionException;
+
 public interface HttpBinService {
     // Will throw a RestException if any errors occur
     @Get("/get")
@@ -126,11 +176,11 @@ public interface HttpBinService {
 
     // Allows you to handle IOException, RestException wrapping InterruptedException may still occur
     @Get("/get")
-    Response performGet2() throws IOException;
+    Response performGet2() throws ExecutionException;
 
     // Allows you to handle both exception, no RestException will be thrown
     @Get("/get")
-    Response performGet3() throws IOException, InterruptedException;
+    Response performGet3() throws ExecutionException, InterruptedException;
 }
 ```
 
