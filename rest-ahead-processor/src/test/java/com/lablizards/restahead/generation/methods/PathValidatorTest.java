@@ -45,8 +45,7 @@ class PathValidatorTest {
         var result = pathValidator.validatePathAndExtractQuery(
             function,
             new RequestLine(Request.class, path),
-            new ParameterDeclaration(List.of(), List.of(), List.of()),
-            new ReturnDeclaration(Optional.empty())
+            new ParameterDeclaration(List.of(), List.of(), List.of())
         );
 
         assertEquals(invalid, result.isEmpty());

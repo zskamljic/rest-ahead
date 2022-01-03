@@ -1,6 +1,7 @@
 package com.lablizards.restahead.processor;
 
 import com.lablizards.restahead.generation.ServiceGenerator;
+import com.lablizards.restahead.modeling.AdapterModeler;
 import com.lablizards.restahead.modeling.ServiceModeler;
 import com.lablizards.restahead.requests.VerbMapping;
 
@@ -10,9 +11,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,7 +20,7 @@ import java.util.stream.Collectors;
 public class RequestsProcessor extends AbstractProcessor {
     private ServiceModeler serviceModeler;
     private ServiceGenerator serviceGenerator;
-    private Messager messager;
+    private AdapterModeler adapterModeler;
 
     /**
      * Initialize the implementation, extracting required fields from {@link ProcessingEnvironment}.
@@ -32,11 +30,12 @@ public class RequestsProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        messager = processingEnv.getMessager();
+        var messager = processingEnv.getMessager();
         var filer = processingEnv.getFiler();
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
         serviceModeler = new ServiceModeler(messager, elements, types);
+        adapterModeler = new AdapterModeler(messager, elements, types);
         serviceGenerator = new ServiceGenerator(messager, filer);
     }
 
@@ -49,15 +48,10 @@ public class RequestsProcessor extends AbstractProcessor {
      */
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        try {
-            var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv);
-            serviceDeclarations.forEach(serviceGenerator::generateService);
-        } catch (IndexOutOfBoundsException e) {
-            var stringWriter = new StringWriter();
-            var printWriter = new PrintWriter(stringWriter);
-            e.printStackTrace(printWriter);
-            messager.printMessage(Diagnostic.Kind.ERROR, "Error when generating: " + stringWriter.getBuffer().toString());
-        }
+        var adapters = adapterModeler.findAdapters(roundEnv);
+
+        var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv, adapters);
+        serviceDeclarations.forEach(serviceGenerator::generateService);
         return true;
     }
 

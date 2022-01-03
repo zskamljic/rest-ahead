@@ -1,11 +1,13 @@
 package com.lablizards.restahead;
 
+import com.lablizards.restahead.adapter.DefaultAdapters;
 import com.lablizards.restahead.client.JavaHttpClient;
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.conversion.Converter;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -28,11 +30,13 @@ public final class RestAhead {
 
     public static class Builder {
         private final String baseUrl;
+        private final Map<Class<?>, Object> adapters = new HashMap<>();
         private RestClient client;
         private Converter converter;
 
         private Builder(String baseUrl) {
             this.baseUrl = baseUrl;
+            adapters.put(DefaultAdapters.class, new DefaultAdapters());
         }
 
         /**
@@ -58,6 +62,17 @@ public final class RestAhead {
         }
 
         /**
+         * Add the adapter to use with services.
+         *
+         * @param adapter the adapter to register
+         * @return the updated builder
+         */
+        public Builder addAdapter(Object adapter) {
+            this.adapters.put(adapter.getClass(), adapter);
+            return this;
+        }
+
+        /**
          * Builds a new instance of specified service.
          *
          * @param service the service to instantiate
@@ -68,55 +83,43 @@ public final class RestAhead {
             try {
                 var implementation = Class.forName(service.getName() + "$Impl")
                     .asSubclass(service);
-                if (client == null) {
-                    client = new JavaHttpClient(baseUrl);
-                }
 
-                var clientOnlyConstructor = getClientOnlyConstructor(implementation);
-                if (clientOnlyConstructor.isPresent()) {
-                    return clientOnlyConstructor.get().newInstance(client);
-                }
-                var converterConstructor = getConverterConstructor(implementation);
-                if (converterConstructor.isPresent()) {
-                    if (converter == null) {
-                        throw new IllegalStateException("Converter required to instantiate " + service + ", but none was provided");
+                var parameters = getRequiredParameters(implementation);
+
+                var allParameters = new HashMap<>(adapters);
+                allParameters.put(Converter.class, converter);
+                allParameters.put(RestClient.class, Optional.ofNullable(client).orElseGet(() -> new JavaHttpClient(baseUrl)));
+
+                var parameterValues = new Object[parameters.length];
+                for (int i = 0; i < parameterValues.length; i++) {
+                    var value = allParameters.get(parameters[i]);
+                    if (value == null) {
+                        throw new IllegalStateException("No value provided for required parameter " + parameters[i]);
                     }
-                    return converterConstructor.get().newInstance(client, converter);
+                    parameterValues[i] = value;
                 }
-                throw new RuntimeException("Unable to construct instance of " + service + ", no valid constructors were present");
-            } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                return implementation.getDeclaredConstructor(parameters)
+                    .newInstance(parameterValues);
+            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         }
 
         /**
-         * Get constructor with client parameter, swallow the exception, as we only care if it exists or not.
+         * Get the required parameters for the given class constructor.
          *
-         * @param implementation the class from which to get the constructor
-         * @param <T>            the constructed type
-         * @return empty if constructor does not exist or constructor otherwise
+         * @param implementation the class for which the parameters should be found
+         * @param <T>            the type of class
+         * @return the constructor parameters
+         * @throws IllegalArgumentException if there's more than one constructor
          */
-        private <T> Optional<Constructor<? extends T>> getClientOnlyConstructor(Class<? extends T> implementation) {
-            try {
-                return Optional.of(implementation.getDeclaredConstructor(RestClient.class));
-            } catch (NoSuchMethodException e) {
-                return Optional.empty();
+        private <T> Class<?>[] getRequiredParameters(Class<? extends T> implementation) {
+            var constructors = implementation.getDeclaredConstructors();
+            if (constructors.length != 1) {
+                throw new IllegalArgumentException("Illegal class. Only one constructor should be present");
             }
-        }
-
-        /**
-         * Get constructor with client, swallowing exceptions if it does not exist
-         *
-         * @param implementation the class from which to fetch the constructor
-         * @param <T>            the constructed type
-         * @return empty if constructor doesn't exist, the constructor otherwise
-         */
-        private <T> Optional<Constructor<? extends T>> getConverterConstructor(Class<? extends T> implementation) {
-            try {
-                return Optional.of(implementation.getDeclaredConstructor(RestClient.class, Converter.class));
-            } catch (NoSuchMethodException e) {
-                return Optional.empty();
-            }
+            var constructor = constructors[0];
+            return constructor.getParameterTypes();
         }
     }
 }

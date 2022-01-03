@@ -1,5 +1,6 @@
 package com.lablizards.restahead.demo;
 
+import com.lablizards.restahead.adapter.DefaultAdapters;
 import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.client.requests.DeleteRequest;
@@ -14,20 +15,21 @@ import javax.annotation.processing.Generated;
 public final class InterfaceWithThrows$Impl implements InterfaceWithThrows {
     private final RestClient client;
 
-    public InterfaceWithThrows$Impl(RestClient client) {
+    private final DefaultAdapters defaultAdapters;
+
+    public InterfaceWithThrows$Impl(RestClient client, DefaultAdapters defaultAdapters) {
         this.client = client;
+        this.defaultAdapters = defaultAdapters;
     }
 
     @Override
     public final Response delete() throws IOException {
         var httpRequest = new DeleteRequest("/delete");
+        var response = client.execute(httpRequest);
         try {
-            var response = client.execute(httpRequest).get();
-            return response;
-        } catch (ExecutionException exception) {
-            throw new RestException(exception.getCause());
-        } catch (InterruptedException exception) {
-            throw new RestException(exception);
+            return defaultAdapters.syncAdapter(response);
+        } catch (ExecutionException | InterruptedException exception) {
+            throw RestException.getAppropriateException(exception);
         }
     }
 }

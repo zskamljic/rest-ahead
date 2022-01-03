@@ -28,7 +28,7 @@ class RestAheadTest {
     }
 
     @Test
-    void buildThrowsForMissingClient() {
+    void buildThrowsForMissingConverter() {
         assertThrows(IllegalStateException.class, () -> {
             RestAhead.builder("https://httpbin.org")
                 .build(ConverterGet.class);

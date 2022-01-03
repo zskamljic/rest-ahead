@@ -54,7 +54,8 @@ public class MethodGenerator {
                 .endControlFlow();
         } else {
             builder.addStatement("var response = client.execute(httpRequest)");
-            responseGenerator.generateReturnStatement(call.returnDeclaration(), builder);
+            var declaredExceptions = call.exceptions();
+            responseGenerator.generateReturnStatement(call.returnDeclaration(), declaredExceptions, builder);
         }
         return builder.returns(TypeName.get(returnType))
             .build();

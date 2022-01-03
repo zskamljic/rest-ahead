@@ -9,21 +9,19 @@ import com.lablizards.restahead.annotations.verbs.Post;
 import com.lablizards.restahead.annotations.verbs.Put;
 import com.lablizards.restahead.demo.models.HttpBinResponse;
 
-import java.util.concurrent.Future;
-
 public interface HttpBinMethodsService {
     @Delete("/delete")
-    Future<HttpBinResponse> delete(@Query("q") String query, @Header("Test-Header") String headers);
+    HttpBinResponse delete(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Get("/get")
-    Future<HttpBinResponse> get(@Query("q") String query, @Header("Test-Header") String headers);
+    HttpBinResponse get(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Patch("/patch")
-    Future<HttpBinResponse> patch(@Query("q") String query, @Header("Test-Header") String headers);
+    HttpBinResponse patch(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Post("/post")
-    Future<HttpBinResponse> post(@Query("q") String query, @Header("Test-Header") String headers);
+    HttpBinResponse post(@Query("q") String query, @Header("Test-Header") String headers);
 
     @Put("/put")
-    Future<HttpBinResponse> put(@Query("q") String query, @Header("Test-Header") String headers);
+    HttpBinResponse put(@Query("q") String query, @Header("Test-Header") String headers);
 }

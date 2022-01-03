@@ -1,8 +1,6 @@
 package com.lablizards.restahead.modeling.validation;
 
-import com.lablizards.restahead.modeling.declaration.CallDeclaration;
 import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
-import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
 import com.lablizards.restahead.requests.request.PresetQuery;
 import com.lablizards.restahead.requests.request.RequestLine;
 
@@ -35,17 +33,15 @@ public class PathValidator {
      * @param function    the function for which path is validated
      * @param requestLine the request line being validated
      * @param parameters  the parameters in the given request
-     * @param returnType
      * @return empty optional in case of errors or requestSpec if no errors are discovered
      */
-    public Optional<CallDeclaration> validatePathAndExtractQuery(
+    public Optional<RequestLine> validatePathAndExtractQuery(
         ExecutableElement function,
         RequestLine requestLine,
-        ParameterDeclaration parameters,
-        ReturnDeclaration returnType
+        ParameterDeclaration parameters
     ) {
         if (requestLine.path() == null || requestLine.path().isEmpty()) {
-            return Optional.of(new CallDeclaration(function, requestLine, parameters, returnType));
+            return Optional.of(requestLine);
         }
 
         try {
@@ -67,6 +63,6 @@ public class PathValidator {
             messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage(), function);
             return Optional.empty();
         }
-        return Optional.of(new CallDeclaration(function, requestLine, parameters, returnType));
+        return Optional.of(requestLine);
     }
 }

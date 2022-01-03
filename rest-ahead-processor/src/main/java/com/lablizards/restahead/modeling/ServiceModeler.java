@@ -1,5 +1,6 @@
 package com.lablizards.restahead.modeling;
 
+import com.lablizards.restahead.modeling.declaration.AdapterClassDeclaration;
 import com.lablizards.restahead.modeling.declaration.CallDeclaration;
 import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
 import com.lablizards.restahead.modeling.declaration.ServiceDeclaration;
@@ -42,11 +43,13 @@ public class ServiceModeler {
      *
      * @param annotations the annotations for which the code should be attributed
      * @param roundEnv    the environment from which to extrac the data
+     * @param adapters    the adapters that can be discovered
      * @return service declarations discovered
      */
     public List<ServiceDeclaration> collectServices(
         Set<? extends TypeElement> annotations,
-        RoundEnvironment roundEnv
+        RoundEnvironment roundEnv,
+        List<AdapterClassDeclaration> adapters
     ) {
         var declaringElements = new HashMap<TypeElement, List<ExecutableElement>>();
         for (var annotation : annotations) {
@@ -58,7 +61,7 @@ public class ServiceModeler {
 
         return declaringElements.entrySet()
             .stream()
-            .flatMap(entry -> createServiceDeclaration(entry.getKey(), entry.getValue()).stream())
+            .flatMap(entry -> createServiceDeclaration(entry.getKey(), entry.getValue(), adapters).stream())
             .toList();
     }
 
@@ -94,9 +97,21 @@ public class ServiceModeler {
         return hasInvalid;
     }
 
-    private Optional<ServiceDeclaration> createServiceDeclaration(TypeElement typeElement, List<ExecutableElement> functions) {
+    /**
+     * Creates a service declaration based on type, functions and required adapters
+     *
+     * @param typeElement the supertype of the service
+     * @param functions   the functions present in the interface
+     * @param adapters    all available adapters
+     * @return service declaration if no errors were found, empty otherwise
+     */
+    private Optional<ServiceDeclaration> createServiceDeclaration(
+        TypeElement typeElement,
+        List<ExecutableElement> functions,
+        List<AdapterClassDeclaration> adapters
+    ) {
         var calls = functions.stream()
-            .map(methodModeler::getCallDeclaration)
+            .map(function -> methodModeler.getCallDeclaration(function, adapters))
             .flatMap(Optional::stream)
             .toList();
 

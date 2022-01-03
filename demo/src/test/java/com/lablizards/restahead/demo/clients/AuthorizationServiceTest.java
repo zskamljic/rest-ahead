@@ -3,6 +3,7 @@ package com.lablizards.restahead.demo.clients;
 import com.lablizards.restahead.JacksonConverter;
 import com.lablizards.restahead.RestAhead;
 import com.lablizards.restahead.exceptions.RequestFailedException;
+import com.lablizards.restahead.exceptions.RestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -26,36 +28,29 @@ class AuthorizationServiceTest {
     }
 
     @Test
-    void basicAuthHandles401() throws ExecutionException, InterruptedException {
+    void basicAuthHandles401() {
         var response = service.getBasicAuth("");
 
-        assertEquals(401, response.get().status());
+        assertEquals(401, response.status());
     }
 
     @Test
-    void basicAuthSucceeds() throws ExecutionException, InterruptedException {
+    void basicAuthSucceeds() {
         var response = service.getBasicAuth("Basic dXNlcjpwYXNzd29yZA==");
 
-        assertEquals(200, response.get().status());
+        assertEquals(200, response.status());
     }
 
     @Test
-    void bearerAuthSucceeds() throws ExecutionException, InterruptedException {
+    void bearerAuthSucceeds() {
         var response = service.getBearer("Bearer " + TOKEN);
 
-        assertTrue(response.get().authenticated());
-        assertEquals(TOKEN, response.get().token());
+        assertTrue(response.authenticated());
+        assertEquals(TOKEN, response.token());
     }
 
     @Test
     void bearerThrowsForNonSuccess() {
-        try {
-            service.getBearer("").get();
-        } catch (ExecutionException e) {
-            assertInstanceOf(RequestFailedException.class, e.getCause());
-        } catch (InterruptedException e) {
-            fail();
-        }
-        // assertThrows(ExecutionException.class, () -> service.getBearer("").get());
+        assertThrows(RequestFailedException.class, () -> service.getBearer(""));
     }
 }

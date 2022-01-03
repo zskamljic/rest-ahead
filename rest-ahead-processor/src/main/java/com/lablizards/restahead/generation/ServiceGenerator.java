@@ -2,18 +2,19 @@ package com.lablizards.restahead.generation;
 
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.conversion.Converter;
+import com.lablizards.restahead.modeling.declaration.AdapterClassDeclaration;
 import com.lablizards.restahead.modeling.declaration.ServiceDeclaration;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.List;
@@ -49,9 +50,7 @@ public class ServiceGenerator {
         var generatedAnnotation = createGeneratedAnnotation();
 
         var type = generateTypeSpecification(
-            serviceDeclaration.generatedName(),
-            serviceDeclaration.serviceType(),
-            serviceDeclaration.requiresConverter(),
+            serviceDeclaration,
             generatedAnnotation,
             methods
         );
@@ -72,31 +71,35 @@ public class ServiceGenerator {
     /**
      * Generate the type specification.
      *
-     * @param typeName            the name for generated service
-     * @param serviceDeclaration  the interface containing annotated methods
-     * @param requiresConverter   whether the generated service needs a converter
+     * @param serviceDeclaration  the declaration of service to implement
      * @param generatedAnnotation the generated annotation to add to implementation
      * @param methods             the methods to attach to generated class
      * @return the generated class
      */
     private TypeSpec generateTypeSpecification(
-        String typeName,
-        TypeElement serviceDeclaration,
-        boolean requiresConverter,
+        ServiceDeclaration serviceDeclaration,
         AnnotationSpec generatedAnnotation,
         List<MethodSpec> methods
     ) {
-        var builder = TypeSpec.classBuilder(typeName)
-            .addSuperinterface(serviceDeclaration.asType())
+        var builder = TypeSpec.classBuilder(serviceDeclaration.generatedName())
+            .addSuperinterface(serviceDeclaration.serviceType().asType())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(generatedAnnotation)
             .addMethods(methods)
             .addField(createClientField())
-            .addMethod(createConstructor(requiresConverter));
-        if (requiresConverter) {
-            messager.printMessage(Diagnostic.Kind.NOTE, serviceDeclaration + " requires a converter, adding field.");
+            .addMethod(createConstructor(serviceDeclaration.requiresConverter(), serviceDeclaration.requiredAdapters()));
+        if (serviceDeclaration.requiresConverter()) {
             builder.addField(createConverterField());
         }
+        serviceDeclaration.requiredAdapters()
+            .forEach(adapter -> {
+                var field = FieldSpec.builder(
+                    TypeName.get(adapter.adapterType().asType()),
+                    adapter.variableName(),
+                    Modifier.PRIVATE, Modifier.FINAL
+                ).build();
+                builder.addField(field);
+            });
 
         return builder.build();
     }
@@ -122,6 +125,11 @@ public class ServiceGenerator {
             .build();
     }
 
+    /**
+     * Creates the converter field.
+     *
+     * @return field specification for a converter
+     */
     private FieldSpec createConverterField() {
         return FieldSpec.builder(Converter.class, "converter", Modifier.PRIVATE, Modifier.FINAL)
             .build();
@@ -130,9 +138,14 @@ public class ServiceGenerator {
     /**
      * Creates the constructor for the service.
      *
+     * @param hasCustomTypes whether the converter needs to be added
+     * @param adapters       the list of adapters that needs to be added
      * @return the constructor specification.
      */
-    private MethodSpec createConstructor(boolean hasCustomTypes) {
+    private MethodSpec createConstructor(
+        boolean hasCustomTypes,
+        List<AdapterClassDeclaration> adapters
+    ) {
         var builder = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PUBLIC)
             .addParameter(RestClient.class, "client")
@@ -142,6 +155,8 @@ public class ServiceGenerator {
             builder.addParameter(Converter.class, "converter")
                 .addStatement("this.converter = converter");
         }
+        adapters.forEach(adapter -> builder.addParameter(TypeName.get(adapter.adapterType().asType()), adapter.variableName())
+            .addStatement("this.$L = $L", adapter.variableName(), adapter.variableName()));
 
         return builder.build();
     }

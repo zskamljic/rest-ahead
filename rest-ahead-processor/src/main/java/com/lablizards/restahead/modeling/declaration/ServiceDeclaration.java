@@ -2,6 +2,7 @@ package com.lablizards.restahead.modeling.declaration;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The service representation based on the interface
@@ -26,5 +27,20 @@ public record ServiceDeclaration(
      */
     public String generatedName() {
         return serviceType.getSimpleName().toString() + GENERATED_SUFFIX;
+    }
+
+    /**
+     * Collects all the required adapters for this service.
+     *
+     * @return a list of required adapters
+     */
+    public List<AdapterClassDeclaration> requiredAdapters() {
+        return calls.stream()
+            .map(CallDeclaration::returnDeclaration)
+            .map(ReturnDeclaration::adapterCall)
+            .flatMap(Optional::stream)
+            .map(ReturnAdapterCall::adapterClass)
+            .distinct()
+            .toList();
     }
 }

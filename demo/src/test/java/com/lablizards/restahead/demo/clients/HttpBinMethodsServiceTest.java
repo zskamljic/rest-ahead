@@ -29,33 +29,33 @@ class HttpBinMethodsServiceTest {
     }
 
     @Test
-    void deleteRequestSucceeds() throws ExecutionException, InterruptedException {
+    void deleteRequestSucceeds() {
         var response = service.delete(QUERY, HEADER);
-        performAssertions(response.get(), true);
+        performAssertions(response, true);
     }
 
     @Test
-    void getRequestSucceeds() throws ExecutionException, InterruptedException {
+    void getRequestSucceeds() {
         var response = service.get(QUERY, HEADER);
-        performAssertions(response.get(), false);
+        performAssertions(response, false);
     }
 
     @Test
-    void patchRequestSucceeds() throws ExecutionException, InterruptedException {
+    void patchRequestSucceeds() {
         var response = service.patch(QUERY, HEADER);
-        performAssertions(response.get(), true);
+        performAssertions(response, true);
     }
 
     @Test
-    void postRequestSucceeds() throws ExecutionException, InterruptedException {
+    void postRequestSucceeds() {
         var response = service.post(QUERY, HEADER);
-        performAssertions(response.get(), true);
+        performAssertions(response, true);
     }
 
     @Test
-    void putRequestSucceeds() throws ExecutionException, InterruptedException {
+    void putRequestSucceeds() {
         var response = service.put(QUERY, HEADER);
-        performAssertions(response.get(), true);
+        performAssertions(response, true);
     }
 
     void performAssertions(HttpBinResponse response, boolean hasBody) {

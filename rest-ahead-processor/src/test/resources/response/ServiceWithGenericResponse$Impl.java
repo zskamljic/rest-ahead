@@ -1,5 +1,6 @@
 package com.lablizards.restahead.demo;
 
+import com.lablizards.restahead.adapter.DefaultAdapters;
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.client.requests.DeleteRequest;
 import com.lablizards.restahead.conversion.Converter;
@@ -12,6 +13,8 @@ import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.processing.Generated;
 
@@ -21,25 +24,34 @@ public final class ServiceWithGenericResponse$Impl implements ServiceWithGeneric
 
     private final Converter converter;
 
-    public ServiceWithGenericResponse$Impl(RestClient client, Converter converter) {
+    private final DefaultAdapters defaultAdapters;
+
+    public ServiceWithGenericResponse$Impl(RestClient client, Converter converter,
+                                           DefaultAdapters defaultAdapters) {
         this.client = client;
         this.converter = converter;
+        this.defaultAdapters = defaultAdapters;
     }
 
     @Override
     public final Map<String, Object> delete() {
         var httpRequest = new DeleteRequest("/delete");
-        try {
-            var response = client.execute(httpRequest).get();
-            if (response.status() < 200 || response.status() >= 300) {
-                throw new RequestFailedException(response.status(), response.body());
+        var response = client.execute(httpRequest);
+        CompletableFuture<Map<String, Object>> convertedResponse = response.thenApply(r -> {
+            if (r.status() < 200 || r.status() >= 300) {
+                throw new RequestFailedException(r.status(), r.body());
             }
-            var responseTypeReference = new GenericReference<Map<String, Object>>(){};
-            return converter.deserialize(response, responseTypeReference.getType());
-        } catch (ExecutionException exception) {
-            throw new RestException(exception.getCause());
-        } catch (InterruptedException | IOException exception) {
-            throw new RestException(exception);
+            try {
+                var conversionTypeHolder = new GenericReference<Map<String, Object>>(){};
+                return converter.deserialize(r, conversionTypeHolder.getType());
+            } catch (IOException exception) {
+                throw new CompletionException(exception);
+            }
+        } );
+        try {
+            return defaultAdapters.syncAdapter(convertedResponse);
+        } catch (ExecutionException | InterruptedException exception) {
+            throw RestException.getAppropriateException(exception);
         }
     }
 }
