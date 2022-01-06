@@ -11,6 +11,7 @@ approach, which also means easier debugging and easier integration with tools li
 ## Features
 
 - [Adapters](#adapters)
+- [Body](#body)
 - [Headers](#headers)
 - [Responses](#response-types)
 - [Query](#queries)
@@ -39,6 +40,9 @@ Calls can then be performed simply by calling the instance of the interface:
 var response = service.performGet();
 ```
 
+Samples of services can be found in `demo` project [here](demo/src/main/java/com/lablizards/restahead/demo/clients),
+examples of obtaining their instances are in [this directory](demo/src/test/java/com/lablizards/restahead/demo/clients).
+
 ## Options
 
 There are multiple options you have when generating requests, all of which will be done automatically when building your
@@ -51,6 +55,7 @@ Out of the box the following types are supported:
 - void
 - Response
 - Future&lt;Response&gt;
+- CompletableFuture&lt;Response&gt;
 
 Other types require you to specify an instance of Converter (rest-ahead-jackson-converter contains an implementation for
 Jackson library). This will allow you to use virtually any type that the converter can construct.
@@ -70,6 +75,18 @@ interface Service {
 
     @Get
     CustomResponseType performGetWithSpecificTarget();
+}
+```
+
+### Body
+
+You can specify a request body by annotating it with `@Body`. Doing so will make the service require a converter to
+serialize the body.
+
+```java
+public interface HttpBinService {
+    @Post("/post")
+    Future<Response> performPost(@Body CustomRequest request);
 }
 ```
 
