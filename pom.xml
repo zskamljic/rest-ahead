@@ -28,6 +28,7 @@
         <mockito.version>4.2.0</mockito.version>
         <compiler.plugin.version>3.8.1</compiler.plugin.version>
         <surefire.version>2.22.2</surefire.version>
+        <jacoco.version>0.8.7</jacoco.version>
 
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -38,9 +39,13 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.7</version>
+                <version>${jacoco.version}</version>
                 <executions>
                     <execution>
                         <id>jacoco-initialize</id>

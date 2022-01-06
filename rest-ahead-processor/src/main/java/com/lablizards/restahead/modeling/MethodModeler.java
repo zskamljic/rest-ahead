@@ -55,7 +55,7 @@ public class MethodModeler {
         var annotation = presentAnnotations.get(0);
         var requestLine = VerbMapping.annotationToVerb(annotation);
 
-        var parameters = parameterModeler.getMethodParameters(function);
+        var parameters = parameterModeler.getMethodParameters(function, requestLine.allowsBody());
         var updatedLine = pathValidator.validatePathAndExtractQuery(function, requestLine, parameters);
         if (updatedLine.isEmpty()) {
             return Optional.empty();

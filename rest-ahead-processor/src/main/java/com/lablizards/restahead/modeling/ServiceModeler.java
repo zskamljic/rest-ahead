@@ -2,7 +2,6 @@ package com.lablizards.restahead.modeling;
 
 import com.lablizards.restahead.modeling.declaration.AdapterClassDeclaration;
 import com.lablizards.restahead.modeling.declaration.CallDeclaration;
-import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
 import com.lablizards.restahead.modeling.declaration.ServiceDeclaration;
 import com.lablizards.restahead.requests.VerbMapping;
 
@@ -125,9 +124,7 @@ public class ServiceModeler {
             typeElement,
             calls,
             calls.stream()
-                .map(CallDeclaration::returnDeclaration)
-                .map(ReturnDeclaration::targetConversion)
-                .anyMatch(Optional::isPresent)
+                .anyMatch(CallDeclaration::requiresConverter)
         ));
     }
 

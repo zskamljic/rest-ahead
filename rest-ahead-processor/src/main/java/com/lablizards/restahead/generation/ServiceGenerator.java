@@ -23,6 +23,8 @@ import java.util.List;
  * Used to generate implementation for services.
  */
 public class ServiceGenerator {
+    private static final String FIELD_ASSIGNMENT = "this.$L = $L";
+
     private final Messager messager;
     private final Filer filer;
     private final MethodGenerator methodGenerator;
@@ -121,7 +123,7 @@ public class ServiceGenerator {
      * @return field specification for client
      */
     private FieldSpec createClientField() {
-        return FieldSpec.builder(RestClient.class, "client", Modifier.PRIVATE, Modifier.FINAL)
+        return FieldSpec.builder(RestClient.class, Variables.CLIENT, Modifier.PRIVATE, Modifier.FINAL)
             .build();
     }
 
@@ -131,7 +133,7 @@ public class ServiceGenerator {
      * @return field specification for a converter
      */
     private FieldSpec createConverterField() {
-        return FieldSpec.builder(Converter.class, "converter", Modifier.PRIVATE, Modifier.FINAL)
+        return FieldSpec.builder(Converter.class, Variables.CONVERTER, Modifier.PRIVATE, Modifier.FINAL)
             .build();
     }
 
@@ -148,15 +150,15 @@ public class ServiceGenerator {
     ) {
         var builder = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PUBLIC)
-            .addParameter(RestClient.class, "client")
-            .addStatement("this.client = client");
+            .addParameter(RestClient.class, Variables.CLIENT)
+            .addStatement(FIELD_ASSIGNMENT, Variables.CLIENT, Variables.CLIENT);
 
         if (hasCustomTypes) {
-            builder.addParameter(Converter.class, "converter")
-                .addStatement("this.converter = converter");
+            builder.addParameter(Converter.class, Variables.CONVERTER)
+                .addStatement(FIELD_ASSIGNMENT, Variables.CONVERTER, Variables.CONVERTER);
         }
         adapters.forEach(adapter -> builder.addParameter(TypeName.get(adapter.adapterType().asType()), adapter.variableName())
-            .addStatement("this.$L = $L", adapter.variableName(), adapter.variableName()));
+            .addStatement(FIELD_ASSIGNMENT, adapter.variableName(), adapter.variableName()));
 
         return builder.build();
     }

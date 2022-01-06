@@ -8,7 +8,7 @@ public record HttpBinResponse(
     Map<String, Object> files,
     Map<String, Object> form,
     Map<String, String> headers,
-    Map<String, Map<String, Object>> json,
+    Map<String, Object> json,
     String origin,
     String url
 ) {

@@ -58,9 +58,7 @@ public class ReturnTypeModeler {
     ) {
         var returnType = function.getReturnType();
 
-        if (returnType.getKind() == TypeKind.VOID) {
-            return Optional.of(new ReturnDeclaration(Optional.of(returnType), Optional.empty()));
-        } else if (types.isSameType(returnType, defaultResponseType)) {
+        if (types.isSameType(returnType, defaultResponseType)) {
             return Optional.of(new ReturnDeclaration(Optional.empty(), Optional.empty()));
         } else if (types.isSubtype(types.erasure(returnType), futureType)) {
             var convertedType = ((DeclaredType) returnType).getTypeArguments().get(0);
@@ -74,7 +72,7 @@ public class ReturnTypeModeler {
 
             var adaptedConvertType = findAdaptedConvertType(returnType, selectedAdapter.get());
             ReturnDeclaration returnDeclaration;
-            if (types.isSameType(adaptedConvertType, responseType)) {
+            if (types.isSameType(adaptedConvertType, responseType) || adaptedConvertType.getKind() == TypeKind.VOID) {
                 returnDeclaration = new ReturnDeclaration(Optional.empty(), selectedAdapter);
             } else {
                 returnDeclaration = new ReturnDeclaration(Optional.of(adaptedConvertType), selectedAdapter);

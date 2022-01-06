@@ -3,17 +3,12 @@ package com.lablizards.restahead.demo.clients;
 import com.lablizards.restahead.JacksonConverter;
 import com.lablizards.restahead.RestAhead;
 import com.lablizards.restahead.exceptions.RequestFailedException;
-import com.lablizards.restahead.exceptions.RestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.ExecutionException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class AuthorizationServiceTest {
     private static final String TOKEN = "token";

@@ -3,6 +3,7 @@ package com.lablizards.restahead.conversion;
 import com.lablizards.restahead.client.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 
 /**
@@ -18,4 +19,13 @@ public interface Converter {
      * @return the deserialized value
      */
     <T> T deserialize(Response response, Type type) throws IOException;
+
+    /**
+     * Serialize the object to input stream.
+     *
+     * @param object the object to serialize
+     * @return the {@link InputStream} containing the serialized object
+     * @throws IOException if an exception occurred while serializing
+     */
+    InputStream serialize(Object object) throws IOException;
 }

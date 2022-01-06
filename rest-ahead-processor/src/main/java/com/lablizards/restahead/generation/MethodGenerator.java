@@ -1,22 +1,21 @@
 package com.lablizards.restahead.generation;
 
-import com.lablizards.restahead.exceptions.RestException;
+import com.lablizards.restahead.modeling.declaration.BodyDeclaration;
 import com.lablizards.restahead.modeling.declaration.CallDeclaration;
 import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
 import com.lablizards.restahead.requests.request.RequestLine;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.Modifier;
-import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Used to generate methods annotated with HTTP annotations.
  */
 public class MethodGenerator {
-    private final ResponseGenerator responseGenerator = new ResponseGenerator();
+    private final ExceptionsGenerator exceptionsGenerator = new ExceptionsGenerator();
+    private final ResponseGenerator responseGenerator = new ResponseGenerator(exceptionsGenerator);
 
     /**
      * Generate methods for given declarations.
@@ -43,22 +42,32 @@ public class MethodGenerator {
         var requestLine = call.requestLine();
         addRequestInitialization(builder, requestLine, call.parameters());
 
-        var returnType = call.function().getReturnType();
-        if (returnType.getKind() == TypeKind.VOID) {
-            builder.beginControlFlow("try")
-                .addStatement("client.execute(httpRequest).get()")
-                .nextControlFlow("catch ($T exception)", ExecutionException.class)
-                .addStatement("throw new $T(exception.getCause())", RestException.class)
-                .nextControlFlow("catch ($T exception)", InterruptedException.class)
-                .addStatement("throw new $T(exception)", RestException.class)
-                .endControlFlow();
-        } else {
-            builder.addStatement("var response = client.execute(httpRequest)");
-            var declaredExceptions = call.exceptions();
-            responseGenerator.generateReturnStatement(call.returnDeclaration(), declaredExceptions, builder);
-        }
-        return builder.returns(TypeName.get(returnType))
-            .build();
+        var declaredExceptions = call.exceptions();
+        call.parameters().body().ifPresent(body -> addSendBodyStatement(builder, body, declaredExceptions));
+
+        builder.addStatement("var $L = $L.execute($L)", Variables.RESPONSE, Variables.CLIENT, Variables.REQUEST);
+        responseGenerator.generateReturnStatement(call.returnDeclaration(), declaredExceptions, builder);
+        return builder.build();
+    }
+
+    /**
+     * Adds the body code request to the method.
+     *
+     * @param builder            the builder where the body code should be added
+     * @param body               the body declaration with parameter to use
+     * @param declaredExceptions the exceptions that the enclosing function already declares
+     */
+    private void addSendBodyStatement(
+        MethodSpec.Builder builder,
+        BodyDeclaration body,
+        List<TypeMirror> declaredExceptions
+    ) {
+        exceptionsGenerator.generateTryCatchIfNeeded(
+            builder,
+            declaredExceptions,
+            body.convertExceptions(),
+            () -> builder.addStatement("$L.setBody($L.serialize($L))", Variables.REQUEST, Variables.CONVERTER, body.parameterName())
+        );
     }
 
     /**
@@ -73,33 +82,33 @@ public class MethodGenerator {
         RequestLine requestLine,
         ParameterDeclaration parameters
     ) {
-        builder.addStatement("var httpRequest = new $T($S)", requestLine.request(), requestLine.path());
+        builder.addStatement("var $L = new $T($S)", Variables.REQUEST, requestLine.request(), requestLine.path());
 
         for (var header : parameters.headers()) {
             if (header.isIterable()) {
-                builder.beginControlFlow("for (var headerItem : $L)", header.codeName());
-                builder.addStatement("httpRequest.addHeader($S, $T.valueOf(headerItem))", header.httpName(), String.class);
+                builder.beginControlFlow("for (var $L : $L)", Variables.HEADER_ITEM, header.codeName());
+                builder.addStatement("$L.addHeader($S, $T.valueOf($L))", Variables.REQUEST, header.httpName(), String.class, Variables.HEADER_ITEM);
                 builder.endControlFlow();
             } else {
                 builder.addStatement(
-                    "httpRequest.addHeader($S, $T.valueOf($L))", header.httpName(), String.class, header.codeName()
+                    "$L.addHeader($S, $T.valueOf($L))", Variables.REQUEST, header.httpName(), String.class, header.codeName()
                 );
             }
         }
         for (var query : parameters.query()) {
             if (query.isIterable()) {
-                builder.beginControlFlow("for (var headerItem : $L)", query.codeName());
-                builder.addStatement("httpRequest.addQuery($S, $T.valueOf(headerItem))", query.httpName(), String.class);
+                builder.beginControlFlow("for (var $L : $L)", Variables.QUERY_ITEM, query.codeName());
+                builder.addStatement("$L.addQuery($S, $T.valueOf($L))", Variables.REQUEST, query.httpName(), String.class, Variables.QUERY_ITEM);
                 builder.endControlFlow();
             } else {
                 builder.addStatement(
-                    "httpRequest.addQuery($S, $T.valueOf($L))", query.httpName(), String.class, query.codeName()
+                    "$L.addQuery($S, $T.valueOf($L))", Variables.REQUEST, query.httpName(), String.class, query.codeName()
                 );
             }
         }
         for (var query : parameters.presetQueries()) {
             builder.addStatement(
-                "httpRequest.addQuery($S, $S)", query.name(), query.value()
+                "$L.addQuery($S, $S)", Variables.REQUEST, query.name(), query.value()
             );
         }
     }

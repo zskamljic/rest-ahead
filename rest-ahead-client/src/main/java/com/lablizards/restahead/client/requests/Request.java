@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Common superclass for all requests, contains functionality and data common to all requests.
  */
-public abstract sealed class Request permits DeleteRequest, GetRequest, PatchRequest, PostRequest, PutRequest {
+public abstract sealed class Request permits DeleteRequest, GetRequest, RequestWithBody {
     private final Map<String, List<String>> headers = new HashMap<>();
     private final Map<String, List<String>> query = new HashMap<>();
     protected String path;

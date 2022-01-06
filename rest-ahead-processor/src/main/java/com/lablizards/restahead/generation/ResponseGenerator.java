@@ -2,26 +2,28 @@ package com.lablizards.restahead.generation;
 
 import com.lablizards.restahead.conversion.GenericReference;
 import com.lablizards.restahead.exceptions.RequestFailedException;
-import com.lablizards.restahead.exceptions.RestException;
 import com.lablizards.restahead.modeling.declaration.ReturnAdapterCall;
 import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.function.Predicate;
 
 /**
  * Create a response for the specified type.
  */
 public class ResponseGenerator {
-    private static final String CONVERTED_NAME = "convertedResponse";
-    private static final String RESPONSE_NAME = "response";
+    private final ExceptionsGenerator exceptionsGenerator;
+
+    public ResponseGenerator(ExceptionsGenerator exceptionsGenerator) {
+        this.exceptionsGenerator = exceptionsGenerator;
+    }
 
     /**
      * Generate an appropriate return statement
@@ -36,7 +38,7 @@ public class ResponseGenerator {
         MethodSpec.Builder builder
     ) {
         if (returnDeclaration.targetConversion().isEmpty() && returnDeclaration.adapterCall().isEmpty()) {
-            builder.addStatement("return $L", RESPONSE_NAME);
+            builder.addStatement("return $L", Variables.RESPONSE);
             return;
         }
         returnDeclaration.targetConversion()
@@ -65,19 +67,15 @@ public class ResponseGenerator {
     ) {
         var expectedExceptions = call.adapterMethod()
             .exceptions();
-        var missingExceptions = expectedExceptions.stream()
-            .filter(Predicate.not(declaredExceptions::contains))
-            .toList();
-        if (!missingExceptions.isEmpty()) {
-            builder.beginControlFlow("try");
-        }
-        builder.addStatement("return $L.$L($L)", call.adapterClass().variableName(), call.adapterMethod().name(), responseName);
-        if (!missingExceptions.isEmpty()) {
-            var exceptionList = String.join(" | ", missingExceptions.stream().map(e -> "$T").toList());
-            builder.nextControlFlow("catch (" + exceptionList + " exception)", missingExceptions.toArray(Object[]::new))
-                .addStatement("throw $T.getAppropriateException(exception)", RestException.class)
-                .endControlFlow();
-        }
+        exceptionsGenerator.generateTryCatchIfNeeded(builder, declaredExceptions, expectedExceptions,
+            () -> {
+                var statement = "$L.$L($L)";
+                if (call.adapterMethod().returnType().getKind() != TypeKind.VOID) {
+                    statement = "return " + statement;
+                }
+                builder.addStatement(statement, call.adapterClass().variableName(), call.adapterMethod().name(), responseName);
+            }
+        );
     }
 
     /**
@@ -94,10 +92,10 @@ public class ResponseGenerator {
             .beginControlFlow("try");
 
         if (isSimpleType(returnType)) {
-            conversionLambdaBuilder.addStatement("return converter.deserialize(r, $T.class)", returnType);
+            conversionLambdaBuilder.addStatement("return $L.deserialize(r, $T.class)", Variables.CONVERTER, returnType);
         } else {
-            conversionLambdaBuilder.addStatement("var conversionTypeHolder = new $T<$T>(){}", GenericReference.class, returnType)
-                .addStatement("return converter.deserialize(r, conversionTypeHolder.getType())");
+            conversionLambdaBuilder.addStatement("var $L = new $T<$T>(){}", Variables.CONVERSION_TYPE_HOLDER, GenericReference.class, returnType)
+                .addStatement("return $L.deserialize(r, $L.getType())", Variables.CONVERTER, Variables.CONVERSION_TYPE_HOLDER);
         }
 
         var conversionLambda = conversionLambdaBuilder.nextControlFlow("catch ($T exception)", IOException.class)
@@ -105,7 +103,7 @@ public class ResponseGenerator {
             .endControlFlow()
             .build();
         var conversionCaller = CodeBlock.builder()
-            .beginControlFlow("$T<$T> $L = response.thenApply(r ->", CompletableFuture.class, returnType, CONVERTED_NAME)
+            .beginControlFlow("$T<$T> $L = $L.thenApply(r ->", CompletableFuture.class, returnType, Variables.CONVERTED_NAME, Variables.RESPONSE)
             .add(conversionLambda)
             .endControlFlow(")");
         builder.addCode(conversionCaller.build());
@@ -131,6 +129,6 @@ public class ResponseGenerator {
      * @return the name of the variable
      */
     private String getReturnedVariableName(boolean isConverted) {
-        return isConverted ? CONVERTED_NAME : RESPONSE_NAME;
+        return isConverted ? Variables.CONVERTED_NAME : Variables.RESPONSE;
     }
 }

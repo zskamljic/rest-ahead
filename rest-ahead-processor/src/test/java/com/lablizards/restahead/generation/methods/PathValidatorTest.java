@@ -2,7 +2,6 @@ package com.lablizards.restahead.generation.methods;
 
 import com.lablizards.restahead.client.requests.Request;
 import com.lablizards.restahead.modeling.declaration.ParameterDeclaration;
-import com.lablizards.restahead.modeling.declaration.ReturnDeclaration;
 import com.lablizards.restahead.modeling.validation.PathValidator;
 import com.lablizards.restahead.requests.request.RequestLine;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +44,7 @@ class PathValidatorTest {
         var result = pathValidator.validatePathAndExtractQuery(
             function,
             new RequestLine(Request.class, path),
-            new ParameterDeclaration(List.of(), List.of(), List.of())
+            new ParameterDeclaration(List.of(), List.of(), Optional.empty())
         );
 
         assertEquals(invalid, result.isEmpty());

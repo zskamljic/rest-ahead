@@ -6,6 +6,7 @@ import com.lablizards.restahead.client.requests.PatchRequest;
 import com.lablizards.restahead.client.requests.PostRequest;
 import com.lablizards.restahead.client.requests.PutRequest;
 import com.lablizards.restahead.client.requests.Request;
+import com.lablizards.restahead.client.requests.RequestWithBody;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -44,16 +45,28 @@ public class JavaHttpClient implements RestClient {
             requestBuilder.DELETE();
         } else if (request instanceof GetRequest) {
             requestBuilder.GET();
-        } else if (request instanceof PatchRequest) {
-            requestBuilder.method("PATCH", HttpRequest.BodyPublishers.noBody());
-        } else if (request instanceof PostRequest) {
-            requestBuilder.POST(HttpRequest.BodyPublishers.noBody());
-        } else if (request instanceof PutRequest) {
-            requestBuilder.PUT(HttpRequest.BodyPublishers.noBody());
+        } else if (request instanceof PatchRequest patchRequest) {
+            requestBuilder.method("PATCH", selectBodyPublisher(patchRequest));
+        } else if (request instanceof PostRequest postRequest) {
+            requestBuilder.POST(selectBodyPublisher(postRequest));
+        } else if (request instanceof PutRequest putRequest) {
+            requestBuilder.PUT(selectBodyPublisher(putRequest));
         }
         request.getHeaders().forEach((name, values) -> values.forEach(value -> requestBuilder.header(name, value)));
         var httpRequest = requestBuilder.build();
         return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
             .thenApply(response -> new Response(response.statusCode(), response.headers().map(), response.body()));
+    }
+
+    /**
+     * Creates a body publisher for the given request.
+     *
+     * @param request the request with body, from which to get the body
+     * @return the appropriate body publisher
+     */
+    private HttpRequest.BodyPublisher selectBodyPublisher(RequestWithBody request) {
+        return request.getBody()
+            .map(input -> HttpRequest.BodyPublishers.ofInputStream(() -> input))
+            .orElse(HttpRequest.BodyPublishers.noBody());
     }
 }

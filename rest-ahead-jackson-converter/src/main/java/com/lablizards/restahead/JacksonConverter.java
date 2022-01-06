@@ -5,6 +5,9 @@ import com.lablizards.restahead.client.Response;
 import com.lablizards.restahead.conversion.Converter;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.lang.reflect.Type;
 
 /**
@@ -43,5 +46,21 @@ public class JacksonConverter implements Converter {
         var javaType = objectMapper.getTypeFactory().constructType(type);
         var reader = objectMapper.readerFor(javaType);
         return reader.readValue(response.body());
+    }
+
+    /**
+     * Serializes the provided object to JSON.
+     *
+     * @param object the object to serialize
+     * @return {@link InputStream} containing the serialized object
+     * @throws IOException if an exception occurs while mapping to json
+     */
+    @Override
+    public InputStream serialize(Object object) throws IOException {
+        var pipedInput = new PipedInputStream();
+        try (var output = new PipedOutputStream(pipedInput)) {
+            objectMapper.writeValue(output, object);
+        }
+        return pipedInput;
     }
 }

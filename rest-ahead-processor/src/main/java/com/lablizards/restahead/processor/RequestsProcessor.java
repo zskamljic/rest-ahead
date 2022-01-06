@@ -48,7 +48,6 @@ public class RequestsProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         var adapters = adapterModeler.findAdapters(roundEnv);
-
         var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv, adapters);
         serviceDeclarations.forEach(serviceGenerator::generateService);
         return true;

@@ -19,4 +19,16 @@ public class DefaultAdapters {
     public <T> T syncAdapter(Future<T> response) throws ExecutionException, InterruptedException {
         return response.get();
     }
+
+    /**
+     * Converts Future calls to blocking call, without a response.
+     *
+     * @param response the response to convert
+     * @param <T>      the of the request
+     * @throws ExecutionException   if an error occurred during future execution
+     * @throws InterruptedException if the future was interrupted
+     */
+    public <T> void syncVoidAdapter(Future<T> response) throws ExecutionException, InterruptedException {
+        response.get();
+    }
 }

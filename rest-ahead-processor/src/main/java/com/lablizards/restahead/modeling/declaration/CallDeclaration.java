@@ -22,4 +22,8 @@ public record CallDeclaration(
     ParameterDeclaration parameters,
     ReturnDeclaration returnDeclaration
 ) {
+    public boolean requiresConverter() {
+        return parameters.body().isPresent() ||
+            returnDeclaration.targetConversion().isPresent();
+    }
 }

@@ -1,5 +1,7 @@
 package com.lablizards.restahead.processor;
 
+import com.lablizards.restahead.annotations.Adapter;
+import com.lablizards.restahead.annotations.request.Body;
 import com.lablizards.restahead.annotations.request.Header;
 import com.lablizards.restahead.annotations.request.Query;
 
@@ -27,6 +29,8 @@ public class GeneratedProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Set.of(
+            Adapter.class.getCanonicalName(),
+            Body.class.getCanonicalName(),
             Generated.class.getCanonicalName(),
             Header.class.getCanonicalName(),
             Query.class.getCanonicalName()
