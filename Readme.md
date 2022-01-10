@@ -6,7 +6,7 @@ preventing any issues from being found at runtime.
 
 The aim of this project is to have as much validation done at compile time, rather than runtime. Additionally, since the
 code is generated at compile time there is no need for reflection. The generated code can be inspected for a no-magic
-approach, which also means easier debugging and easier integration with tools like [GraalVM](https://www.graalvm.org/)
+approach.
 
 ## Features
 
