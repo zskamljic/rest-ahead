@@ -40,8 +40,8 @@ Calls can then be performed simply by calling the instance of the interface:
 var response = service.performGet();
 ```
 
-Samples of services can be found in `demo` project [here](demo/src/main/java/com/lablizards/restahead/demo/clients),
-examples of obtaining their instances are in [this directory](demo/src/test/java/com/lablizards/restahead/demo/clients).
+Samples of services can be found in `demo` project [here](demo/src/main/java/io/github/zskamljic/restahead/demo/clients),
+examples of obtaining their instances are in [this directory](demo/src/test/java/io/github/zskamljic/restahead/demo/clients).
 
 ## Options
 
