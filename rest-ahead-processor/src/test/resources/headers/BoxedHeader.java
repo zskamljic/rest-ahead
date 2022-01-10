@@ -1,11 +1,11 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.request.Header;
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.annotations.verbs.Get;
-import com.lablizards.restahead.annotations.verbs.Patch;
-import com.lablizards.restahead.annotations.verbs.Post;
-import com.lablizards.restahead.annotations.verbs.Put;
+import io.github.zskamljic.restahead.annotations.request.Header;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.annotations.verbs.Get;
+import io.github.zskamljic.restahead.annotations.verbs.Patch;
+import io.github.zskamljic.restahead.annotations.verbs.Post;
+import io.github.zskamljic.restahead.annotations.verbs.Put;
 
 public interface BoxedHeader {
     @Delete("/delete")

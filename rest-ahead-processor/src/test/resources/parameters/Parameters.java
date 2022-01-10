@@ -1,9 +1,9 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.request.Header;
-import com.lablizards.restahead.annotations.request.Query;
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.annotations.verbs.Post;
+import io.github.zskamljic.restahead.annotations.request.Header;
+import io.github.zskamljic.restahead.annotations.request.Query;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.annotations.verbs.Post;
 
 public interface Parameters {
     @Delete("/delete")

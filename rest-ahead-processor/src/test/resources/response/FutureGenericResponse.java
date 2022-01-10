@@ -1,6 +1,6 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
 
 import java.util.Map;
 import java.util.concurrent.Future;

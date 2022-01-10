@@ -1,11 +1,11 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.adapter.DefaultAdapters;
-import com.lablizards.restahead.client.RestClient;
-import com.lablizards.restahead.client.requests.DeleteRequest;
-import com.lablizards.restahead.conversion.Converter;
-import com.lablizards.restahead.exceptions.RequestFailedException;
-import com.lablizards.restahead.exceptions.RestException;
+import io.github.zskamljic.restahead.adapter.DefaultAdapters;
+import io.github.zskamljic.restahead.client.RestClient;
+import io.github.zskamljic.restahead.client.requests.DeleteRequest;
+import io.github.zskamljic.restahead.conversion.Converter;
+import io.github.zskamljic.restahead.exceptions.RequestFailedException;
+import io.github.zskamljic.restahead.exceptions.RestException;
 import java.io.IOException;
 import java.lang.InterruptedException;
 import java.lang.Override;

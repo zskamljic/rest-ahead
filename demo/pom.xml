@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>RestAhead</artifactId>
-        <groupId>com.lablizards</groupId>
+        <groupId>io.github.zskamljic</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -13,18 +13,18 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.lablizards</groupId>
+            <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-client</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.lablizards</groupId>
+            <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-processor</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.lablizards</groupId>
+            <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-jackson-converter</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>

@@ -1,7 +1,7 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.request.Body;
-import com.lablizards.restahead.annotations.verbs.Post;
+import io.github.zskamljic.restahead.annotations.request.Body;
+import io.github.zskamljic.restahead.annotations.verbs.Post;
 
 import java.util.Map;
 

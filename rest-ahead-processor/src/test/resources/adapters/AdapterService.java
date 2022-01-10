@@ -1,8 +1,8 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.Adapter;
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.client.Response;
+import io.github.zskamljic.restahead.annotations.Adapter;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.client.Response;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

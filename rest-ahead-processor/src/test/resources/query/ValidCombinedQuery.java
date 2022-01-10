@@ -1,7 +1,7 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.request.Query;
-import com.lablizards.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.annotations.request.Query;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
 
 public interface ValidCombinedQuery {
     @Delete("/delete?q=1")

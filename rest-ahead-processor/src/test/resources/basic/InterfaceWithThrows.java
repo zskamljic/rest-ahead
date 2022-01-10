@@ -1,7 +1,7 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.client.Response;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.client.Response;
 
 import java.io.IOException;
 

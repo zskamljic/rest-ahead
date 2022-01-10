@@ -1,7 +1,7 @@
-package com.lablizards.restahead.demo;
+package io.github.zskamljic.restahead.demo;
 
-import com.lablizards.restahead.annotations.verbs.Delete;
-import com.lablizards.restahead.annotations.verbs.Patch;
+import io.github.zskamljic.restahead.annotations.verbs.Delete;
+import io.github.zskamljic.restahead.annotations.verbs.Patch;
 
 public interface MultipleAnnotations {
     @Delete("/delete")
