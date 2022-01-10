@@ -1,4 +1,4 @@
-# RestAhead - an AOT REST client
+# RestAhead - compile time generated REST client
 
 This project draws inspiration from projects such as [Retrofit](https://square.github.io/retrofit/)
 and [Feign](https://github.com/OpenFeign/feign), but with a twist: your services are generated at compile time,
