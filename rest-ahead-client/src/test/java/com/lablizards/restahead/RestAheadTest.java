@@ -1,6 +1,5 @@
 package com.lablizards.restahead;
 
-import com.lablizards.restahead.annotations.verbs.Get;
 import com.lablizards.restahead.client.RestClient;
 import com.lablizards.restahead.conversion.Converter;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,6 @@ class RestAheadTest {
     }
 
     interface SimpleGet {
-        @Get
         void doGet();
     }
 

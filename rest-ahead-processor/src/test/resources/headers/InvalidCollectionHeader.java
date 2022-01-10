@@ -3,6 +3,7 @@ package com.lablizards.restahead.demo;
 import com.lablizards.restahead.annotations.request.Header;
 import com.lablizards.restahead.annotations.verbs.Delete;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface InvalidCollectionHeader {

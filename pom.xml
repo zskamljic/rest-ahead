@@ -13,10 +13,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>rest-ahead-client</module>
         <module>demo</module>
+        <module>rest-ahead-client</module>
         <module>rest-ahead-processor</module>
-        <module>rest-ahead-annotations</module>
         <module>rest-ahead-jackson-converter</module>
         <module>test-report-aggregator</module>
     </modules>
