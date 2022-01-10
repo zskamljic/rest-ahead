@@ -24,11 +24,6 @@
         </dependency>
         <dependency>
             <groupId>com.lablizards</groupId>
-            <artifactId>rest-ahead-annotations</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lablizards</groupId>
             <artifactId>rest-ahead-client</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
