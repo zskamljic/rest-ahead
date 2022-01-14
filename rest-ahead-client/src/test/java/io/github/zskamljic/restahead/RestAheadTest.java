@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead;
 
-import io.github.zskamljic.restahead.client.RestClient;
+import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.conversion.Converter;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +39,7 @@ class RestAheadTest {
     }
 
     static class SimpleGet$Impl implements SimpleGet {
-        public SimpleGet$Impl(RestClient client) {
+        public SimpleGet$Impl(String url, Client client) {
         }
 
         @Override
@@ -51,7 +51,7 @@ class RestAheadTest {
     }
 
     static class ConverterGet$Impl implements ConverterGet {
-        public ConverterGet$Impl(RestClient client, Converter converter) {
+        public ConverterGet$Impl(String url, Client client, Converter converter) {
         }
 
         @Override

@@ -5,12 +5,7 @@ import io.github.zskamljic.restahead.annotations.verbs.Get;
 import io.github.zskamljic.restahead.annotations.verbs.Patch;
 import io.github.zskamljic.restahead.annotations.verbs.Post;
 import io.github.zskamljic.restahead.annotations.verbs.Put;
-import io.github.zskamljic.restahead.client.requests.DeleteRequest;
-import io.github.zskamljic.restahead.client.requests.GetRequest;
-import io.github.zskamljic.restahead.client.requests.PatchRequest;
-import io.github.zskamljic.restahead.client.requests.PostRequest;
-import io.github.zskamljic.restahead.client.requests.PutRequest;
-import io.github.zskamljic.restahead.client.requests.Request;
+import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.requests.request.RequestLine;
 import io.github.zskamljic.restahead.requests.request.RequestSpec;
 
@@ -39,26 +34,26 @@ public class VerbMapping {
      * @return the request specification
      */
     public static RequestLine annotationToVerb(Annotation annotation) {
-        Class<? extends Request> request;
+        Verb verb;
         String path;
         if (annotation instanceof Delete delete) {
-            request = DeleteRequest.class;
+            verb = Verb.DELETE;
             path = delete.value();
         } else if (annotation instanceof Get get) {
-            request = GetRequest.class;
+            verb = Verb.GET;
             path = get.value();
         } else if (annotation instanceof Patch patch) {
-            request = PatchRequest.class;
+            verb = Verb.PATCH;
             path = patch.value();
         } else if (annotation instanceof Post post) {
-            request = PostRequest.class;
+            verb = Verb.POST;
             path = post.value();
         } else if (annotation instanceof Put put) {
-            request = PutRequest.class;
+            verb = Verb.PUT;
             path = put.value();
         } else {
             throw new IllegalArgumentException("Annotation was not a valid verb: " + annotation);
         }
-        return new RequestLine(request, path);
+        return new RequestLine(verb, path);
     }
 }

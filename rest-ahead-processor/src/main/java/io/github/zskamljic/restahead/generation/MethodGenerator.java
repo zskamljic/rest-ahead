@@ -1,10 +1,13 @@
 package io.github.zskamljic.restahead.generation;
 
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.MethodSpec;
+import io.github.zskamljic.restahead.client.requests.Request;
+import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.requests.request.RequestLine;
-import com.squareup.javapoet.MethodSpec;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;
@@ -45,7 +48,7 @@ public class MethodGenerator {
         var declaredExceptions = call.exceptions();
         call.parameters().body().ifPresent(body -> addSendBodyStatement(builder, body, declaredExceptions));
 
-        builder.addStatement("var $L = $L.execute($L)", Variables.RESPONSE, Variables.CLIENT, Variables.REQUEST);
+        builder.addStatement("var $L = $L.execute($L.build())", Variables.RESPONSE, Variables.CLIENT, Variables.REQUEST_BUILDER);
         responseGenerator.generateReturnStatement(call.returnDeclaration(), declaredExceptions, builder);
         return builder.build();
     }
@@ -66,7 +69,7 @@ public class MethodGenerator {
             builder,
             declaredExceptions,
             body.convertExceptions(),
-            () -> builder.addStatement("$L.setBody($L.serialize($L))", Variables.REQUEST, Variables.CONVERTER, body.parameterName())
+            () -> builder.addStatement("$L.setBody($L.serialize($L))", Variables.REQUEST_BUILDER, Variables.CONVERTER, body.parameterName())
         );
     }
 
@@ -82,33 +85,39 @@ public class MethodGenerator {
         RequestLine requestLine,
         ParameterDeclaration parameters
     ) {
-        builder.addStatement("var $L = new $T($S)", Variables.REQUEST, requestLine.request(), requestLine.path());
+        var requestBlock = CodeBlock.builder()
+            .add("var $L = new $T()\n", Variables.REQUEST_BUILDER, Request.Builder.class)
+            .add(".setVerb($T.$L)\n", Verb.class, requestLine.verb())
+            .add(".setBaseUrl($L)\n", Variables.BASE_URL)
+            .add(".setPath($S)", requestLine.path())
+            .build();
+        builder.addStatement(requestBlock);
 
         for (var header : parameters.headers()) {
             if (header.isIterable()) {
                 builder.beginControlFlow("for (var $L : $L)", Variables.HEADER_ITEM, header.codeName());
-                builder.addStatement("$L.addHeader($S, $T.valueOf($L))", Variables.REQUEST, header.httpName(), String.class, Variables.HEADER_ITEM);
+                builder.addStatement("$L.addHeader($S, $T.valueOf($L))", Variables.REQUEST_BUILDER, header.httpName(), String.class, Variables.HEADER_ITEM);
                 builder.endControlFlow();
             } else {
                 builder.addStatement(
-                    "$L.addHeader($S, $T.valueOf($L))", Variables.REQUEST, header.httpName(), String.class, header.codeName()
+                    "$L.addHeader($S, $T.valueOf($L))", Variables.REQUEST_BUILDER, header.httpName(), String.class, header.codeName()
                 );
             }
         }
         for (var query : parameters.query()) {
             if (query.isIterable()) {
                 builder.beginControlFlow("for (var $L : $L)", Variables.QUERY_ITEM, query.codeName());
-                builder.addStatement("$L.addQuery($S, $T.valueOf($L))", Variables.REQUEST, query.httpName(), String.class, Variables.QUERY_ITEM);
+                builder.addStatement("$L.addQuery($S, $T.valueOf($L))", Variables.REQUEST_BUILDER, query.httpName(), String.class, Variables.QUERY_ITEM);
                 builder.endControlFlow();
             } else {
                 builder.addStatement(
-                    "$L.addQuery($S, $T.valueOf($L))", Variables.REQUEST, query.httpName(), String.class, query.codeName()
+                    "$L.addQuery($S, $T.valueOf($L))", Variables.REQUEST_BUILDER, query.httpName(), String.class, query.codeName()
                 );
             }
         }
         for (var query : parameters.presetQueries()) {
             builder.addStatement(
-                "$L.addQuery($S, $S)", Variables.REQUEST, query.name(), query.value()
+                "$L.addQuery($S, $S)", Variables.REQUEST_BUILDER, query.name(), query.value()
             );
         }
     }

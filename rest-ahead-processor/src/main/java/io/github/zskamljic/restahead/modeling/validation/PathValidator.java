@@ -48,7 +48,7 @@ public class PathValidator {
             var uri = new URI(requestLine.path());
             var query = uri.getQuery();
             if (query != null) {
-                requestLine = new RequestLine(requestLine.request(), uri.getPath());
+                requestLine = new RequestLine(requestLine.verb(), uri.getPath());
                 var items = query.split("&");
                 for (var item : items) {
                     var nameValue = item.split("=");

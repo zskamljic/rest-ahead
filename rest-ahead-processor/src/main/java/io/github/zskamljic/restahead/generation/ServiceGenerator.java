@@ -1,15 +1,15 @@
 package io.github.zskamljic.restahead.generation;
 
-import io.github.zskamljic.restahead.client.RestClient;
-import io.github.zskamljic.restahead.conversion.Converter;
-import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
-import io.github.zskamljic.restahead.modeling.declaration.ServiceDeclaration;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import io.github.zskamljic.restahead.client.Client;
+import io.github.zskamljic.restahead.conversion.Converter;
+import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
+import io.github.zskamljic.restahead.modeling.declaration.ServiceDeclaration;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
@@ -88,6 +88,7 @@ public class ServiceGenerator {
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(generatedAnnotation)
             .addMethods(methods)
+            .addField(createBaseUrlField())
             .addField(createClientField())
             .addMethod(createConstructor(serviceDeclaration.requiresConverter(), serviceDeclaration.requiredAdapters()));
         if (serviceDeclaration.requiresConverter()) {
@@ -117,13 +118,18 @@ public class ServiceGenerator {
             .build();
     }
 
+    private FieldSpec createBaseUrlField() {
+        return FieldSpec.builder(String.class, Variables.BASE_URL, Modifier.PRIVATE, Modifier.FINAL)
+            .build();
+    }
+
     /**
      * Creates the client field.
      *
      * @return field specification for client
      */
     private FieldSpec createClientField() {
-        return FieldSpec.builder(RestClient.class, Variables.CLIENT, Modifier.PRIVATE, Modifier.FINAL)
+        return FieldSpec.builder(Client.class, Variables.CLIENT, Modifier.PRIVATE, Modifier.FINAL)
             .build();
     }
 
@@ -150,7 +156,9 @@ public class ServiceGenerator {
     ) {
         var builder = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PUBLIC)
-            .addParameter(RestClient.class, Variables.CLIENT)
+            .addParameter(String.class, Variables.BASE_URL)
+            .addParameter(Client.class, Variables.CLIENT)
+            .addStatement(FIELD_ASSIGNMENT, Variables.BASE_URL, Variables.BASE_URL)
             .addStatement(FIELD_ASSIGNMENT, Variables.CLIENT, Variables.CLIENT);
 
         if (hasCustomTypes) {

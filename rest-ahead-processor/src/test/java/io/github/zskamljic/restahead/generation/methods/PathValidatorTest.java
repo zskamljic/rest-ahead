@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead.generation.methods;
 
-import io.github.zskamljic.restahead.client.requests.Request;
+import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.validation.PathValidator;
 import io.github.zskamljic.restahead.requests.request.RequestLine;
@@ -43,7 +43,7 @@ class PathValidatorTest {
     void pathReturnsCorrectForString(boolean invalid, String path) {
         var result = pathValidator.validatePathAndExtractQuery(
             function,
-            new RequestLine(Request.class, path),
+            new RequestLine(Verb.GET, path),
             new ParameterDeclaration(List.of(), List.of(), Optional.empty())
         );
 

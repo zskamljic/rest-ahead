@@ -13,6 +13,7 @@ approach.
 - [Adapters](#adapters)
 - [Body](#body)
 - [Headers](#headers)
+- [Interceptors](#interceptor)
 - [Responses](#response-types)
 - [Query](#queries)
 
@@ -175,6 +176,20 @@ public class CustomAdapter {
 Adapter will also need to be added to RestAhead builder, via the `addAdapter(Object object)` method. Exceptions can be
 thrown by declared adapters and can be propagated via the service (see [Call exceptions](#call-exceptions)).
 
+### Interceptors
+
+Interceptors can be added to the client to perform common logic before, after or around a request. Interceptor should implement the `Interceptor` interface and be added to the client like so:
+
+```jshelllanguage
+var client = new JavaHttpClient();
+client.addInterceptor(new PreRequestInterceptor());
+
+var service = RestAhead.builder("https://httpbin.org/")
+    .client(client)
+    .converter(new JacksonConverter())
+    .build(InterceptedService.class);
+```
+
 ### Call exceptions
 
 By default, no exceptions need to be declared to execute calls, but beware! An unchecked exception (RestException) will
@@ -206,7 +221,7 @@ from the request.
 
 ### Custom client
 
-The `RestAhead` builder declares an interface `RestClient` that allows you to implement custom clients. By default, if
+The `RestAhead` builder declares an interface `Client` that allows you to implement custom clients. By default, if
 no client is specified, Java HTTP client is used.
 
 ## License

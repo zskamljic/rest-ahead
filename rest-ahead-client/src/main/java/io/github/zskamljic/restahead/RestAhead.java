@@ -1,9 +1,10 @@
 package io.github.zskamljic.restahead;
 
 import io.github.zskamljic.restahead.adapter.DefaultAdapters;
+import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.client.JavaHttpClient;
-import io.github.zskamljic.restahead.client.RestClient;
 import io.github.zskamljic.restahead.conversion.Converter;
+import io.github.zskamljic.restahead.exceptions.RestException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public final class RestAhead {
     public static class Builder {
         private final String baseUrl;
         private final Map<Class<?>, Object> adapters = new HashMap<>();
-        private RestClient client;
+        private Client client;
         private Converter converter;
 
         private Builder(String baseUrl) {
@@ -45,7 +46,7 @@ public final class RestAhead {
          * @param client the client to use
          * @return the updated builder
          */
-        public Builder client(RestClient client) {
+        public Builder client(Client client) {
             this.client = client;
             return this;
         }
@@ -85,13 +86,17 @@ public final class RestAhead {
                     .asSubclass(service);
 
                 var parameters = getRequiredParameters(implementation);
+                if (parameters[0] != String.class) {
+                    throw new RestException("First parameter is not a String, generated code was not correct.");
+                }
 
                 var allParameters = new HashMap<>(adapters);
                 allParameters.put(Converter.class, converter);
-                allParameters.put(RestClient.class, Optional.ofNullable(client).orElseGet(() -> new JavaHttpClient(baseUrl)));
+                allParameters.put(Client.class, Optional.ofNullable(client).orElseGet(JavaHttpClient::new));
 
                 var parameterValues = new Object[parameters.length];
-                for (int i = 0; i < parameterValues.length; i++) {
+                parameterValues[0] = baseUrl;
+                for (int i = 1; i < parameterValues.length; i++) {
                     var value = allParameters.get(parameters[i]);
                     if (value == null) {
                         throw new IllegalStateException("No value provided for required parameter " + parameters[i]);
@@ -101,7 +106,7 @@ public final class RestAhead {
                 return implementation.getDeclaredConstructor(parameters)
                     .newInstance(parameterValues);
             } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
+                throw new RestException(e);
             }
         }
 
