@@ -13,9 +13,10 @@ approach.
 - [Adapters](#adapters)
 - [Body](#body)
 - [Headers](#headers)
-- [Interceptors](#interceptor)
-- [Responses](#response-types)
+- [Interceptors](#interceptors)
+- [Path](#paths)
 - [Query](#queries)
+- [Responses](#response-types)
 
 ## Introduction
 
@@ -41,8 +42,9 @@ Calls can then be performed simply by calling the instance of the interface:
 var response = service.performGet();
 ```
 
-Samples of services can be found in `demo` project [here](demo/src/main/java/io/github/zskamljic/restahead/demo/clients),
-examples of obtaining their instances are in [this directory](demo/src/test/java/io/github/zskamljic/restahead/demo/clients).
+Samples of services can be found in `demo` project [here](demo/src/main/java/io/github/zskamljic/restahead/demo/clients)
+, examples of obtaining their instances are
+in [this directory](demo/src/test/java/io/github/zskamljic/restahead/demo/clients).
 
 ## Options
 
@@ -178,16 +180,28 @@ thrown by declared adapters and can be propagated via the service (see [Call exc
 
 ### Interceptors
 
-Interceptors can be added to the client to perform common logic before, after or around a request. Interceptor should implement the `Interceptor` interface and be added to the client like so:
+Interceptors can be added to the client to perform common logic before, after or around a request. Interceptor should
+implement the `Interceptor` interface and be added to the client like so:
 
 ```jshelllanguage
 var client = new JavaHttpClient();
-client.addInterceptor(new PreRequestInterceptor());
+    client.addInterceptor(new PreRequestInterceptor());
 
-var service = RestAhead.builder("https://httpbin.org/")
-    .client(client)
-    .converter(new JacksonConverter())
-    .build(InterceptedService.class);
+    var service = RestAhead.builder("https://httpbin.org/")
+        .client(client)
+        .converter(new JacksonConverter())
+        .build(InterceptedService.class);
+```
+
+### Paths
+
+Path parameters can also be provided through requests by using the `@Path` annotation on a parameter:
+
+```java
+interface PathExample {
+    @Get("/{path1}/{path2}")
+    Response performGet(@Path("path1") String path, @Path String path2); // value can be omitted in favor or parameter name
+}
 ```
 
 ### Call exceptions
@@ -221,8 +235,8 @@ from the request.
 
 ### Custom client
 
-The `RestAhead` builder declares an interface `Client` that allows you to implement custom clients. By default, if
-no client is specified, Java HTTP client is used.
+The `RestAhead` builder declares an interface `Client` that allows you to implement custom clients. By default, if no
+client is specified, Java HTTP client is used.
 
 ## License
 
