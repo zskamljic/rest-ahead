@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 public abstract class CommonProcessorTest {
     private final AbstractProcessor requestProcessor = new RequestsProcessor();
-    private final AbstractProcessor generatedProcessor = new GeneratedProcessor();
+    private final AbstractProcessor generatedProcessor = new UnclaimedProcessor();
 
     protected CompileTester commonCompilationAssertion(String... files) {
         var sources = Arrays.stream(files)

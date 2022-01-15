@@ -9,7 +9,7 @@ import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
  * @param parameters  the function parameters that need to be declared
  */
 public record RequestSpec(
-    RequestLine requestLine,
+    BasicRequestLine requestLine,
     ParameterDeclaration parameters
 ) {
 }

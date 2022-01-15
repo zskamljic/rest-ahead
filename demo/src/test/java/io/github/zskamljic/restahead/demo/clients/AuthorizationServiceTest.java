@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthorizationServiceTest {
     private static final String TOKEN = "token";
+    private static final String USERNAME = "user";
+    private static final String PASSWORD = "password";
 
     private AuthorizationService service;
 
@@ -24,14 +26,14 @@ class AuthorizationServiceTest {
 
     @Test
     void basicAuthHandles401() {
-        var response = service.getBasicAuth("");
+        var response = service.getBasicAuth(USERNAME, PASSWORD, "");
 
         assertEquals(401, response.status());
     }
 
     @Test
     void basicAuthSucceeds() {
-        var response = service.getBasicAuth("Basic dXNlcjpwYXNzd29yZA==");
+        var response = service.getBasicAuth(USERNAME, PASSWORD, "Basic dXNlcjpwYXNzd29yZA==");
 
         assertEquals(200, response.status());
     }

@@ -50,12 +50,12 @@ abstract class CommonParameterValidator {
      */
     protected Optional<RequestParameterSpec> extractSpec(VariableElement parameter, String value) {
         var type = isInvalidType(parameter.asType());
-        if (type == HeaderType.INVALID) {
+        if (type == ParameterType.INVALID) {
             messager.printMessage(Diagnostic.Kind.ERROR, "Only primitives, String, UUID and their arrays and collections are supported.", parameter);
             return Optional.empty();
         }
 
-        return Optional.of(new RequestParameterSpec(value, parameter.getSimpleName().toString(), type == HeaderType.ITERABLE));
+        return Optional.of(new RequestParameterSpec(value, parameter.getSimpleName().toString(), type == ParameterType.ITERABLE));
     }
 
     /**
@@ -64,21 +64,21 @@ abstract class CommonParameterValidator {
      * @param typeMirror the type of the parameter
      * @return INVALID if type is not supported, SINGLE if item is a directly supported value, ITERABLE if it's an array or {@link Collection}
      */
-    private HeaderType isInvalidType(TypeMirror typeMirror) {
+    private ParameterType isInvalidType(TypeMirror typeMirror) {
         if (typeMirror instanceof ArrayType arrayType) {
-            return isUnsupportedType(arrayType.getComponentType()) ? HeaderType.INVALID : HeaderType.ITERABLE;
+            return isUnsupportedType(arrayType.getComponentType()) ? ParameterType.INVALID : ParameterType.ITERABLE;
         }
         if (typeMirror instanceof DeclaredType declaredType) {
             var erasedType = types.erasure(declaredType);
             if (types.isAssignable(erasedType, collectionMirror)) {
                 var typeArguments = declaredType.getTypeArguments();
-                if (typeArguments.size() != 1) return HeaderType.INVALID;
+                if (typeArguments.size() != 1) return ParameterType.INVALID;
 
-                return isUnsupportedType(typeArguments.get(0)) ? HeaderType.INVALID : HeaderType.ITERABLE;
+                return isUnsupportedType(typeArguments.get(0)) ? ParameterType.INVALID : ParameterType.ITERABLE;
             }
         }
 
-        return isUnsupportedType(typeMirror) ? HeaderType.INVALID : HeaderType.SINGLE;
+        return isUnsupportedType(typeMirror) ? ParameterType.INVALID : ParameterType.SINGLE;
     }
 
     /**
@@ -102,7 +102,7 @@ abstract class CommonParameterValidator {
             .noneMatch(type -> types.isSameType(type, typeMirror));
     }
 
-    enum HeaderType {
+    enum ParameterType {
         INVALID, SINGLE, ITERABLE
     }
 }

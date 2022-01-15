@@ -1,18 +1,16 @@
 package io.github.zskamljic.restahead.requests.request;
 
 import io.github.zskamljic.restahead.client.requests.Verb;
+import io.github.zskamljic.restahead.requests.request.path.RequestPath;
 
 /**
- * Contains the request verb and path.
+ * The processed request line.
  *
- * @param verb the verb for the request
- * @param path the path for the request
+ * @param verb the verb to use for the request
+ * @param path
  */
 public record RequestLine(
     Verb verb,
-    String path
+    RequestPath path
 ) {
-    public boolean allowsBody() {
-        return verb.allowsBody();
-    }
 }

@@ -11,20 +11,23 @@ import java.util.Optional;
  *
  * @param headers       the header parameters
  * @param query         the query parameters
+ * @param paths         the path parameters
  * @param body          the body declaration
  * @param presetQueries the queries present in request line
  */
 public record ParameterDeclaration(
     List<RequestParameterSpec> headers,
     List<RequestParameterSpec> query,
+    List<RequestParameterSpec> paths,
     Optional<BodyDeclaration> body,
     List<PresetQuery> presetQueries
 ) {
     public ParameterDeclaration(
         List<RequestParameterSpec> headers,
         List<RequestParameterSpec> query,
+        List<RequestParameterSpec> paths,
         @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<BodyDeclaration> body
     ) {
-        this(headers, query, body, new ArrayList<>());
+        this(headers, query, paths, body, new ArrayList<>());
     }
 }

@@ -7,11 +7,14 @@ import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
+import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 import io.github.zskamljic.restahead.requests.request.RequestLine;
+import io.github.zskamljic.restahead.requests.request.path.TemplatedPath;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Used to generate methods annotated with HTTP annotations.
@@ -88,10 +91,13 @@ public class MethodGenerator {
         var requestBlock = CodeBlock.builder()
             .add("var $L = new $T()\n", Variables.REQUEST_BUILDER, Request.Builder.class)
             .add(".setVerb($T.$L)\n", Verb.class, requestLine.verb())
-            .add(".setBaseUrl($L)\n", Variables.BASE_URL)
-            .add(".setPath($S)", requestLine.path())
-            .build();
-        builder.addStatement(requestBlock);
+            .add(".setBaseUrl($L)\n", Variables.BASE_URL);
+        if (requestLine.path() instanceof TemplatedPath path) {
+            addTemplatedPath(requestBlock, path, parameters.paths());
+        } else {
+            requestBlock.add(".setPath($S)", requestLine.path());
+        }
+        builder.addStatement(requestBlock.build());
 
         for (var header : parameters.headers()) {
             if (header.isIterable()) {
@@ -120,5 +126,38 @@ public class MethodGenerator {
                 "$L.addQuery($S, $S)", Variables.REQUEST_BUILDER, query.name(), query.value()
             );
         }
+    }
+
+    /**
+     * Add path that contains parameters.
+     *
+     * @param requestBlock the block to which to add the path code
+     * @param path         the path definition
+     * @param paths        the provided paths
+     */
+    private void addTemplatedPath(
+        CodeBlock.Builder requestBlock,
+        TemplatedPath path,
+        List<RequestParameterSpec> paths
+    ) {
+        var pathToVariable = paths.stream()
+            .collect(Collectors.toMap(RequestParameterSpec::httpName, RequestParameterSpec::httpName));
+
+        var replaceBlocks = CodeBlock.builder()
+            .add(".setPath($S", path);
+
+        var requiredParams = path.getRequiredParameters();
+        for (int i = 0; i < requiredParams.size(); i++) {
+            var param = requiredParams.get(i);
+
+            replaceBlocks.add(".replace($S, $T.valueOf($L))" + (i != requiredParams.size() - 1 ? "\n" : ""),
+                "{%s}".formatted(param),
+                String.class,
+                pathToVariable.get(param));
+        }
+
+        replaceBlocks.add(")");
+
+        requestBlock.add(replaceBlocks.build());
     }
 }

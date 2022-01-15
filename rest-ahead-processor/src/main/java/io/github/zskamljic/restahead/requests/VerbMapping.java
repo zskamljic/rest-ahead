@@ -6,7 +6,7 @@ import io.github.zskamljic.restahead.annotations.verbs.Patch;
 import io.github.zskamljic.restahead.annotations.verbs.Post;
 import io.github.zskamljic.restahead.annotations.verbs.Put;
 import io.github.zskamljic.restahead.client.requests.Verb;
-import io.github.zskamljic.restahead.requests.request.RequestLine;
+import io.github.zskamljic.restahead.requests.request.BasicRequestLine;
 import io.github.zskamljic.restahead.requests.request.RequestSpec;
 
 import java.lang.annotation.Annotation;
@@ -33,7 +33,7 @@ public class VerbMapping {
      * @param annotation the annotation from which to extract the verb and path
      * @return the request specification
      */
-    public static RequestLine annotationToVerb(Annotation annotation) {
+    public static BasicRequestLine annotationToVerb(Annotation annotation) {
         Verb verb;
         String path;
         if (annotation instanceof Delete delete) {
@@ -54,6 +54,6 @@ public class VerbMapping {
         } else {
             throw new IllegalArgumentException("Annotation was not a valid verb: " + annotation);
         }
-        return new RequestLine(verb, path);
+        return new BasicRequestLine(verb, path);
     }
 }

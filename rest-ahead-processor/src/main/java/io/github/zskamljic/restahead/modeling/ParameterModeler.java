@@ -2,11 +2,13 @@ package io.github.zskamljic.restahead.modeling;
 
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.request.Header;
+import io.github.zskamljic.restahead.annotations.request.Path;
 import io.github.zskamljic.restahead.annotations.request.Query;
 import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 import io.github.zskamljic.restahead.modeling.validation.HeaderValidator;
+import io.github.zskamljic.restahead.modeling.validation.PathValidator;
 import io.github.zskamljic.restahead.modeling.validation.QueryValidator;
 
 import javax.annotation.processing.Messager;
@@ -27,16 +29,18 @@ import java.util.Objects;
  */
 public class ParameterModeler {
     private static final List<Class<? extends Annotation>> EXPECTED_ANNOTATIONS = List.of(
-        Body.class, Header.class, Query.class
+        Body.class, Header.class, Path.class, Query.class
     );
 
     private final Messager messager;
+    private final PathValidator pathValidator;
     private final HeaderValidator headerValidator;
     private final QueryValidator queryValidator;
     private final TypeMirror ioException;
 
-    public ParameterModeler(Messager messager, Elements elements, Types types) {
+    public ParameterModeler(Messager messager, Elements elements, Types types, PathValidator pathValidator) {
         this.messager = messager;
+        this.pathValidator = pathValidator;
         headerValidator = new HeaderValidator(messager, elements, types);
         queryValidator = new QueryValidator(messager, elements, types);
         ioException = elements.getTypeElement(IOException.class.getCanonicalName())
@@ -54,6 +58,7 @@ public class ParameterModeler {
 
         var headers = new ArrayList<RequestParameterSpec>();
         var queries = new ArrayList<RequestParameterSpec>();
+        var paths = new ArrayList<RequestParameterSpec>();
         var bodies = new ArrayList<BodyDeclaration>();
 
         for (var parameter : parameters) {
@@ -66,7 +71,7 @@ public class ParameterModeler {
                 continue;
             }
             var annotation = presentAnnotations.get(0);
-            handleAnnotation(parameter, annotation, headers, queries, bodies);
+            handleAnnotation(parameter, annotation, headers, queries, paths, bodies);
         }
 
         if (!bodies.isEmpty() && !allowsBody) {
@@ -82,7 +87,7 @@ public class ParameterModeler {
         var bodyDeclaration = bodies.stream()
             .findFirst();
 
-        return new ParameterDeclaration(headers, queries, bodyDeclaration);
+        return new ParameterDeclaration(headers, queries, paths, bodyDeclaration);
     }
 
     /**
@@ -92,6 +97,7 @@ public class ParameterModeler {
      * @param annotation the annotation to qualify
      * @param headers    the list to collect headers in
      * @param queries    the list to collect queries in
+     * @param paths      the paths to collect placeholders in
      * @param bodies     the list of bodies to collect bodies in
      */
     private void handleAnnotation(
@@ -99,6 +105,7 @@ public class ParameterModeler {
         Annotation annotation,
         List<RequestParameterSpec> headers,
         List<RequestParameterSpec> queries,
+        List<RequestParameterSpec> paths,
         List<BodyDeclaration> bodies
     ) {
         if (annotation instanceof Header header) {
@@ -107,6 +114,8 @@ public class ParameterModeler {
             queryValidator.getQuerySpec(query.value(), parameter).ifPresent(queries::add);
         } else if (annotation instanceof Body) {
             bodies.add(new BodyDeclaration(parameter, parameter.getSimpleName().toString(), List.of(ioException)));
+        } else if (annotation instanceof Path path) {
+            pathValidator.getPathSpec(path.value(), parameter).ifPresent(paths::add);
         } else {
             messager.printMessage(Diagnostic.Kind.ERROR, "Annotation is not supported here", parameter);
         }

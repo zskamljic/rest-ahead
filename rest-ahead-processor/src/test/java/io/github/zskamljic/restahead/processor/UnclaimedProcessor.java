@@ -3,6 +3,7 @@ package io.github.zskamljic.restahead.processor;
 import io.github.zskamljic.restahead.annotations.Adapter;
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.request.Header;
+import io.github.zskamljic.restahead.annotations.request.Path;
 import io.github.zskamljic.restahead.annotations.request.Query;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -15,7 +16,7 @@ import java.util.Set;
 /**
  * Claim other annotations to prevent compile warnings.
  */
-public class GeneratedProcessor extends AbstractProcessor {
+public class UnclaimedProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         return true;
@@ -33,6 +34,7 @@ public class GeneratedProcessor extends AbstractProcessor {
             Body.class.getCanonicalName(),
             Generated.class.getCanonicalName(),
             Header.class.getCanonicalName(),
+            Path.class.getCanonicalName(),
             Query.class.getCanonicalName()
         );
     }
