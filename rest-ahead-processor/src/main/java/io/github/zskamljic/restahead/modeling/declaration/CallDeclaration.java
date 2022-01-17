@@ -1,5 +1,6 @@
 package io.github.zskamljic.restahead.modeling.declaration;
 
+import io.github.zskamljic.restahead.encoding.FormEncoding;
 import io.github.zskamljic.restahead.requests.request.RequestLine;
 
 import javax.lang.model.element.ExecutableElement;
@@ -22,8 +23,13 @@ public record CallDeclaration(
     ParameterDeclaration parameters,
     ReturnDeclaration returnDeclaration
 ) {
+    /**
+     * Whether the body requires a converter to be present in the service.
+     *
+     * @return true if a converter is required, false otherwise
+     */
     public boolean requiresConverter() {
-        return parameters.body().isPresent() ||
+        return parameters.body().isPresent() && !(parameters.body().get().encoding() instanceof FormEncoding) ||
             returnDeclaration.targetConversion().isPresent();
     }
 }

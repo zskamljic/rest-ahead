@@ -1,9 +1,12 @@
 package io.github.zskamljic.restahead.generation;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
+import io.github.zskamljic.restahead.encoding.ConvertEncoding;
+import io.github.zskamljic.restahead.encoding.FormEncoding;
 import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
@@ -68,12 +71,49 @@ public class MethodGenerator {
         BodyDeclaration body,
         List<TypeMirror> declaredExceptions
     ) {
+        var encoding = body.encoding();
+        if (encoding instanceof ConvertEncoding convertEncoding) {
+            addConvertEncoding(builder, declaredExceptions, convertEncoding.exceptions(), body.parameterName());
+        } else if (encoding instanceof FormEncoding) {
+            addFormEncoding(builder, body.parameterName());
+        }
+    }
+
+    /**
+     * Adds the default body encoding using the converter field.
+     *
+     * @param builder            the builder to which the code should be added
+     * @param declaredExceptions the exceptions declared by the parent method
+     * @param convertExceptions  the exceptions thrown by the converter
+     * @param parameterName      the name of the parameter to convert
+     */
+    private void addConvertEncoding(
+        MethodSpec.Builder builder,
+        List<TypeMirror> declaredExceptions,
+        List<TypeMirror> convertExceptions,
+        String parameterName
+    ) {
         exceptionsGenerator.generateTryCatchIfNeeded(
             builder,
             declaredExceptions,
-            body.convertExceptions(),
-            () -> builder.addStatement("$L.setBody($L.serialize($L))", Variables.REQUEST_BUILDER, Variables.CONVERTER, body.parameterName())
+            convertExceptions,
+            () -> builder.addStatement("$L.setBody($L.serialize($L))", Variables.REQUEST_BUILDER, Variables.CONVERTER, parameterName)
         );
+    }
+
+    /**
+     * Adds form encoding using the generated type and adds a Content-Type header for this body.
+     *
+     * @param builder       the builder to add the code to
+     * @param parameterName the name of the parameter
+     */
+    private void addFormEncoding(MethodSpec.Builder builder, String parameterName) {
+        var className = ClassName.get(MethodGenerator.class.getPackageName(), Variables.FORM_CONVERTER);
+        builder.addStatement("$L.addHeader(\"Content-Type\", \"application/x-www-form-urlencoded\")", Variables.REQUEST_BUILDER)
+            .addStatement(
+                "$L.setBody($T.$L($L))",
+                Variables.REQUEST_BUILDER, className, Variables.FORM_ENCODE, parameterName
+            );
     }
 
     /**

@@ -1,9 +1,9 @@
 package io.github.zskamljic.restahead.modeling.validation;
 
+import io.github.zskamljic.restahead.modeling.TypeValidator;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 
 import javax.annotation.processing.Messager;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -12,33 +12,22 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Used to validate common parameters such as headers and queries.
  */
 abstract class CommonParameterValidator {
-    private static final List<Class<?>> ALLOWED_TYPES = List.of(
-        String.class, UUID.class
-    );
-
-    private final List<TypeMirror> allowedMirrors;
     protected final Messager messager;
     private final Types types;
     private final TypeMirror collectionMirror;
+    private final TypeValidator typeValidator;
 
     protected CommonParameterValidator(Messager messager, Elements elements, Types types) {
         this.messager = messager;
         this.types = types;
         collectionMirror = elements.getTypeElement(Collection.class.getCanonicalName()).asType();
-
-        allowedMirrors = ALLOWED_TYPES.stream()
-            .map(Class::getCanonicalName)
-            .map(elements::getTypeElement)
-            .map(TypeElement::asType)
-            .toList();
+        typeValidator = new TypeValidator(elements, types);
     }
 
     /**
@@ -66,7 +55,7 @@ abstract class CommonParameterValidator {
      */
     private ParameterType isInvalidType(TypeMirror typeMirror) {
         if (typeMirror instanceof ArrayType arrayType) {
-            return isUnsupportedType(arrayType.getComponentType()) ? ParameterType.INVALID : ParameterType.ITERABLE;
+            return typeValidator.isUnsupportedType(arrayType.getComponentType()) ? ParameterType.INVALID : ParameterType.ITERABLE;
         }
         if (typeMirror instanceof DeclaredType declaredType) {
             var erasedType = types.erasure(declaredType);
@@ -74,32 +63,11 @@ abstract class CommonParameterValidator {
                 var typeArguments = declaredType.getTypeArguments();
                 if (typeArguments.size() != 1) return ParameterType.INVALID;
 
-                return isUnsupportedType(typeArguments.get(0)) ? ParameterType.INVALID : ParameterType.ITERABLE;
+                return typeValidator.isUnsupportedType(typeArguments.get(0)) ? ParameterType.INVALID : ParameterType.ITERABLE;
             }
         }
 
-        return isUnsupportedType(typeMirror) ? ParameterType.INVALID : ParameterType.SINGLE;
-    }
-
-    /**
-     * Checks if type is supported.
-     *
-     * @param typeMirror the type to check
-     * @return true if value is not a primitive, a boxed primitive or not a String or UUID
-     */
-    private boolean isUnsupportedType(TypeMirror typeMirror) {
-        if (typeMirror.getKind().isPrimitive()) {
-            return false;
-        }
-        try {
-            types.unboxedType(typeMirror);
-            return false;
-        } catch (IllegalArgumentException exception) {
-            // Type was not a primitive
-        }
-
-        return allowedMirrors.stream()
-            .noneMatch(type -> types.isSameType(type, typeMirror));
+        return typeValidator.isUnsupportedType(typeMirror) ? ParameterType.INVALID : ParameterType.SINGLE;
     }
 
     enum ParameterType {

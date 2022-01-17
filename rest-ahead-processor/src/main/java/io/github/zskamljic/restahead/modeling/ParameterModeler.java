@@ -1,9 +1,14 @@
 package io.github.zskamljic.restahead.modeling;
 
+import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.request.Header;
 import io.github.zskamljic.restahead.annotations.request.Path;
 import io.github.zskamljic.restahead.annotations.request.Query;
+import io.github.zskamljic.restahead.encoding.ConvertEncoding;
+import io.github.zskamljic.restahead.encoding.Encoding;
+import io.github.zskamljic.restahead.encoding.FormEncoding;
+import io.github.zskamljic.restahead.encoding.generation.GenerationStrategy;
 import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
@@ -23,6 +28,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Used to extract parameter info from the declaration.
@@ -34,6 +40,8 @@ public class ParameterModeler {
 
     private final Messager messager;
     private final PathValidator pathValidator;
+    private final Elements elements;
+    private final Types types;
     private final HeaderValidator headerValidator;
     private final QueryValidator queryValidator;
     private final TypeMirror ioException;
@@ -41,6 +49,8 @@ public class ParameterModeler {
     public ParameterModeler(Messager messager, Elements elements, Types types, PathValidator pathValidator) {
         this.messager = messager;
         this.pathValidator = pathValidator;
+        this.elements = elements;
+        this.types = types;
         headerValidator = new HeaderValidator(messager, elements, types);
         queryValidator = new QueryValidator(messager, elements, types);
         ioException = elements.getTypeElement(IOException.class.getCanonicalName())
@@ -108,16 +118,47 @@ public class ParameterModeler {
         List<RequestParameterSpec> paths,
         List<BodyDeclaration> bodies
     ) {
+        var hasFormAnnotation = parameter.getAnnotation(FormUrlEncoded.class) != null;
+        if (annotation instanceof Body) {
+            selectEncoding(hasFormAnnotation, parameter)
+                .ifPresent(
+                    encoding -> bodies.add(new BodyDeclaration(parameter, parameter.getSimpleName().toString(), encoding))
+                );
+            return;
+        }
+        if (hasFormAnnotation) {
+            messager.printMessage(Diagnostic.Kind.ERROR, "FormUrlEncoded can only be applied to parameter annotated with @Body.", parameter);
+            return;
+        }
+
         if (annotation instanceof Header header) {
             headerValidator.getHeaderSpec(header.value(), parameter).ifPresent(headers::add);
         } else if (annotation instanceof Query query) {
             queryValidator.getQuerySpec(query.value(), parameter).ifPresent(queries::add);
-        } else if (annotation instanceof Body) {
-            bodies.add(new BodyDeclaration(parameter, parameter.getSimpleName().toString(), List.of(ioException)));
         } else if (annotation instanceof Path path) {
             pathValidator.getPathSpec(path.value(), parameter).ifPresent(paths::add);
         } else {
             messager.printMessage(Diagnostic.Kind.ERROR, "Annotation is not supported here", parameter);
+        }
+    }
+
+    /**
+     * Select the appropriate encoding for the body parameter.
+     *
+     * @param hasFormAnnotation if there is a {@link FormUrlEncoded} annotation on the parameter
+     * @param parameter         the parameter itself
+     * @return empty if no valid strategy for conversion is found, the encoding otherwise
+     */
+    private Optional<Encoding> selectEncoding(boolean hasFormAnnotation, VariableElement parameter) {
+        if (hasFormAnnotation) {
+            var strategy = GenerationStrategy.select(elements, types, parameter.asType());
+            if (strategy.isEmpty()) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "Form encoding for type " + parameter.asType() + " is not supported.", parameter);
+                return Optional.empty();
+            }
+            return Optional.of(new FormEncoding(strategy.get()));
+        } else {
+            return Optional.of(new ConvertEncoding(List.of(ioException)));
         }
     }
 }

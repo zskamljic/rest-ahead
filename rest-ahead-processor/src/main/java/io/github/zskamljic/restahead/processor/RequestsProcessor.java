@@ -1,5 +1,6 @@
 package io.github.zskamljic.restahead.processor;
 
+import io.github.zskamljic.restahead.generation.FormConverterGenerator;
 import io.github.zskamljic.restahead.generation.ServiceGenerator;
 import io.github.zskamljic.restahead.modeling.AdapterModeler;
 import io.github.zskamljic.restahead.modeling.ServiceModeler;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  * Processor entry point for HTTP annotations.
  */
 public class RequestsProcessor extends AbstractProcessor {
+    private FormConverterGenerator formConverterGenerator;
     private ServiceModeler serviceModeler;
     private ServiceGenerator serviceGenerator;
     private AdapterModeler adapterModeler;
@@ -36,6 +38,7 @@ public class RequestsProcessor extends AbstractProcessor {
         serviceModeler = new ServiceModeler(messager, elements, types);
         adapterModeler = new AdapterModeler(messager, elements, types);
         serviceGenerator = new ServiceGenerator(messager, filer);
+        formConverterGenerator = new FormConverterGenerator(messager, filer);
     }
 
     /**
@@ -49,7 +52,8 @@ public class RequestsProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         var adapters = adapterModeler.findAdapters(roundEnv);
         var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv, adapters);
-        serviceDeclarations.forEach(serviceGenerator::generateService);
+        formConverterGenerator.generateFormEncoderIfNeeded(serviceDeclarations);
+        serviceDeclarations.forEach(service -> serviceGenerator.generateService(service));
         return true;
     }
 
