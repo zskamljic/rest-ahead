@@ -17,10 +17,8 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -44,19 +42,9 @@ public record RecordGenerationStrategy(TypeMirror type) implements GenerationStr
             .map(ExecutableElement::getSimpleName)
             .map(Name::toString)
             .toList();
-        var parameters = new ArrayList<>();
-        var conversions = new ArrayList<String>();
-        for (var getter : getters) {
-            parameters.add(getter + "=");
-            parameters.add(URLEncoder.class);
-            parameters.add(String.class);
-            parameters.add(getter);
-            parameters.add(StandardCharsets.class);
-
-            conversions.add("$S + $T.encode($T.valueOf(value.$L()), $T.UTF_8)");
-        }
-        return builder.addStatement("var stringValue = " + String.join(" + \"&\" + ", conversions), parameters.toArray())
-            .addStatement("return new $T(stringValue.getBytes())", ByteArrayInputStream.class)
+        var getterFormGenerator = new GetterFormGenerator(builder);
+        getterFormGenerator.generateConversion(getters, UnaryOperator.identity());
+        return builder.addStatement("return new $T(stringValue.getBytes())", ByteArrayInputStream.class)
             .build();
     }
 

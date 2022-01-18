@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 /**
  * Outlines the generation strategy for some type.
  */
-public sealed interface GenerationStrategy permits MapGenerationStrategy, RecordGenerationStrategy {
+public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapGenerationStrategy, RecordGenerationStrategy {
     /**
      * The type that this strategy applies to. Return from this value will be used to ensure that only one converter
      * will be generated for each type.
@@ -38,7 +38,8 @@ public sealed interface GenerationStrategy permits MapGenerationStrategy, Record
     static Optional<GenerationStrategy> select(Elements elements, Types types, TypeMirror mirror) {
         Stream<OptionalStrategyProvider> providers = Stream.of(
             MapGenerationStrategy::getIfSupported,
-            RecordGenerationStrategy::getIfSupported
+            RecordGenerationStrategy::getIfSupported,
+            ClassGenerationStrategy::getIfSupported
         );
         return providers.map(provider -> provider.getIfSupported(elements, types, mirror))
             .flatMap(Optional::stream)

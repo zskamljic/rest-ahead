@@ -3,6 +3,7 @@ package io.github.zskamljic.restahead.encoding.generation;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import io.github.zskamljic.restahead.generation.Variables;
 import io.github.zskamljic.restahead.modeling.TypeValidator;
@@ -37,7 +38,7 @@ public record MapGenerationStrategy(TypeMirror type) implements GenerationStrate
         var valueParameter = TypeVariableName.get("Value");
         var builder = MethodSpec.methodBuilder(Variables.FORM_ENCODE)
             .addModifiers(Modifier.STATIC, Modifier.PUBLIC)
-            .addParameter(ParameterizedTypeName.get((ClassName) ClassName.get(type), keyParameter, valueParameter), "value")
+            .addParameter(ParameterizedTypeName.get((ClassName) TypeName.get(type), keyParameter, valueParameter), "value")
             .addTypeVariables(List.of(keyParameter, valueParameter))
             .returns(InputStream.class);
 

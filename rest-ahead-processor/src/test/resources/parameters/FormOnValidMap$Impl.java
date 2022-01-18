@@ -4,7 +4,6 @@ import io.github.zskamljic.restahead.adapter.DefaultAdapters;
 import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
-import io.github.zskamljic.restahead.conversion.Converter;
 import io.github.zskamljic.restahead.exceptions.RestException;
 import io.github.zskamljic.restahead.generation.FormConverter;
 import java.lang.Double;
@@ -24,15 +23,11 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
 
     private final Client client;
 
-    private final Converter converter;
-
     private final DefaultAdapters defaultAdapters;
 
-    public FormOnValidMap$Impl(String baseUrl, Client client, Converter converter,
-                               DefaultAdapters defaultAdapters) {
+    public FormOnValidMap$Impl(String baseUrl, Client client, DefaultAdapters defaultAdapters) {
         this.baseUrl = baseUrl;
         this.client = client;
-        this.converter = converter;
         this.defaultAdapters = defaultAdapters;
     }
 
@@ -42,6 +37,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setVerb(Verb.POST)
             .setBaseUrl(baseUrl)
             .setPath("");
+        httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
         httpRequestBuilder.setBody(FormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
@@ -57,6 +53,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setVerb(Verb.POST)
             .setBaseUrl(baseUrl)
             .setPath("");
+        httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
         httpRequestBuilder.setBody(FormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
@@ -72,6 +69,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setVerb(Verb.POST)
             .setBaseUrl(baseUrl)
             .setPath("");
+        httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
         httpRequestBuilder.setBody(FormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
@@ -87,6 +85,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setVerb(Verb.POST)
             .setBaseUrl(baseUrl)
             .setPath("");
+        httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
         httpRequestBuilder.setBody(FormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {

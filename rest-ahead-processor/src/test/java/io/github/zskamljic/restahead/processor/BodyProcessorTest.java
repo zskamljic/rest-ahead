@@ -41,4 +41,26 @@ class BodyProcessorTest extends CommonProcessorTest {
             .and()
             .generatesSources(JavaFileObjects.forResource("parameters/FormOnRecord$Impl.java"));
     }
+
+    @Test
+    void invalidRecordFailsToCompile() {
+        commonCompilationAssertion("parameters/FormOnRecordInvalid.java")
+            .failsToCompile()
+            .withErrorContaining("not supported");
+    }
+
+    @Test
+    void validClassCompiles() {
+        commonCompilationAssertion("parameters/FormOnClass.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("parameters/FormOnClass$Impl.java"));
+    }
+
+    @Test
+    void invalidClassFailsToCompile() {
+        commonCompilationAssertion("parameters/FormOnClassInvalid.java")
+            .failsToCompile()
+            .withErrorContaining("not supported");
+    }
 }

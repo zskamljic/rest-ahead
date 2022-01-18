@@ -41,4 +41,15 @@ class FormServiceTest {
         assertEquals("application/x-www-form-urlencoded", headers.get(CONTENT_TYPE));
         assertEquals(Map.of("first", "FIRST", "second", "SECOND"), response.form());
     }
+
+    @Test
+    void formRequestSendsCorrectDataForClass() {
+        var sample = new FormService.SampleClass("FIRST", "SECOND");
+
+        var response = service.postClass(sample);
+
+        var headers = response.headers();
+        assertEquals("application/x-www-form-urlencoded", headers.get(CONTENT_TYPE));
+        assertEquals(Map.of("first", "FIRST", "second", "SECOND"), response.form());
+    }
 }

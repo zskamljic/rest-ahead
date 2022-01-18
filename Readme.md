@@ -93,6 +93,23 @@ public interface HttpBinService {
 }
 ```
 
+Sending a form-url-encoded body can be done by adding `@FormUrlEncoded` annotation to the body:
+
+```java
+public interface HttpBinService {
+    @Post("/post")
+    Future<Response> performPost(@FormUrlEncoded @Body CustomRequest request);
+}
+```
+
+Such bodies do not require a converter, one will be generated for the given type.
+
+Supported types:
+
+- Map<String, String> and inherited classes
+- Records composed of primitives, boxed values, String or UUID
+- Classes with public, non-static getters returning only primitives, boxed values, String or UUID
+
 ### Headers
 
 Adding headers is possible by using the `@Header` annotation. Valid parameters for headers are either primitive types,
