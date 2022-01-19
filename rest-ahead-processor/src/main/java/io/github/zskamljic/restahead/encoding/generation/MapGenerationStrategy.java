@@ -8,11 +8,13 @@ import com.squareup.javapoet.TypeVariableName;
 import io.github.zskamljic.restahead.generation.Variables;
 import io.github.zskamljic.restahead.modeling.TypeValidator;
 
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -65,7 +67,7 @@ public record MapGenerationStrategy(TypeMirror type) implements GenerationStrate
      * @param mirror   the type for which to find a strategy
      * @return a strategy if data is valid, empty otherwise
      */
-    public static Optional<GenerationStrategy> getIfSupported(Elements elements, Types types, TypeMirror mirror) {
+    public static Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         var type = elements.getTypeElement(Map.class.getCanonicalName())
             .asType();
         if (!types.isAssignable(types.erasure(mirror), type)) {
@@ -80,6 +82,7 @@ public record MapGenerationStrategy(TypeMirror type) implements GenerationStrate
         var value = genericArguments.get(1);
 
         if (stringValidator.isUnsupportedType(key) || stringValidator.isUnsupportedType(value)) {
+            messager.printMessage(Diagnostic.Kind.ERROR, "Maps must consist of string representable values to be formEncoded", mapType.asElement());
             return Optional.empty();
         }
 

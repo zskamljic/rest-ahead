@@ -2,6 +2,7 @@ package io.github.zskamljic.restahead.encoding.generation;
 
 import com.squareup.javapoet.MethodSpec;
 
+import javax.annotation.processing.Messager;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -30,18 +31,19 @@ public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapG
     /**
      * Selects an appropriate generation strategy for given type.
      *
+     * @param messager the messager to report errors to
      * @param elements the elements to fetch type information from
      * @param types    the types utility to use for typing info
      * @param mirror   the type for which to find a strategy
      * @return the strategy or empty if none was found
      */
-    static Optional<GenerationStrategy> select(Elements elements, Types types, TypeMirror mirror) {
+    static Optional<GenerationStrategy> select(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         Stream<OptionalStrategyProvider> providers = Stream.of(
             MapGenerationStrategy::getIfSupported,
             RecordGenerationStrategy::getIfSupported,
             ClassGenerationStrategy::getIfSupported
         );
-        return providers.map(provider -> provider.getIfSupported(elements, types, mirror))
+        return providers.map(provider -> provider.getIfSupported(messager, elements, types, mirror))
             .flatMap(Optional::stream)
             .findFirst();
     }
@@ -51,6 +53,6 @@ public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapG
      */
     @FunctionalInterface
     interface OptionalStrategyProvider {
-        Optional<GenerationStrategy> getIfSupported(Elements elements, Types types, TypeMirror mirror);
+        Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror);
     }
 }

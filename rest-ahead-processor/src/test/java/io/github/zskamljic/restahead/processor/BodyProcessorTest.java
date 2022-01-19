@@ -39,7 +39,10 @@ class BodyProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("parameters/FormOnRecord.java")
             .compilesWithoutWarnings()
             .and()
-            .generatesSources(JavaFileObjects.forResource("parameters/FormOnRecord$Impl.java"));
+            .generatesSources(
+                JavaFileObjects.forResource("parameters/FormOnRecord$Impl.java"),
+                JavaFileObjects.forResource("parameters/record/FormConverter.java")
+            );
     }
 
     @Test
@@ -54,7 +57,10 @@ class BodyProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("parameters/FormOnClass.java")
             .compilesWithoutWarnings()
             .and()
-            .generatesSources(JavaFileObjects.forResource("parameters/FormOnClass$Impl.java"));
+            .generatesSources(
+                JavaFileObjects.forResource("parameters/FormOnClass$Impl.java"),
+                JavaFileObjects.forResource("parameters/class/FormConverter.java")
+            );
     }
 
     @Test
@@ -62,5 +68,12 @@ class BodyProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("parameters/FormOnClassInvalid.java")
             .failsToCompile()
             .withErrorContaining("not supported");
+    }
+
+    @Test
+    void invalidFormNameFailsToCompile() {
+        commonCompilationAssertion("parameters/FormOnWithWrongField.java")
+            .failsToCompile()
+            .withErrorContaining("Form name cannot be empty");
     }
 }

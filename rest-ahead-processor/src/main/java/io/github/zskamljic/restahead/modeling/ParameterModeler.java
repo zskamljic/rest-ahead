@@ -151,7 +151,7 @@ public class ParameterModeler {
      */
     private Optional<Encoding> selectEncoding(boolean hasFormAnnotation, VariableElement parameter) {
         if (hasFormAnnotation) {
-            var strategy = GenerationStrategy.select(elements, types, parameter.asType());
+            var strategy = GenerationStrategy.select(messager, elements, types, parameter.asType());
             if (strategy.isEmpty()) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "Form encoding for type " + parameter.asType() + " is not supported.", parameter);
                 return Optional.empty();

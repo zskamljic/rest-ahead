@@ -5,11 +5,11 @@ import com.squareup.javapoet.TypeName;
 import io.github.zskamljic.restahead.generation.Variables;
 import io.github.zskamljic.restahead.modeling.TypeValidator;
 
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -38,12 +38,8 @@ public record RecordGenerationStrategy(TypeMirror type) implements GenerationStr
             .returns(InputStream.class);
 
         var element = ((DeclaredType) type).asElement();
-        var getters = accessors(element)
-            .map(ExecutableElement::getSimpleName)
-            .map(Name::toString)
-            .toList();
         var getterFormGenerator = new GetterFormGenerator(builder);
-        getterFormGenerator.generateConversion(getters, UnaryOperator.identity());
+        getterFormGenerator.generateConversion(accessors(element).toList(), UnaryOperator.identity());
         return builder.addStatement("return new $T(stringValue.getBytes())", ByteArrayInputStream.class)
             .build();
     }
@@ -56,7 +52,7 @@ public record RecordGenerationStrategy(TypeMirror type) implements GenerationStr
      * @param mirror   the type for which to find a strategy
      * @return the strategy if it can be applied, empty otherwise
      */
-    public static Optional<GenerationStrategy> getIfSupported(Elements elements, Types types, TypeMirror mirror) {
+    public static Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         if (!(mirror instanceof DeclaredType declaredType)) return Optional.empty();
 
         var element = declaredType.asElement();
@@ -67,7 +63,9 @@ public record RecordGenerationStrategy(TypeMirror type) implements GenerationStr
             .map(ExecutableElement::getReturnType)
             .anyMatch(stringValidator::isUnsupportedType);
 
-        if (hasInvalidTypes) return Optional.empty();
+        if (hasInvalidTypes || GetterFormGenerator.hasInvalidFormNames(messager, true, accessors(element))) {
+            return Optional.empty();
+        }
 
         return Optional.of(new RecordGenerationStrategy(mirror));
     }

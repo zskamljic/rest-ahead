@@ -93,12 +93,30 @@ public interface HttpBinService {
 }
 ```
 
+#### Form encoding
+
 Sending a form-url-encoded body can be done by adding `@FormUrlEncoded` annotation to the body:
 
 ```java
 public interface HttpBinService {
     @Post("/post")
     Future<Response> performPost(@FormUrlEncoded @Body CustomRequest request);
+}
+```
+
+Changing the name of parameters in the form line can be done by using `@FormName` annotation on desired fields:
+
+```java
+// This will cause the body to send "first=<value of first>&second=<value of b>"
+record SampleFormBody(String first, @FormName("second") String b) {
+}
+
+// This will cause the body to send "customName=hello"
+class SampleFormClass {
+    @FormName("customName")
+    String getSomething() {
+        return "hello";
+    }
 }
 ```
 

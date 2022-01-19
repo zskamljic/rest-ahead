@@ -1,5 +1,6 @@
 package io.github.zskamljic.restahead.demo.clients;
 
+import io.github.zskamljic.restahead.annotations.form.FormName;
 import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.verbs.Post;
@@ -17,7 +18,7 @@ public interface FormService {
     @Post("/post")
     HttpBinResponse postClass(@FormUrlEncoded @Body SampleClass body);
 
-    record Sample(String first, String second) {
+    record Sample(String first, @FormName("2nd") String second) {
     }
 
     class SampleClass {
@@ -33,6 +34,7 @@ public interface FormService {
             return first;
         }
 
+        @FormName("2nd")
         public String getSecond() {
             return second;
         }

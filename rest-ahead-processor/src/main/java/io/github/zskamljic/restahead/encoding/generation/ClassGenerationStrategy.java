@@ -5,9 +5,9 @@ import com.squareup.javapoet.TypeName;
 import io.github.zskamljic.restahead.generation.Variables;
 import io.github.zskamljic.restahead.modeling.TypeValidator;
 
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -16,8 +16,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Used to generate class to form encoded string conversion.
@@ -31,13 +29,9 @@ public record ClassGenerationStrategy(TypeMirror type) implements GenerationStra
             .returns(InputStream.class);
 
         var getters = findGetters((DeclaredType) type);
-        var methodToNames = getters.stream()
-            .map(ExecutableElement::getSimpleName)
-            .map(Name::toString)
-            .collect(Collectors.toMap(ClassGenerationStrategy::getterToName, Function.identity()));
 
         var getterFormGenerator = new GetterFormGenerator(builder);
-        getterFormGenerator.generateConversion(methodToNames.keySet().stream().toList(), methodToNames::get);
+        getterFormGenerator.generateConversion(getters, ClassGenerationStrategy::getterToName);
         return builder.addStatement("return new $T(stringValue.getBytes())", ByteArrayInputStream.class)
             .build();
     }
@@ -50,7 +44,7 @@ public record ClassGenerationStrategy(TypeMirror type) implements GenerationStra
      * @param mirror   the type for which to find a strategy
      * @return generation strategy if no issues were discovered, empty otherwise
      */
-    public static Optional<GenerationStrategy> getIfSupported(Elements elements, Types types, TypeMirror mirror) {
+    public static Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         if (!(mirror instanceof DeclaredType declaredType)) return Optional.empty();
 
         var getters = findGetters(declaredType);
@@ -62,7 +56,9 @@ public record ClassGenerationStrategy(TypeMirror type) implements GenerationStra
             .map(ExecutableElement::getReturnType)
             .anyMatch(stringValidator::isUnsupportedType);
 
-        if (hasInvalidType) return Optional.empty();
+        if (hasInvalidType || GetterFormGenerator.hasInvalidFormNames(messager, false, getters.stream())) {
+            return Optional.empty();
+        }
 
         return Optional.of(new ClassGenerationStrategy(mirror));
     }

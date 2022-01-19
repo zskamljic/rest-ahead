@@ -1,6 +1,7 @@
 package io.github.zskamljic.restahead.processor;
 
 import io.github.zskamljic.restahead.annotations.Adapter;
+import io.github.zskamljic.restahead.annotations.form.FormName;
 import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.request.Header;
@@ -33,6 +34,7 @@ public class UnclaimedProcessor extends AbstractProcessor {
         return Set.of(
             Adapter.class.getCanonicalName(),
             Body.class.getCanonicalName(),
+            FormName.class.getCanonicalName(),
             FormUrlEncoded.class.getCanonicalName(),
             Generated.class.getCanonicalName(),
             Header.class.getCanonicalName(),
