@@ -7,6 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Common logic for both fields and files.
+ */
 public abstract sealed class MultiPart permits FieldPart, FilePart {
     protected static final String SEPARATOR = "\r\n";
     private final String fieldName;
@@ -15,6 +18,12 @@ public abstract sealed class MultiPart permits FieldPart, FilePart {
         this.fieldName = fieldName;
     }
 
+    /**
+     * Creates an input stream containing the boundary and content.
+     *
+     * @param boundary the boundary to use
+     * @return the {@link InputStream} with written body
+     */
     public final InputStream inputStream(String boundary) {
         var prefix = "--" + boundary + SEPARATOR +
             contentDisposition() + SEPARATOR + SEPARATOR;
@@ -28,9 +37,19 @@ public abstract sealed class MultiPart permits FieldPart, FilePart {
         )));
     }
 
+    /**
+     * Content disposition line for this type.
+     *
+     * @return the filled disposition
+     */
     protected String contentDisposition() {
         return "Content-Disposition: form-data; name=\"" + fieldName + "\"";
     }
 
+    /**
+     * Get content for this part.
+     *
+     * @return the stream that when read will provide content of this part's body
+     */
     protected abstract InputStream bodyContent();
 }

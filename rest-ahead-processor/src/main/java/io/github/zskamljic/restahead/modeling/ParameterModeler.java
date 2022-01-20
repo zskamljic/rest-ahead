@@ -119,6 +119,12 @@ public class ParameterModeler {
         return new ParameterDeclaration(headers, queries, paths, bodyDeclaration);
     }
 
+    /**
+     * Creates body encoding if necessary.
+     *
+     * @param bodies the bodies that need code generation
+     * @return encoding if valid and present, empty otherwise
+     */
     private Optional<BodyEncoding> createBodyDeclaration(ArrayList<BodyParameter> bodies) {
         if (bodies.isEmpty()) return Optional.empty();
 
@@ -148,7 +154,7 @@ public class ParameterModeler {
                 partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.of(FilePart.class)));
             } else if (!typeValidator.isUnsupportedType(type)) {
                 partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.of(FieldPart.class)));
-            } else if (typeValidator.isDirectFileType(type)) {
+            } else if (typeValidator.isDirectMultipartType(type)) {
                 partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.empty()));
             } else {
                 messager.printMessage(Diagnostic.Kind.ERROR, "Type is not supported for multipart body.", body.parameter());
@@ -157,6 +163,15 @@ public class ParameterModeler {
         return Optional.of(new MultiPartBodyEncoding(partMap, exceptions.stream().toList()));
     }
 
+    /**
+     * Handles the annotations on function that are relevant to query, path or headers.
+     *
+     * @param requestAnnotations the annotations present
+     * @param parameter          the parameter on which the annotations are
+     * @param headers            a list to collect headers in
+     * @param queries            a list to collect queries in
+     * @param paths              a list to collect paths in
+     */
     private void handleRequestAnnotations(
         List<? extends Annotation> requestAnnotations,
         VariableElement parameter,
@@ -179,6 +194,13 @@ public class ParameterModeler {
         }
     }
 
+    /**
+     * Handle annotations relevant to the body.
+     *
+     * @param bodyAnnotations the annotations present on the parameter
+     * @param parameter       the parameter we are processing
+     * @param bodies          a list to collect bodies in
+     */
     private void handleBodyAnnotations(
         List<? extends Annotation> bodyAnnotations,
         VariableElement parameter,
@@ -208,6 +230,12 @@ public class ParameterModeler {
         bodies.add(new BodyParameter(parameter, parameterName, parameterName, hasFormUrlEncoded ? BodyParameter.Type.FORM : BodyParameter.Type.CONVERT));
     }
 
+    /**
+     * Checks if the list has invalid body definitions.
+     *
+     * @param bodies the full list of bodies
+     * @return true if any errors are found, false otherwise
+     */
     private boolean hasInvalidBodies(ArrayList<BodyParameter> bodies) {
         if (bodies.size() <= 1) return false;
 

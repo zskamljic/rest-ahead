@@ -119,6 +119,13 @@ public class MethodGenerator {
             );
     }
 
+    /**
+     * Adds multipart request builder to the method.
+     *
+     * @param builder            the builder to which to add the code
+     * @param declaredExceptions the exceptions that the function throws
+     * @param multipart          the encoding to generate code for
+     */
     private void addMultipartEncoding(
         MethodSpec.Builder builder,
         List<TypeMirror> declaredExceptions,
@@ -132,11 +139,11 @@ public class MethodGenerator {
                 builder.addCode("$T.builder()\n", MultiPartRequest.class);
                 for (var part : multipart.parts()) {
                     part.type().ifPresentOrElse(
-                        type -> builder.addCode(".addPart(new $T($S, $L))\n", type, part.httpName(), part.name()),
-                        () -> builder.addCode(".addPart($L)\n", part.name())
+                        type -> builder.addCode("\t.addPart(new $T($S, $L))\n", type, part.httpName(), part.name()),
+                        () -> builder.addCode("\t.addPart($L)\n", part.name())
                     );
                 }
-                builder.addStatement(".buildInto($L)", Variables.REQUEST_BUILDER);
+                builder.addStatement("\t.buildInto($L)", Variables.REQUEST_BUILDER);
             }
         );
     }

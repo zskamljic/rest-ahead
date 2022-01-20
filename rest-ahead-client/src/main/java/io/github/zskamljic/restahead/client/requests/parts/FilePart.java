@@ -9,6 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/**
+ * Represents a multipart file
+ */
 public final class FilePart extends MultiPart {
     private final InputStream inputStream;
     private final String fileName;

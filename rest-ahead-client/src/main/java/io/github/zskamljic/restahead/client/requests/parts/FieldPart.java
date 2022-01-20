@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+/**
+ * Represents a multipart field.
+ */
 public final class FieldPart extends MultiPart {
     private final String value;
 

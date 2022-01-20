@@ -68,14 +68,32 @@ public class TypeValidator {
             .noneMatch(type -> types.isSameType(type, typeMirror));
     }
 
+    /**
+     * Checks if the type is valid for file bodies.
+     *
+     * @param type the type to check
+     * @return whether or not the type is valid
+     */
     public boolean isFileType(TypeMirror type) {
         return allowedFileMirrors.stream().anyMatch(allowed -> types.isAssignable(type, allowed));
     }
 
-    public boolean isDirectFileType(TypeMirror type) {
+    /**
+     * Checks if type can be passed directly.
+     *
+     * @param type the type
+     * @return true if type is field part or file part
+     */
+    public boolean isDirectMultipartType(TypeMirror type) {
         return types.isAssignable(type, multiPartType);
     }
 
+    /**
+     * Get possible exceptions for multipart file constructor based on type provided.
+     *
+     * @param type the type to check for
+     * @return the list of exceptions
+     */
     public List<TypeMirror> getPossibleException(TypeMirror type) {
         return filePartType.getEnclosedElements()
             .stream()
@@ -90,6 +108,13 @@ public class TypeValidator {
             .toList();
     }
 
+    /**
+     * If the function has a parameter that type can be assigned to.
+     *
+     * @param function the function to check
+     * @param type     the type to check for
+     * @return whether the type can be used as a parameter to this function
+     */
     private boolean functionContainsParameter(ExecutableElement function, TypeMirror type) {
         return function.getParameters()
             .stream()
