@@ -2,12 +2,17 @@ package io.github.zskamljic.restahead.demo.clients;
 
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
+import io.github.zskamljic.restahead.client.requests.parts.FilePart;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FormServiceTest {
     private static final String CONTENT_TYPE = "Content-Type";
@@ -51,5 +56,27 @@ class FormServiceTest {
         var headers = response.headers();
         assertEquals("application/x-www-form-urlencoded", headers.get(CONTENT_TYPE));
         assertEquals(Map.of("first", "FIRST", "2nd", "SECOND"), response.form());
+    }
+
+    @Test
+    void formRequestSendsMultipart() throws IOException {
+        var path = Files.createTempFile("pre", "post");
+        var file = path.toFile();
+        var input = new ByteArrayInputStream("data".getBytes());
+
+        var inputPart = new FilePart("stream", "stream", input);
+        var bytesPart = new FilePart("bytes", "bytes", new byte[]{1, 2, 3});
+
+        var response = service.postMultiPart("part1", "part2", file, path, inputPart, bytesPart);
+
+        var headers = response.headers();
+        assertTrue(headers.get(CONTENT_TYPE).startsWith("multipart/form-data;"));
+        assertEquals(4, response.files().size());
+        assertEquals("", response.files().get("file"));
+        assertEquals("", response.files().get("path"));
+        assertEquals("data", response.files().get("stream"));
+        assertEquals(2, response.form().size());
+        assertEquals("part1", response.form().get("part"));
+        assertEquals("part2", response.form().get("two"));
     }
 }

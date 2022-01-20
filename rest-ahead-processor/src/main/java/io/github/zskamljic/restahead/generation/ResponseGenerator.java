@@ -110,7 +110,7 @@ public class ResponseGenerator {
     }
 
     /**
-     * Whether the type is absent from generic parameters
+     * Whether the type is absent from generic parts
      *
      * @param returnType the type to consider
      * @return false if type has any generic arguments, true otherwise

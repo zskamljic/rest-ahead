@@ -7,10 +7,14 @@ import io.github.zskamljic.restahead.modeling.ServiceModeler;
 import io.github.zskamljic.restahead.requests.VerbMapping;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +26,7 @@ public class RequestsProcessor extends AbstractProcessor {
     private ServiceModeler serviceModeler;
     private ServiceGenerator serviceGenerator;
     private AdapterModeler adapterModeler;
+    private Messager messager;
 
     /**
      * Initialize the implementation, extracting required fields from {@link ProcessingEnvironment}.
@@ -31,7 +36,7 @@ public class RequestsProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        var messager = processingEnv.getMessager();
+        messager = processingEnv.getMessager();
         var filer = processingEnv.getFiler();
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
@@ -50,10 +55,17 @@ public class RequestsProcessor extends AbstractProcessor {
      */
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        var adapters = adapterModeler.findAdapters(roundEnv);
-        var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv, adapters);
-        formConverterGenerator.generateFormEncoderIfNeeded(serviceDeclarations);
-        serviceDeclarations.forEach(service -> serviceGenerator.generateService(service));
+        try {
+            var adapters = adapterModeler.findAdapters(roundEnv);
+            var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv, adapters);
+            formConverterGenerator.generateFormEncoderIfNeeded(serviceDeclarations);
+            serviceDeclarations.forEach(service -> serviceGenerator.generateService(service));
+        } catch (IllegalArgumentException e) {
+            var stringWriter = new StringWriter();
+            var printWriter = new PrintWriter(stringWriter);
+            e.printStackTrace(printWriter);
+            messager.printMessage(Diagnostic.Kind.ERROR, "Error when generating: " + stringWriter.getBuffer().toString());
+        }
         return true;
     }
 

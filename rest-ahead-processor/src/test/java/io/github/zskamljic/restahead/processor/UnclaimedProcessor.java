@@ -3,6 +3,7 @@ package io.github.zskamljic.restahead.processor;
 import io.github.zskamljic.restahead.annotations.Adapter;
 import io.github.zskamljic.restahead.annotations.form.FormName;
 import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
+import io.github.zskamljic.restahead.annotations.form.Part;
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.request.Header;
 import io.github.zskamljic.restahead.annotations.request.Path;
@@ -38,6 +39,7 @@ public class UnclaimedProcessor extends AbstractProcessor {
             FormUrlEncoded.class.getCanonicalName(),
             Generated.class.getCanonicalName(),
             Header.class.getCanonicalName(),
+            Part.class.getCanonicalName(),
             Path.class.getCanonicalName(),
             Query.class.getCanonicalName()
         );

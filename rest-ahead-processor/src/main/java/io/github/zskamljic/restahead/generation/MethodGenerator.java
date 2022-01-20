@@ -3,11 +3,13 @@ package io.github.zskamljic.restahead.generation;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
+import io.github.zskamljic.restahead.client.requests.MultiPartRequest;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
-import io.github.zskamljic.restahead.encoding.ConvertEncoding;
-import io.github.zskamljic.restahead.encoding.FormEncoding;
-import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
+import io.github.zskamljic.restahead.encoding.BodyEncoding;
+import io.github.zskamljic.restahead.encoding.ConvertBodyEncoding;
+import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
+import io.github.zskamljic.restahead.encoding.MultiPartBodyEncoding;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
@@ -63,19 +65,20 @@ public class MethodGenerator {
      * Adds the body code request to the method.
      *
      * @param builder            the builder where the body code should be added
-     * @param body               the body declaration with parameter to use
+     * @param encoding           the body declaration with parameter(s) to use
      * @param declaredExceptions the exceptions that the enclosing function already declares
      */
     private void addSendBodyStatement(
         MethodSpec.Builder builder,
-        BodyDeclaration body,
+        BodyEncoding encoding,
         List<TypeMirror> declaredExceptions
     ) {
-        var encoding = body.encoding();
-        if (encoding instanceof ConvertEncoding convertEncoding) {
-            addConvertEncoding(builder, declaredExceptions, convertEncoding.exceptions(), body.parameterName());
-        } else if (encoding instanceof FormEncoding) {
-            addFormEncoding(builder, body.parameterName());
+        if (encoding instanceof ConvertBodyEncoding convertEncoding) {
+            addConvertEncoding(builder, declaredExceptions, convertEncoding.exceptions(), convertEncoding.parameterName());
+        } else if (encoding instanceof FormBodyEncoding formEncoding) {
+            addFormEncoding(builder, formEncoding.parameterName());
+        } else if (encoding instanceof MultiPartBodyEncoding multipart) {
+            addMultipartEncoding(builder, declaredExceptions, multipart);
         }
     }
 
@@ -116,12 +119,34 @@ public class MethodGenerator {
             );
     }
 
+    private void addMultipartEncoding(
+        MethodSpec.Builder builder,
+        List<TypeMirror> declaredExceptions,
+        MultiPartBodyEncoding multipart
+    ) {
+        exceptionsGenerator.generateTryCatchIfNeeded(
+            builder,
+            declaredExceptions,
+            multipart.exceptions(),
+            () -> {
+                builder.addCode("$T.builder()\n", MultiPartRequest.class);
+                for (var part : multipart.parts()) {
+                    part.type().ifPresentOrElse(
+                        type -> builder.addCode(".addPart(new $T($S, $L))\n", type, part.httpName(), part.name()),
+                        () -> builder.addCode(".addPart($L)\n", part.name())
+                    );
+                }
+                builder.addStatement(".buildInto($L)", Variables.REQUEST_BUILDER);
+            }
+        );
+    }
+
     /**
      * Add request initialization lines.
      *
      * @param builder     the method builder
      * @param requestLine the request line info
-     * @param parameters  the request parameters
+     * @param parameters  the request parts
      */
     private void addRequestInitialization(
         MethodSpec.Builder builder,
@@ -169,7 +194,7 @@ public class MethodGenerator {
     }
 
     /**
-     * Add path that contains parameters.
+     * Add path that contains parts.
      *
      * @param requestBlock the block to which to add the path code
      * @param path         the path definition

@@ -22,9 +22,9 @@ public final class TemplatedPath extends RequestPath {
     }
 
     /**
-     * Find the parameters that need to be provided.
+     * Find the parts that need to be provided.
      *
-     * @return list of parameters
+     * @return list of parts
      */
     public List<String> getRequiredParameters() {
         return requiredParameters;

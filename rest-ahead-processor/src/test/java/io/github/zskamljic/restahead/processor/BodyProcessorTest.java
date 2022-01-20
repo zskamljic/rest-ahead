@@ -16,7 +16,7 @@ class BodyProcessorTest extends CommonProcessorTest {
     void formOnInvalidParam() {
         commonCompilationAssertion("parameters/FormOnInvalid.java")
             .failsToCompile()
-            .withErrorContaining("@Body");
+            .withErrorContaining("Invalid annotation combination");
     }
 
     @Test
@@ -75,5 +75,27 @@ class BodyProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("parameters/FormOnWithWrongField.java")
             .failsToCompile()
             .withErrorContaining("Form name cannot be empty");
+    }
+
+    @Test
+    void formAndPartOnRequestFailToCompile() {
+        commonCompilationAssertion("parameters/FormAndPartSameField.java")
+            .failsToCompile()
+            .withErrorContaining("Request can't be both multipart and form encoded");
+    }
+
+    @Test
+    void formWithPartCompiles() {
+        commonCompilationAssertion("parameters/FormWithPart.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("parameters/FormWithPart$Impl.java"));
+    }
+
+    @Test
+    void formWithPartOnInvalidTypeFailsToCompile() {
+        commonCompilationAssertion("parameters/FormWithPartInvalidType.java")
+            .failsToCompile()
+            .withErrorContaining("Type is not supported");
     }
 }

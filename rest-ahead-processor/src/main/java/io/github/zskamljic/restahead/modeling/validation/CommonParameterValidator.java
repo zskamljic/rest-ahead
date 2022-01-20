@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * Used to validate common parameters such as headers and queries.
+ * Used to validate common parts such as headers and queries.
  */
 abstract class CommonParameterValidator {
     protected final Messager messager;

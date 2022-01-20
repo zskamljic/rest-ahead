@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @param name              the name of the method
  * @param returnType        the output of this adapter
- * @param adapterParameters the parameters of the adapter
+ * @param adapterParameters the parts of the adapter
  * @param exceptions        the exceptions thrown by this adapter
  * @param executableElement the executable element itself
  */

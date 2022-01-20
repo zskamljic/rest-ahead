@@ -31,7 +31,7 @@ class PathProcessorTest extends CommonProcessorTest {
     void pathAnnotationWithoutPlaceholderFails() {
         commonCompilationAssertion("path/PathWithoutPlaceholder.java")
             .failsToCompile()
-            .withErrorContaining("parameters are present, but there are none expected");
+            .withErrorContaining("parts are present, but there are none expected");
     }
 
     @Test

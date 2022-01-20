@@ -80,9 +80,9 @@ public class MethodModeler {
     }
 
     /**
-     * Checks if expected parameters and declared parameters match or not
+     * Checks if expected parts and declared parts match or not
      *
-     * @param paths       the paths from function parameters
+     * @param paths       the paths from function parts
      * @param requestLine the path from annotation
      * @param function    the function on which to report errors
      * @return true if any errors are discovered, false otherwise.
@@ -96,14 +96,14 @@ public class MethodModeler {
             .map(RequestParameterSpec::httpName)
             .collect(Collectors.toSet());
         if (annotationPaths.size() != paths.size()) {
-            messager.printMessage(Diagnostic.Kind.ERROR, "Path parameters must be unique", function);
+            messager.printMessage(Diagnostic.Kind.ERROR, "Path parts must be unique", function);
             return false;
         }
 
         if (!(requestLine.path() instanceof TemplatedPath templatedPath)) {
             if (annotationPaths.isEmpty()) return false;
 
-            messager.printMessage(Diagnostic.Kind.ERROR, "Path parameters are present, but there are none expected", function);
+            messager.printMessage(Diagnostic.Kind.ERROR, "Path parts are present, but there are none expected", function);
             return true;
         }
 
@@ -124,7 +124,7 @@ public class MethodModeler {
         missingPathDeclarations.removeAll(requestLineParameters);
         messager.printMessage(
             Diagnostic.Kind.ERROR,
-            "Expected and provided path variables do not match. Missing from parameters: %s, missing from path: %s"
+            "Expected and provided path variables do not match. Missing from parts: %s, missing from path: %s"
                 .formatted(
                     String.join(", ", missingParameters),
                     String.join(", ", missingPathDeclarations)),

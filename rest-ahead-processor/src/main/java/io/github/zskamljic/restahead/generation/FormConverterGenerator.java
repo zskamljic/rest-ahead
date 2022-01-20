@@ -2,9 +2,8 @@ package io.github.zskamljic.restahead.generation;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-import io.github.zskamljic.restahead.encoding.FormEncoding;
+import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
 import io.github.zskamljic.restahead.encoding.generation.GenerationStrategy;
-import io.github.zskamljic.restahead.modeling.declaration.BodyDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ServiceDeclaration;
@@ -44,9 +43,8 @@ public class FormConverterGenerator {
             .map(CallDeclaration::parameters)
             .map(ParameterDeclaration::body)
             .flatMap(Optional::stream)
-            .map(BodyDeclaration::encoding)
-            .filter(FormEncoding.class::isInstance)
-            .map(FormEncoding.class::cast)
+            .filter(FormBodyEncoding.class::isInstance)
+            .map(FormBodyEncoding.class::cast)
             .toList();
         if (formEncodableParameters.isEmpty()) {
             return;
@@ -68,10 +66,10 @@ public class FormConverterGenerator {
     /**
      * Generates the actual implementation.
      *
-     * @param parameters the parameters that require generation
+     * @param parameters the parts that require generation
      * @return the generated type.
      */
-    private TypeSpec generateFormEncoder(List<FormEncoding> parameters) {
+    private TypeSpec generateFormEncoder(List<FormBodyEncoding> parameters) {
         var typeToStrategy = new HashMap<TypeMirror, GenerationStrategy>();
         for (var parameter : parameters) {
             typeToStrategy.put(parameter.strategy().type(), parameter.strategy());

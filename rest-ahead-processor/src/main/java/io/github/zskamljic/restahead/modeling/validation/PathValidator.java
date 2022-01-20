@@ -31,7 +31,7 @@ public class PathValidator extends CommonParameterValidator {
      *
      * @param function    the function for which path is validated
      * @param requestLine the request line being validated
-     * @param parameters  the parameters in the given request
+     * @param parameters  the parts in the given request
      * @return empty optional in case of errors or requestSpec if no errors are discovered
      */
     public Optional<RequestLine> validatePathAndExtractQuery(
@@ -57,9 +57,9 @@ public class PathValidator extends CommonParameterValidator {
     }
 
     /**
-     * Extracts the preset query parameters from the request.
+     * Extracts the preset query parts from the request.
      *
-     * @param parameters the parameters to store query items in
+     * @param parameters the parts to store query items in
      * @param query      the query string
      * @param function   the function on which to report an error
      */
@@ -91,7 +91,7 @@ public class PathValidator extends CommonParameterValidator {
         return extractSpec(parameter, value)
             .filter(spec -> {
                 if (spec.isIterable()) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Path parameters must be singular.");
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Path parts must be singular.");
                     return false;
                 }
                 return true;

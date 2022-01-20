@@ -128,6 +128,27 @@ Supported types:
 - Records composed of primitives, boxed values, String or UUID
 - Classes with public, non-static getters returning only primitives, boxed values, String or UUID
 
+#### Multipart encoding
+
+Multipart requests can be executed as following:
+
+```java
+public interface MultipartService {
+    @Post("/post")
+    HttpBinResponse postMultiPart(
+        @Part String part,
+        @Body @Part("two") String part2,
+        @Part File file,
+        @Part Path path,
+        @Part FilePart part
+    );
+}
+```
+
+Parts can be added manually by using `FilePart` for example, it allows usage of `InputStreams`, `byte[]` etc.
+
+Note that files and paths will be read when the request reads the body - meaning their evaluation is lazy.
+
 ### Headers
 
 Adding headers is possible by using the `@Header` annotation. Valid parameters for headers are either primitive types,

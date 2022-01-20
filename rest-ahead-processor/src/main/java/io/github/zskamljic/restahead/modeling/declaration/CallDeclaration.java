@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead.modeling.declaration;
 
-import io.github.zskamljic.restahead.encoding.FormEncoding;
+import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
 import io.github.zskamljic.restahead.requests.request.RequestLine;
 
 import javax.lang.model.element.ExecutableElement;
@@ -13,7 +13,7 @@ import java.util.List;
  * @param function          the function that needs to be overridden
  * @param exceptions        the exceptions thrown by this call
  * @param requestLine       the request and path to be used
- * @param parameters        the parameters of the request
+ * @param parameters        the parts of the request
  * @param returnDeclaration the return value of the request
  */
 public record CallDeclaration(
@@ -29,7 +29,7 @@ public record CallDeclaration(
      * @return true if a converter is required, false otherwise
      */
     public boolean requiresConverter() {
-        return parameters.body().isPresent() && !(parameters.body().get().encoding() instanceof FormEncoding) ||
+        return parameters.body().isPresent() && !(parameters.body().get() instanceof FormBodyEncoding) ||
             returnDeclaration.targetConversion().isPresent();
     }
 }
