@@ -1,25 +1,19 @@
 package io.github.zskamljic.restahead.generation;
 
-import io.github.zskamljic.restahead.conversion.GenericReference;
-import io.github.zskamljic.restahead.exceptions.RequestFailedException;
+import com.squareup.javapoet.MethodSpec;
 import io.github.zskamljic.restahead.modeling.declaration.ReturnAdapterCall;
 import io.github.zskamljic.restahead.modeling.declaration.ReturnDeclaration;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
 
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 /**
  * Create a response for the specified type.
  */
 public class ResponseGenerator {
     private final ExceptionsGenerator exceptionsGenerator;
+    private final ConversionGenerator conversionGenerator = new ConversionGenerator();
 
     public ResponseGenerator(ExceptionsGenerator exceptionsGenerator) {
         this.exceptionsGenerator = exceptionsGenerator;
@@ -42,7 +36,7 @@ public class ResponseGenerator {
             return;
         }
         returnDeclaration.targetConversion()
-            .ifPresent(returnType -> generateMappingSource(builder, returnType));
+            .ifPresent(returnType -> conversionGenerator.generateConversion(builder, returnType));
 
         var returnedName = getReturnedVariableName(returnDeclaration.targetConversion().isPresent());
         returnDeclaration.adapterCall().ifPresentOrElse(
@@ -76,50 +70,6 @@ public class ResponseGenerator {
                 builder.addStatement(statement, call.adapterClass().variableName(), call.adapterMethod().name(), responseName);
             }
         );
-    }
-
-    /**
-     * Generates the code used to map to another source
-     *
-     * @param builder    the builder to which the code should be added
-     * @param returnType the target mapped return type
-     */
-    private void generateMappingSource(MethodSpec.Builder builder, TypeMirror returnType) {
-        var conversionLambdaBuilder = CodeBlock.builder()
-            .beginControlFlow("if (r.status() < 200 || r.status() >= 300)")
-            .addStatement("throw new $T(r.status(), r.body())", RequestFailedException.class)
-            .endControlFlow()
-            .beginControlFlow("try");
-
-        if (isSimpleType(returnType)) {
-            conversionLambdaBuilder.addStatement("return $L.deserialize(r, $T.class)", Variables.CONVERTER, returnType);
-        } else {
-            conversionLambdaBuilder.addStatement("var $L = new $T<$T>(){}", Variables.CONVERSION_TYPE_HOLDER, GenericReference.class, returnType)
-                .addStatement("return $L.deserialize(r, $L.getType())", Variables.CONVERTER, Variables.CONVERSION_TYPE_HOLDER);
-        }
-
-        var conversionLambda = conversionLambdaBuilder.nextControlFlow("catch ($T exception)", IOException.class)
-            .addStatement("throw new $T(exception)", CompletionException.class)
-            .endControlFlow()
-            .build();
-        var conversionCaller = CodeBlock.builder()
-            .beginControlFlow("$T<$T> $L = $L.thenApply(r ->", CompletableFuture.class, returnType, Variables.CONVERTED_NAME, Variables.RESPONSE)
-            .add(conversionLambda)
-            .endControlFlow(")");
-        builder.addCode(conversionCaller.build());
-    }
-
-    /**
-     * Whether the type is absent from generic parts
-     *
-     * @param returnType the type to consider
-     * @return false if type has any generic arguments, true otherwise
-     */
-    private boolean isSimpleType(TypeMirror returnType) {
-        if (!(returnType instanceof DeclaredType declaredType)) {
-            return true;
-        }
-        return declaredType.getTypeArguments().isEmpty();
     }
 
     /**

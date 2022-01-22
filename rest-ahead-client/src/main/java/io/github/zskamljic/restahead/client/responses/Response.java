@@ -1,4 +1,4 @@
-package io.github.zskamljic.restahead.client;
+package io.github.zskamljic.restahead.client.responses;
 
 import java.io.InputStream;
 import java.util.List;

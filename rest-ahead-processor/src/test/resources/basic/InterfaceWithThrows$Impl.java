@@ -2,9 +2,9 @@ package io.github.zskamljic.restahead.demo;
 
 import io.github.zskamljic.restahead.adapter.DefaultAdapters;
 import io.github.zskamljic.restahead.client.Client;
-import io.github.zskamljic.restahead.client.Response;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
+import io.github.zskamljic.restahead.client.responses.Response;
 import io.github.zskamljic.restahead.exceptions.RestException;
 import java.io.IOException;
 import java.lang.InterruptedException;

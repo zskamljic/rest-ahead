@@ -1,6 +1,7 @@
 package io.github.zskamljic.restahead.modeling.declaration;
 
-import javax.lang.model.type.TypeMirror;
+import io.github.zskamljic.restahead.modeling.conversion.Conversion;
+
 import java.util.Optional;
 
 /**
@@ -10,7 +11,7 @@ import java.util.Optional;
  * @param adapterCall      the adapter class and method to use
  */
 public record ReturnDeclaration(
-    Optional<TypeMirror> targetConversion,
+    Optional<Conversion> targetConversion,
     Optional<ReturnAdapterCall> adapterCall
 ) {
 }

@@ -13,6 +13,7 @@ public final class Variables {
     public static final String CONVERSION_TYPE_HOLDER = "conversionTypeHolder";
     public static final String CONVERTED_NAME = "convertedResponse";
     public static final String CONVERTER = "converter";
+    public static final String DESERIALIZED = "deserializedResponse";
     public static final String FORM_CONVERTER = "FormConverter";
     public static final String FORM_ENCODE = "formEncode";
     public static final String HEADER_ITEM = "headerItem";

@@ -1,7 +1,7 @@
 package io.github.zskamljic.restahead;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.Response;
 import io.github.zskamljic.restahead.conversion.Converter;
 
 import java.io.IOException;

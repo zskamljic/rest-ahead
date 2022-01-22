@@ -43,7 +43,8 @@ public final class FutureGenericResponse$Impl implements FutureGenericResponse {
             }
             try {
                 var conversionTypeHolder = new GenericReference<Map<String, Object>>(){};
-                return converter.deserialize(r, conversionTypeHolder.getType());
+                Map<String, Object> deserializedResponse = converter.deserialize(r, conversionTypeHolder.getType());
+                return deserializedResponse;
             } catch (IOException exception) {
                 throw new CompletionException(exception);
             }

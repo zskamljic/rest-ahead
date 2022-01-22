@@ -33,4 +33,20 @@ class ResponseProcessorTest extends CommonProcessorTest {
             .and()
             .generatesSources(JavaFileObjects.forResource("response/FutureGenericResponse$Impl.java"));
     }
+
+    @Test
+    void responseBodyCompiles() {
+        commonCompilationAssertion("response/ResponseWithBody.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("response/ResponseWithBody$Impl.java"));
+    }
+
+    @Test
+    void responseBodyAndErrorCompiles() {
+        commonCompilationAssertion("response/ResponseWithErrorBody.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("response/ResponseWithErrorBody$Impl.java"));
+    }
 }

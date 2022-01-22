@@ -81,6 +81,23 @@ interface Service {
 }
 ```
 
+If you require response headers and the status code as well, two more types can be used along with custom response
+types:
+
+```java
+interface Service {
+    // BodyResponse.body() is an optional that contains the deserialized type in case of success.
+    // If non 2xx code is returned InputStream errorBody will be present, that contains untouched response body.
+    @Get
+    BodyResponse<CustomResponseType> get();
+
+    // BodyAndErrorResponse.body() is an optional that contains the deserialized body in case of success.
+    // If non 2xx code is returned the errorBody will contain the deserialized body
+    @Get
+    BodyAndErrorResponse<CustomResponseType, CustomErrorType> getErrors();
+}
+```
+
 ### Body
 
 You can specify a request body by annotating it with `@Body`. Doing so will make the service require a converter to

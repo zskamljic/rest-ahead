@@ -46,7 +46,8 @@ public final class ServiceWithUnknownResponse$Impl implements ServiceWithUnknown
                 throw new RequestFailedException(r.status(), r.body());
             }
             try {
-                return converter.deserialize(r, ServiceWithUnknownResponse.TestResponse.class);
+                ServiceWithUnknownResponse.TestResponse deserializedResponse = converter.deserialize(r, ServiceWithUnknownResponse.TestResponse.class);
+                return deserializedResponse;
             } catch (IOException exception) {
                 throw new CompletionException(exception);
             }

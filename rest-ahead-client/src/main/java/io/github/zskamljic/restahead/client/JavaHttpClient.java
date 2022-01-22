@@ -1,6 +1,7 @@
 package io.github.zskamljic.restahead.client;
 
 import io.github.zskamljic.restahead.client.requests.Request;
+import io.github.zskamljic.restahead.client.responses.Response;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;

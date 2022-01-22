@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead.conversion;
 
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.Response;
 
 import java.io.IOException;
 import java.io.InputStream;

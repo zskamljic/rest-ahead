@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead;
 
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.Response;
 import io.github.zskamljic.restahead.conversion.GenericReference;
 import org.junit.jupiter.api.Test;
 

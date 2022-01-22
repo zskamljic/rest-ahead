@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead.demo.interceptors;
 
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.Response;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.intercepting.Chain;
 import io.github.zskamljic.restahead.intercepting.Interceptor;

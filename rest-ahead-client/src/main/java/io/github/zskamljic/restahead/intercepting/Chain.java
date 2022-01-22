@@ -1,6 +1,6 @@
 package io.github.zskamljic.restahead.intercepting;
 
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.Response;
 import io.github.zskamljic.restahead.client.requests.Request;
 
 import java.util.List;

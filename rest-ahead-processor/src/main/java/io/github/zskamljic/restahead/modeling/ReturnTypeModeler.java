@@ -1,7 +1,13 @@
 package io.github.zskamljic.restahead.modeling;
 
 import io.github.zskamljic.restahead.adapter.DefaultAdapters;
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.BodyAndErrorResponse;
+import io.github.zskamljic.restahead.client.responses.BodyResponse;
+import io.github.zskamljic.restahead.client.responses.Response;
+import io.github.zskamljic.restahead.modeling.conversion.BodyAndErrorConversion;
+import io.github.zskamljic.restahead.modeling.conversion.BodyResponseConversion;
+import io.github.zskamljic.restahead.modeling.conversion.Conversion;
+import io.github.zskamljic.restahead.modeling.conversion.DirectConversion;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterMethodDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ReturnAdapterCall;
@@ -20,6 +26,7 @@ import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -33,16 +40,20 @@ public class ReturnTypeModeler {
     private final TypeMirror defaultAdapterType;
     private final DeclaredType defaultResponseType;
     private final TypeMirror responseType;
+    private final TypeMirror bodyResponseType;
+    private final TypeMirror bodyAndErrorType;
 
     public ReturnTypeModeler(Messager messager, Elements elements, Types types) {
         this.messager = messager;
         this.types = types;
-        var futureElement = elements.getTypeElement(Future.class.getCanonicalName());
+        var futureElement = elements.getTypeElement(CompletableFuture.class.getCanonicalName());
         responseType = elements.getTypeElement(Response.class.getCanonicalName())
             .asType();
-        futureType = types.erasure(futureElement.asType());
+        futureType = types.erasure(elements.getTypeElement(Future.class.getCanonicalName()).asType());
         defaultResponseType = types.getDeclaredType(futureElement, responseType);
         defaultAdapterType = elements.getTypeElement(DefaultAdapters.class.getCanonicalName()).asType();
+        bodyResponseType = types.erasure(elements.getTypeElement(BodyResponse.class.getCanonicalName()).asType());
+        bodyAndErrorType = types.erasure(elements.getTypeElement(BodyAndErrorResponse.class.getCanonicalName()).asType());
     }
 
     /**
@@ -58,11 +69,12 @@ public class ReturnTypeModeler {
     ) {
         var returnType = function.getReturnType();
 
-        if (types.isSameType(returnType, defaultResponseType)) {
+        if (types.isAssignable(defaultResponseType, returnType)) {
             return Optional.of(new ReturnDeclaration(Optional.empty(), Optional.empty()));
         } else if (types.isSubtype(types.erasure(returnType), futureType)) {
             var convertedType = ((DeclaredType) returnType).getTypeArguments().get(0);
-            return Optional.of(new ReturnDeclaration(Optional.of(convertedType), Optional.empty()));
+            var conversion = selectConversion(convertedType);
+            return Optional.of(new ReturnDeclaration(Optional.of(conversion), Optional.empty()));
         } else {
             var selectedAdapter = findCorrectAdapter(adapters, returnType);
             if (selectedAdapter.isEmpty()) {
@@ -75,9 +87,28 @@ public class ReturnTypeModeler {
             if (types.isSameType(adaptedConvertType, responseType) || adaptedConvertType.getKind() == TypeKind.VOID) {
                 returnDeclaration = new ReturnDeclaration(Optional.empty(), selectedAdapter);
             } else {
-                returnDeclaration = new ReturnDeclaration(Optional.of(adaptedConvertType), selectedAdapter);
+                var conversion = selectConversion(adaptedConvertType);
+                returnDeclaration = new ReturnDeclaration(Optional.of(conversion), selectedAdapter);
             }
             return Optional.of(returnDeclaration);
+        }
+    }
+
+    /**
+     * Select the conversion to use for specified type.
+     *
+     * @param convertedType the type being converted
+     * @return appropriate strategy for type conversion
+     */
+    private Conversion selectConversion(TypeMirror convertedType) {
+        if (types.isSameType(types.erasure(convertedType), bodyResponseType)) {
+            var argument = ((DeclaredType) convertedType).getTypeArguments().get(0);
+            return new BodyResponseConversion(argument);
+        } else if (types.isSameType(types.erasure(convertedType), bodyAndErrorType)) {
+            var arguments = ((DeclaredType) convertedType).getTypeArguments();
+            return new BodyAndErrorConversion(arguments.get(0), arguments.get(1));
+        } else {
+            return new DirectConversion(convertedType);
         }
     }
 

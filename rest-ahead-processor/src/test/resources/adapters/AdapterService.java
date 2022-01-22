@@ -2,7 +2,7 @@ package io.github.zskamljic.restahead.demo;
 
 import io.github.zskamljic.restahead.annotations.Adapter;
 import io.github.zskamljic.restahead.annotations.verbs.Delete;
-import io.github.zskamljic.restahead.client.Response;
+import io.github.zskamljic.restahead.client.responses.Response;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
