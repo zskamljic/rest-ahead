@@ -260,10 +260,10 @@ implement the `Interceptor` interface and be added to the client like so:
 var client = new JavaHttpClient();
     client.addInterceptor(new PreRequestInterceptor());
 
-    var service = RestAhead.builder("https://httpbin.org/")
-        .client(client)
-        .converter(new JacksonConverter())
-        .build(InterceptedService.class);
+var service = RestAhead.builder("https://httpbin.org/")
+    .client(client)
+    .converter(new JacksonConverter())
+    .build(InterceptedService.class);
 ```
 
 ### Paths
