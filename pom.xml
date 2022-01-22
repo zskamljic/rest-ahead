@@ -36,9 +36,8 @@
             ${project.basedir}/../test-report-aggregator/target/site/jacoco-aggregate/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.language>java</sonar.language>
-
-        <gpg.keyName>0x63CD3706</gpg.keyName>
-        <maven.deploy.skip>true</maven.deploy.skip>
+        <sonar.organization>zskamljic</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <url>https://gitlab.com/zskamljic/rest-ahead</url>
@@ -135,8 +134,10 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <keyname>${gpg.keyName}</keyname>
-                            <passphraseServerId>${gpg.keyName}</passphraseServerId>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
                         </configuration>
                     </execution>
                 </executions>
