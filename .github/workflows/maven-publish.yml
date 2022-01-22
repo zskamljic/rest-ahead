@@ -24,4 +24,6 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-        run: ./deploy.sh
+        run: |
+          ./mvnw clean test
+          ./mvnw -Dgpg.passphrase="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -pl '!:test-report-aggregator,!:demo' deploy -DskipTests
