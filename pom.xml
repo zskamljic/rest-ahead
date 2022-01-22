@@ -36,7 +36,7 @@
             ${project.basedir}/../test-report-aggregator/target/site/jacoco-aggregate/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.language>java</sonar.language>
-        <sonar.organization>zskamljic</sonar.organization>
+        <sonar.organization>zskamljic-github</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
