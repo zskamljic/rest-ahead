@@ -5,7 +5,7 @@
     <parent>
         <artifactId>RestAhead</artifactId>
         <groupId>io.github.zskamljic</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -20,22 +20,22 @@
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>demo</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-client</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-jackson-converter</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-processor</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 
