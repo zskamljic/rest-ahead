@@ -43,7 +43,7 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
-    <url>https://gitlab.com/zskamljic/rest-ahead</url>
+    <url>https://github.com/zskamljic/rest-ahead</url>
     <licenses>
         <license>
             <name>Apache 2.0</name>
@@ -57,9 +57,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://gitlab.com/zskamljic/rest-ahead.git</connection>
-        <developerConnection>scm:git:ssh://gitlab.com:zskamljic/rest-ahead.git</developerConnection>
-        <url>https://gitlab.com/zskamljic/rest-ahead</url>
+        <connection>scm:git:git://github.com/zskamljic/rest-ahead.git</connection>
+        <developerConnection>scm:git:ssh://github.com:zskamljic/rest-ahead.git</developerConnection>
+        <url>https://github.com/zskamljic/rest-ahead</url>
     </scm>
     <distributionManagement>
         <snapshotRepository>
