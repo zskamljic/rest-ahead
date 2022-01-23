@@ -1,5 +1,8 @@
 # RestAhead - compile time generated REST client
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=zskamljic_rest-ahead&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=zskamljic_rest-ahead)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=zskamljic_rest-ahead&metric=coverage)](https://sonarcloud.io/summary/new_code?id=zskamljic_rest-ahead)
+
 This project draws inspiration from projects such as [Retrofit](https://square.github.io/retrofit/)
 and [Feign](https://github.com/OpenFeign/feign), but with a twist: your services are generated at compile time,
 preventing any issues from being found at runtime.
@@ -260,10 +263,10 @@ implement the `Interceptor` interface and be added to the client like so:
 var client = new JavaHttpClient();
     client.addInterceptor(new PreRequestInterceptor());
 
-var service = RestAhead.builder("https://httpbin.org/")
-    .client(client)
-    .converter(new JacksonConverter())
-    .build(InterceptedService.class);
+    var service = RestAhead.builder("https://httpbin.org/")
+        .client(client)
+        .converter(new JacksonConverter())
+        .build(InterceptedService.class);
 ```
 
 ### Paths
@@ -310,6 +313,56 @@ from the request.
 
 The `RestAhead` builder declares an interface `Client` that allows you to implement custom clients. By default, if no
 client is specified, Java HTTP client is used.
+
+## Adding to project
+
+Add the dependencies as following:
+
+```xml
+<dependencies>
+    <!-- other dependencies -->
+    <dependency>
+        <groupId>io.github.zskamljic</groupId>
+        <artifactId>rest-ahead-client</artifactId>
+        <version>${rest.ahead.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>io.github.zskamljic</groupId>
+        <artifactId>rest-ahead-processor</artifactId>
+        <version>${rest.ahead.version}</version>
+        <scope>provided</scope>
+    </dependency>
+    <!-- If you want to use the Jackson converter -->
+    <dependency>
+        <groupId>io.github.zskamljic</groupId>
+        <artifactId>rest-ahead-jackson-converter</artifactId>
+        <version>${rest.ahead.version}</version>
+    </dependency>
+</dependencies>
+```
+
+Also add the maven-compiler-plugin if not present:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>${compiler.plugin.version}</version>
+</plugin>
+```
+
+### Snapshots
+
+Snapshots can be accessed by adding the snapshot repository:
+
+```xml
+<repositories>
+    <repository>
+        <id>oss.sonatype.org-snapshot</id>
+        <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+</repositories>
+```
 
 ## License
 
