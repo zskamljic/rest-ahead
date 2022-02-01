@@ -20,6 +20,7 @@ approach.
 - [Path](#paths)
 - [Query](#queries)
 - [Responses](#response-types)
+- [Spring Boot](#spring-boot)
 
 ## Introduction
 
@@ -314,11 +315,54 @@ from the request.
 The `RestAhead` builder declares an interface `Client` that allows you to implement custom clients. By default, if no
 client is specified, Java HTTP client is used.
 
+### Spring Boot
+
+For compatibility with spring boot you can add the following to your pom.xml:
+
+```xml
+
+<dependency>
+    <groupId>io.github.zskamljic</groupId>
+    <artifactId>rest-ahead-spring</artifactId>
+    <version>${rest.ahead.version}</version>
+</dependency>
+```
+
+To enable automatic creation of Spring beans add the `@EnableRestAhead` annotation to your application class as
+following:
+
+```java
+
+@EnableRestAhead
+@SpringBootApplication
+public class SpringApplicationDemo {
+    public static void main(String[] args) {
+        SpringApplication.run(SpringApplicationDemo.class, args);
+    }
+}
+```
+
+Finally, to have services available as injectable beans add the `@RestAheadService` annotation to the service:
+
+```java
+
+@RestAheadService(url = "https://httpbin.org", converter = JacksonConverter.class)
+public interface DemoService {
+    @Get("/get")
+    Map<String, Object> performGet();
+}
+```
+
+`DemoService` will then be injectable wherever you use it as a bean - either constructor injection or `@Autowired`
+injection. URL property needs to be provided to have a baseUrl configured, converter property is optional and is
+required only if the service requires one, see [response types](#response-types).
+
 ## Adding to project
 
 Add the dependencies as following:
 
 ```xml
+
 <dependencies>
     <!-- other dependencies -->
     <dependency>
@@ -344,6 +388,7 @@ Add the dependencies as following:
 Also add the maven-compiler-plugin if not present:
 
 ```xml
+
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-compiler-plugin</artifactId>
@@ -356,6 +401,7 @@ Also add the maven-compiler-plugin if not present:
 Snapshots can be accessed by adding the snapshot repository:
 
 ```xml
+
 <repositories>
     <repository>
         <id>oss.sonatype.org-snapshot</id>

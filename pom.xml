@@ -21,6 +21,7 @@
         <module>rest-ahead-processor</module>
         <module>rest-ahead-jackson-converter</module>
         <module>test-report-aggregator</module>
+        <module>rest-ahead-spring</module>
     </modules>
 
     <properties>
