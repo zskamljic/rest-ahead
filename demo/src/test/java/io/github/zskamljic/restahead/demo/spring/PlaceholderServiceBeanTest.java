@@ -20,7 +20,7 @@ import static org.mockito.Mockito.doReturn;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class PlaceholderServiceBeanTest {
+class PlaceholderServiceBeanTest {
     @MockBean
     private Client mockClient;
 
