@@ -1,14 +1,5 @@
 package io.github.zskamljic.restahead.processor;
 
-import io.github.zskamljic.restahead.annotations.Adapter;
-import io.github.zskamljic.restahead.annotations.form.FormName;
-import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
-import io.github.zskamljic.restahead.annotations.form.Part;
-import io.github.zskamljic.restahead.annotations.request.Body;
-import io.github.zskamljic.restahead.annotations.request.Header;
-import io.github.zskamljic.restahead.annotations.request.Path;
-import io.github.zskamljic.restahead.annotations.request.Query;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.RoundEnvironment;
@@ -32,16 +23,6 @@ public class UnclaimedProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Set.of(
-            Adapter.class.getCanonicalName(),
-            Body.class.getCanonicalName(),
-            FormName.class.getCanonicalName(),
-            FormUrlEncoded.class.getCanonicalName(),
-            Generated.class.getCanonicalName(),
-            Header.class.getCanonicalName(),
-            Part.class.getCanonicalName(),
-            Path.class.getCanonicalName(),
-            Query.class.getCanonicalName()
-        );
+        return Set.of(Generated.class.getCanonicalName());
     }
 }

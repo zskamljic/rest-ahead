@@ -82,7 +82,7 @@ public final class RestAhead {
          */
         public <T> T build(Class<T> service) {
             try {
-                var implementation = Class.forName(service.getName() + "$Impl")
+                var implementation = Class.forName(service.getPackageName() + "." + service.getSimpleName() + "$Impl")
                     .asSubclass(service);
 
                 var parameters = getRequiredParameters(implementation);

@@ -1,6 +1,8 @@
 package io.github.zskamljic.restahead.spring;
 
+import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.conversion.Converter;
+import io.github.zskamljic.restahead.intercepting.Interceptor;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -30,4 +32,28 @@ public @interface RestAheadService {
      * @return the Converter class to use with this service. Can be left empty if no converter is required.
      */
     Class<? extends Converter> converter() default Converter.class;
+
+    /**
+     * Client will be automatically instantiated. This requires the provided client to have a public, no-args
+     * constructor.
+     *
+     * @return the Client to use with this service. Can be left empty for default client.
+     */
+    Class<? extends Client> client() default Client.class;
+
+    /**
+     * Interceptors will be automatically instantiated. This requires them to have a public, no-args constructor.
+     * This will only be honored if a client is provided.
+     *
+     * @return the Interceptor classes to use with the client.
+     */
+    Class<? extends Interceptor>[] interceptors() default {};
+
+    /**
+     * Adapters will be automatically instantiated. This requires the provided classes to have a public,
+     * no-args constructor.
+     *
+     * @return the Adapter classes to use with this service. Can be left empty if no adapters are required.
+     */
+    Class<?>[] adapters() default {};
 }

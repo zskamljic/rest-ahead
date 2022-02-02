@@ -112,7 +112,7 @@ public final class Request {
         } else {
             pathWithoutSlash = path;
         }
-        return URI.create(baseUrl + pathWithoutSlash + "?" + queryString);
+        return URI.create(baseUrl + pathWithoutSlash + (queryString.isEmpty() ? "" : ("?" + queryString)));
     }
 
     /**
