@@ -345,8 +345,8 @@ public class SpringApplicationDemo {
 Finally, to have services available as injectable beans add the `@RestAheadService` annotation to the service:
 
 ```java
-
-@RestAheadService(url = "https://httpbin.org", converter = JacksonConverter.class)
+// Instead of placeholder you can also use a hardcoded URL
+@RestAheadService(url = "${placeholder.url}", converter = JacksonConverter.class)
 public interface DemoService {
     @Get("/get")
     Map<String, Object> performGet();

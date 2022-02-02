@@ -4,8 +4,10 @@ import io.github.zskamljic.restahead.RestAhead;
 import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.conversion.Converter;
 import io.github.zskamljic.restahead.intercepting.Interceptor;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
@@ -18,6 +20,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -84,7 +87,7 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
         var clazz = ClassUtils.resolveClassName(className, null);
 
         var definitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(clazz,
-                () -> instantiateService(attributes, clazz)
+                () -> instantiateService(registry, attributes, clazz)
             )
             .setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE)
             .setLazyInit(true);
@@ -97,16 +100,18 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
     /**
      * Instantiate a new service with appropriate url, converter etc.
      *
+     * @param <T>        the type to cast to (required since clazz has wildcard type
+     * @param registry   the registry to which to add the new bean
      * @param attributes the attributes from which to get the data used during creation
      * @param clazz      the service to instantiate
-     * @param <T>        the type to cast to (required since clazz has wildcard type
      * @return the instance of the service
      */
-    private <T> T instantiateService(Map<String, Object> attributes, Class<?> clazz) {
-        var url = (String) attributes.get(BASE_URL);
-        var converter = getConverterIfPossible(attributes);
-        var client = getClientIfPossible(attributes);
-        var adapters = getAdaptersIfPossible(attributes);
+    private <T> T instantiateService(BeanDefinitionRegistry registry, Map<String, Object> attributes, Class<?> clazz) {
+        var url = environment.resolvePlaceholders((String) attributes.get(BASE_URL));
+        var beanFactory = registry instanceof ConfigurableBeanFactory factory ? factory : null;
+        var converter = getConverterIfPossible(beanFactory, attributes);
+        var client = getClientIfPossible(beanFactory, attributes);
+        var adapters = getAdaptersIfPossible(beanFactory, attributes);
         var builder = RestAhead.builder(url);
         converter.ifPresent(builder::converter);
         client.ifPresent(builder::client);
@@ -119,24 +124,32 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
     /**
      * Find a converter from attributes, or return empty optional if none was provided.
      *
-     * @param attributes the attributes from which to extract the converter
+     * @param beanFactory the bean factory to fetch bean instances from
+     * @param attributes  the attributes from which to extract the converter
      * @return converter if a valid class was provided, empty if value was the default converter instance
      * @throws IllegalArgumentException if converter is not a valid subclass or if no valid constructors are present.
      */
-    private Optional<Converter> getConverterIfPossible(Map<String, Object> attributes) {
+    private Optional<Converter> getConverterIfPossible(
+        @Nullable ConfigurableBeanFactory beanFactory,
+        Map<String, Object> attributes
+    ) {
         var value = attributes.get(CONVERTER);
-        return getInstanceForClass(value, CONVERTER, Converter.class);
+        return getInstanceForClass(beanFactory, value, CONVERTER, Converter.class);
     }
 
     /**
      * Get instance of client if specified. If interceptors are found they are added to client instance as well.
      *
-     * @param attributes the full set of attributes
+     * @param beanFactory the bean factory to fetch bean instances from
+     * @param attributes  the full set of attributes
      * @return client if one could be found from config, empty otherwise
      */
-    private Optional<Client> getClientIfPossible(Map<String, Object> attributes) {
+    private Optional<Client> getClientIfPossible(
+        @Nullable ConfigurableBeanFactory beanFactory,
+        Map<String, Object> attributes
+    ) {
         var value = attributes.get(CLIENT);
-        var client = getInstanceForClass(value, CLIENT, Client.class);
+        var client = getInstanceForClass(beanFactory, value, CLIENT, Client.class);
         if (client.isEmpty()) return Optional.empty();
 
         var interceptorValues = attributes.get(INTERCEPTORS);
@@ -144,7 +157,7 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
             throw new IllegalStateException(INTERCEPTORS + " must be an array of classes.");
         }
         var interceptors = Arrays.stream(interceptorClasses)
-            .flatMap(clazz -> getInstanceForClass(clazz, INTERCEPTORS, Interceptor.class).stream())
+            .flatMap(clazz -> getInstanceForClass(beanFactory, clazz, INTERCEPTORS, Interceptor.class).stream())
             .toList();
         var clientInstance = client.get();
         interceptors.forEach(clientInstance::addInterceptor);
@@ -154,36 +167,50 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
     /**
      * Find and instantiate adapters from specified classes.
      *
-     * @param attributes the attributes from which to get the adapters
+     * @param beanFactory the bean factory to fetch bean instances from
+     * @param attributes  the attributes from which to get the adapters
      * @return list of adapter instances
      */
-    private List<Object> getAdaptersIfPossible(Map<String, Object> attributes) {
+    private List<Object> getAdaptersIfPossible(
+        @Nullable ConfigurableBeanFactory beanFactory,
+        Map<String, Object> attributes
+    ) {
         var values = attributes.get(ADAPTERS);
         if (!(values instanceof Class<?>[] classes)) {
             throw new IllegalStateException(ADAPTERS + " must be an array of classes.");
         }
         return Arrays.stream(classes)
-            .flatMap(clazz -> getInstanceForClass(clazz, ADAPTERS, Object.class).stream())
+            .flatMap(clazz -> getInstanceForClass(beanFactory, clazz, ADAPTERS, Object.class).stream())
             .toList();
     }
 
     /**
      * Create a new instance of provided class and cast accordingly.
      *
+     * @param beanFactory the bean factory to fetch existing bean from if possible
      * @param value       the attribute value
      * @param name        the name of the attribute
      * @param targetClass class that needs to be instantiated
      * @param <T>         the type to return
      * @return instance of type if possible, empty if class is not the default value
      */
-    private <T> Optional<T> getInstanceForClass(Object value, String name, Class<T> targetClass) {
+    private <T> Optional<T> getInstanceForClass(
+        @Nullable ConfigurableBeanFactory beanFactory,
+        Object value,
+        String name,
+        Class<T> targetClass
+    ) {
         if (!(value instanceof Class<?> candidateClass)) {
             throw new IllegalStateException(name + " must be a subclass of " + targetClass.getCanonicalName());
+        }
+        var selectedClass = candidateClass.asSubclass(targetClass);
+        var beanInstance = findBeanInstance(beanFactory, selectedClass);
+        if (beanInstance.isPresent()) {
+            return beanInstance.map(selectedClass::cast);
         }
         if (targetClass.equals(candidateClass)) {
             return Optional.empty();
         }
-        var selectedClass = candidateClass.asSubclass(targetClass);
         try {
             var constructor = selectedClass.getConstructor();
             return Optional.of(constructor.newInstance());
@@ -191,6 +218,21 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
             throw new IllegalArgumentException(name + " must have a public no-argument constructor.");
         } catch (InvocationTargetException | InstantiationException e) {
             throw new IllegalStateException("An error occurred while instantiating " + name, e);
+        }
+    }
+
+    private <T> Optional<T> findBeanInstance(
+        @Nullable ConfigurableBeanFactory beanFactory,
+        Class<? extends T> selectedClass
+    ) {
+        if (beanFactory == null) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(beanFactory.getBean(selectedClass));
+        } catch (NoSuchBeanDefinitionException ignored) {
+            return Optional.empty();
         }
     }
 
