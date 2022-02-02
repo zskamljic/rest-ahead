@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class DummyClient extends Client {
-    public static final List<ClientRequestPair> requests = new ArrayList<>();
-    public final List<Interceptor> interceptors = new ArrayList<>();
+    private final List<Interceptor> interceptors = new ArrayList<>();
+    protected static final List<ClientRequestPair> requests = new ArrayList<>();
 
     public List<Interceptor> getInterceptors() {
         return interceptors;

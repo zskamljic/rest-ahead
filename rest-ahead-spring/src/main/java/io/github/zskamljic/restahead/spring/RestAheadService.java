@@ -26,23 +26,24 @@ public @interface RestAheadService {
     String url();
 
     /**
-     * Converter will be automatically instantiated. This requires the provided class to have a public,
-     * no-args constructor.
+     * Converter will be automatically instantiated. The class specified needs to be a bean or has to have
+     * a public no-args constructor.
      *
      * @return the Converter class to use with this service. Can be left empty if no converter is required.
      */
     Class<? extends Converter> converter() default Converter.class;
 
     /**
-     * Client will be automatically instantiated. This requires the provided client to have a public, no-args
-     * constructor.
+     * Client will be automatically instantiated. The class specified needs to be a bean or has to have
+     * a public no-args constructor.
      *
      * @return the Client to use with this service. Can be left empty for default client.
      */
     Class<? extends Client> client() default Client.class;
 
     /**
-     * Interceptors will be automatically instantiated. This requires them to have a public, no-args constructor.
+     * Interceptors will be automatically instantiated. The class specified needs to be a bean or has to have
+     * a public no-args constructor.
      * This will only be honored if a client is provided.
      *
      * @return the Interceptor classes to use with the client.
@@ -50,8 +51,8 @@ public @interface RestAheadService {
     Class<? extends Interceptor>[] interceptors() default {};
 
     /**
-     * Adapters will be automatically instantiated. This requires the provided classes to have a public,
-     * no-args constructor.
+     * Adapters will be automatically instantiated. The class specified needs to be a bean or has to have
+     * a public no-args constructor.
      *
      * @return the Adapter classes to use with this service. Can be left empty if no adapters are required.
      */

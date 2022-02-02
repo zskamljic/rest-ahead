@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -25,6 +26,9 @@ class ConfigCombinationsTest {
     @Autowired
     private ConfigCombinations.AdapterService adapterService;
 
+    @Autowired
+    private ConfigCombinations.PlaceholderService placeholderService;
+
     @AfterEach
     void tearDown() {
         DummyClient.requests.clear();
@@ -37,7 +41,7 @@ class ConfigCombinationsTest {
 
         assertFalse(requests.isEmpty());
         var request = requests.get(0);
-        assertTrue(((DummyClient) request.client()).interceptors.isEmpty());
+        assertTrue(((DummyClient) request.client()).getInterceptors().isEmpty());
     }
 
     @Test
@@ -47,7 +51,7 @@ class ConfigCombinationsTest {
 
         assertFalse(requests.isEmpty());
         var request = requests.get(0);
-        assertTrue(((DummyClient) request.client()).interceptors.get(0) instanceof ConfigCombinations.PassThroughInterceptor);
+        assertTrue(((DummyClient) request.client()).getInterceptors().get(0) instanceof ConfigCombinations.PassThroughInterceptor);
     }
 
     @Test
@@ -64,5 +68,12 @@ class ConfigCombinationsTest {
         var requests = DummyClient.requests;
 
         assertTrue(requests.isEmpty());
+    }
+
+    @Test
+    void placeholderService() {
+        var response = placeholderService.get();
+
+        assertNotNull(response);
     }
 }

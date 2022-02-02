@@ -44,4 +44,10 @@ public class ConfigCombinations {
         @Get("/get")
         Supplier<Response> get();
     }
+
+    @RestAheadService(url = "${placeholder.url}")
+    interface PlaceholderService {
+        @Get("/get")
+        Response get();
+    }
 }
