@@ -1,5 +1,13 @@
 package io.github.zskamljic.restahead.processor;
 
+import io.github.zskamljic.restahead.annotations.Adapter;
+import io.github.zskamljic.restahead.annotations.form.FormName;
+import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
+import io.github.zskamljic.restahead.annotations.form.Part;
+import io.github.zskamljic.restahead.annotations.request.Body;
+import io.github.zskamljic.restahead.annotations.request.Header;
+import io.github.zskamljic.restahead.annotations.request.Path;
+import io.github.zskamljic.restahead.annotations.request.Query;
 import io.github.zskamljic.restahead.generation.FormConverterGenerator;
 import io.github.zskamljic.restahead.generation.ServiceGenerator;
 import io.github.zskamljic.restahead.modeling.AdapterModeler;
@@ -15,13 +23,19 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Processor entry point for HTTP annotations.
  */
 public class RequestsProcessor extends AbstractProcessor {
+    private static final List<Class<?>> NON_VERB_ANNOTATIONS = List.of(
+        Adapter.class, Body.class, Header.class, Path.class, Query.class, FormName.class, FormUrlEncoded.class, Part.class
+    );
+
     private FormConverterGenerator formConverterGenerator;
     private ServiceModeler serviceModeler;
     private ServiceGenerator serviceGenerator;
@@ -57,7 +71,8 @@ public class RequestsProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         try {
             var adapters = adapterModeler.findAdapters(roundEnv);
-            var serviceDeclarations = serviceModeler.collectServices(annotations, roundEnv, adapters);
+            var verbs = filterVerbAnnotations(annotations);
+            var serviceDeclarations = serviceModeler.collectServices(verbs, roundEnv, adapters);
             formConverterGenerator.generateFormEncoderIfNeeded(serviceDeclarations);
             serviceDeclarations.forEach(service -> serviceGenerator.generateService(service));
         } catch (IllegalArgumentException e) {
@@ -67,6 +82,21 @@ public class RequestsProcessor extends AbstractProcessor {
             messager.printMessage(Diagnostic.Kind.ERROR, "Error when generating: " + stringWriter.getBuffer().toString());
         }
         return true;
+    }
+
+    /**
+     * Filters discovered annotations to filter out only verb annotations.
+     *
+     * @param annotations the full set of annotations.
+     * @return the filtered set
+     */
+    private Set<? extends TypeElement> filterVerbAnnotations(Set<? extends TypeElement> annotations) {
+        var names = NON_VERB_ANNOTATIONS.stream()
+            .map(Class::getSimpleName)
+            .toList();
+        return annotations.stream()
+            .filter(type -> !names.contains(type.getSimpleName().toString()))
+            .collect(Collectors.toSet());
     }
 
     /**
@@ -86,7 +116,10 @@ public class RequestsProcessor extends AbstractProcessor {
      */
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return VerbMapping.ANNOTATION_VERBS.stream()
+        return Stream.concat(
+                VerbMapping.ANNOTATION_VERBS.stream(),
+                NON_VERB_ANNOTATIONS.stream()
+            )
             .map(Class::getCanonicalName)
             .collect(Collectors.toSet());
     }

@@ -38,24 +38,24 @@ class RestAheadTest {
         void doGet();
     }
 
-    static class SimpleGet$Impl implements SimpleGet {
-        public SimpleGet$Impl(String url, Client client) {
-        }
-
-        @Override
-        public void doGet() {
-        }
-    }
-
     interface ConverterGet extends SimpleGet {
     }
+}
 
-    static class ConverterGet$Impl implements ConverterGet {
-        public ConverterGet$Impl(String url, Client client, Converter converter) {
-        }
+class SimpleGet$Impl implements RestAheadTest.SimpleGet {
+    public SimpleGet$Impl(String url, Client client) {
+    }
 
-        @Override
-        public void doGet() {
-        }
+    @Override
+    public void doGet() {
+    }
+}
+
+class ConverterGet$Impl implements RestAheadTest.ConverterGet {
+    public ConverterGet$Impl(String url, Client client, Converter converter) {
+    }
+
+    @Override
+    public void doGet() {
     }
 }
