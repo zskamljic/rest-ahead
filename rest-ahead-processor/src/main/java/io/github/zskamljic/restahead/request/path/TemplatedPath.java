@@ -1,4 +1,4 @@
-package io.github.zskamljic.restahead.requests.request.path;
+package io.github.zskamljic.restahead.request.path;
 
 import java.net.URI;
 import java.net.URISyntaxException;

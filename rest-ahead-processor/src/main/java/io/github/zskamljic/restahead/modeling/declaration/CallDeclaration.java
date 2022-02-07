@@ -1,7 +1,7 @@
 package io.github.zskamljic.restahead.modeling.declaration;
 
 import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
-import io.github.zskamljic.restahead.requests.request.RequestLine;
+import io.github.zskamljic.restahead.request.RequestLine;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;

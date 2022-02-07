@@ -1,4 +1,4 @@
-package io.github.zskamljic.restahead.requests.request;
+package io.github.zskamljic.restahead.request;
 
 /**
  * Preset query information.

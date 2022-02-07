@@ -13,8 +13,8 @@ import io.github.zskamljic.restahead.encoding.MultiPartBodyEncoding;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
-import io.github.zskamljic.restahead.requests.request.RequestLine;
-import io.github.zskamljic.restahead.requests.request.path.TemplatedPath;
+import io.github.zskamljic.restahead.request.RequestLine;
+import io.github.zskamljic.restahead.request.path.TemplatedPath;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;

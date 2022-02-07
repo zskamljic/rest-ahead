@@ -3,7 +3,7 @@ package io.github.zskamljic.restahead.modeling;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ServiceDeclaration;
-import io.github.zskamljic.restahead.requests.VerbMapping;
+import io.github.zskamljic.restahead.polyglot.Dialects;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -30,11 +30,13 @@ public class ServiceModeler {
     private final Messager messager;
     private final Elements elements;
     private final MethodModeler methodModeler;
+    private final Dialects dialects;
 
-    public ServiceModeler(Messager messager, Elements elements, Types types) {
+    public ServiceModeler(Messager messager, Elements elements, Types types, Dialects dialects) {
         this.messager = messager;
         this.elements = elements;
-        methodModeler = new MethodModeler(messager, elements, types);
+        this.dialects = dialects;
+        methodModeler = new MethodModeler(messager, elements, types, dialects);
     }
 
     /**
@@ -80,7 +82,7 @@ public class ServiceModeler {
                 .map(ExecutableElement.class::cast)
                 .toList();
             for (var function : functions) {
-                var annotation = VerbMapping.ANNOTATION_VERBS.stream()
+                var annotation = dialects.verbAnnotations()
                     .map(function::getAnnotation)
                     .filter(Objects::nonNull)
                     .toList();

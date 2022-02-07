@@ -1,7 +1,7 @@
-package io.github.zskamljic.restahead.requests.request;
+package io.github.zskamljic.restahead.request;
 
 import io.github.zskamljic.restahead.client.requests.Verb;
-import io.github.zskamljic.restahead.requests.request.path.RequestPath;
+import io.github.zskamljic.restahead.request.path.RequestPath;
 
 /**
  * The processed request line.

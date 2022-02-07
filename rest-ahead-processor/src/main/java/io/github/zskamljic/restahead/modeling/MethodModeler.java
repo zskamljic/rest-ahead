@@ -4,9 +4,9 @@ import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaratio
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 import io.github.zskamljic.restahead.modeling.validation.PathValidator;
-import io.github.zskamljic.restahead.requests.VerbMapping;
-import io.github.zskamljic.restahead.requests.request.RequestLine;
-import io.github.zskamljic.restahead.requests.request.path.TemplatedPath;
+import io.github.zskamljic.restahead.polyglot.Dialects;
+import io.github.zskamljic.restahead.request.RequestLine;
+import io.github.zskamljic.restahead.request.path.TemplatedPath;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -28,9 +28,11 @@ public class MethodModeler {
     private final ParameterModeler parameterModeler;
     private final PathValidator pathValidator;
     private final ReturnTypeModeler returnTypeModeler;
+    private final Dialects dialects;
 
-    public MethodModeler(Messager messager, Elements elements, Types types) {
+    public MethodModeler(Messager messager, Elements elements, Types types, Dialects dialects) {
         this.messager = messager;
+        this.dialects = dialects;
         pathValidator = new PathValidator(messager, elements, types);
         this.parameterModeler = new ParameterModeler(messager, elements, types, pathValidator);
         returnTypeModeler = new ReturnTypeModeler(messager, elements, types);
@@ -47,7 +49,7 @@ public class MethodModeler {
         ExecutableElement function,
         List<AdapterClassDeclaration> adapters
     ) {
-        var presentAnnotations = VerbMapping.ANNOTATION_VERBS.stream()
+        var presentAnnotations = dialects.verbAnnotations()
             .map(function::getAnnotation)
             .filter(Objects::nonNull)
             .toList();
@@ -58,7 +60,7 @@ public class MethodModeler {
         }
 
         var annotation = presentAnnotations.get(0);
-        var requestLine = VerbMapping.annotationToVerb(annotation);
+        var requestLine = dialects.basicRequestLine(annotation);
 
         var parameters = parameterModeler.getMethodParameters(function, requestLine.allowsBody());
         var updatedLine = pathValidator.validatePathAndExtractQuery(function, requestLine, parameters);

@@ -1,4 +1,4 @@
-package io.github.zskamljic.restahead.requests.request.path;
+package io.github.zskamljic.restahead.request.path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
