@@ -1,11 +1,6 @@
 package io.github.zskamljic.restahead.modeling;
 
 import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
-import io.github.zskamljic.restahead.annotations.form.Part;
-import io.github.zskamljic.restahead.annotations.request.Body;
-import io.github.zskamljic.restahead.annotations.request.Header;
-import io.github.zskamljic.restahead.annotations.request.Path;
-import io.github.zskamljic.restahead.annotations.request.Query;
 import io.github.zskamljic.restahead.client.requests.parts.FieldPart;
 import io.github.zskamljic.restahead.client.requests.parts.FilePart;
 import io.github.zskamljic.restahead.encoding.BodyEncoding;
@@ -20,6 +15,7 @@ import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 import io.github.zskamljic.restahead.modeling.validation.HeaderValidator;
 import io.github.zskamljic.restahead.modeling.validation.PathValidator;
 import io.github.zskamljic.restahead.modeling.validation.QueryValidator;
+import io.github.zskamljic.restahead.polyglot.Dialects;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
@@ -40,13 +36,6 @@ import java.util.Optional;
  * Used to extract parameter info from the declaration.
  */
 public class ParameterModeler {
-    private static final List<Class<? extends Annotation>> REQUEST_ANNOTATIONS = List.of(
-        Header.class, Path.class, Query.class
-    );
-    private static final List<Class<? extends Annotation>> BODY_ANNOTATIONS = List.of(
-        Body.class, FormUrlEncoded.class, Part.class
-    );
-
     private final Messager messager;
     private final PathValidator pathValidator;
     private final Elements elements;
@@ -54,12 +43,20 @@ public class ParameterModeler {
     private final HeaderValidator headerValidator;
     private final QueryValidator queryValidator;
     private final TypeMirror ioException;
+    private final Dialects dialects;
 
-    public ParameterModeler(Messager messager, Elements elements, Types types, PathValidator pathValidator) {
+    public ParameterModeler(
+        Messager messager,
+        Elements elements,
+        Dialects dialects,
+        Types types,
+        PathValidator pathValidator
+    ) {
         this.messager = messager;
-        this.pathValidator = pathValidator;
         this.elements = elements;
+        this.dialects = dialects;
         this.types = types;
+        this.pathValidator = pathValidator;
         headerValidator = new HeaderValidator(messager, elements, types);
         queryValidator = new QueryValidator(messager, elements, types);
         ioException = elements.getTypeElement(IOException.class.getCanonicalName())
@@ -81,11 +78,11 @@ public class ParameterModeler {
         var bodies = new ArrayList<BodyParameter>();
 
         for (var parameter : parameters) {
-            var requestAnnotations = REQUEST_ANNOTATIONS.stream()
+            var requestAnnotations = dialects.requestAnnotations()
                 .map(parameter::getAnnotation)
                 .filter(Objects::nonNull)
                 .toList();
-            var bodyAnnotations = BODY_ANNOTATIONS.stream()
+            var bodyAnnotations = dialects.bodyAnnotations()
                 .map(parameter::getAnnotation)
                 .filter(Objects::nonNull)
                 .toList();
@@ -151,13 +148,20 @@ public class ParameterModeler {
             var type = body.parameter().asType();
             if (typeValidator.isFileType(type)) {
                 exceptions.addAll(typeValidator.getPossibleException(type));
-                partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.of(FilePart.class)));
+                partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.of(FilePart.class), Optional.empty()));
             } else if (!typeValidator.isUnsupportedType(type)) {
-                partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.of(FieldPart.class)));
+                partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.of(FieldPart.class), Optional.empty()));
             } else if (typeValidator.isDirectMultipartType(type)) {
-                partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.empty()));
+                partMap.add(new MultiPartParameter(body.httpName(), body.name(), Optional.empty(), Optional.empty()));
             } else {
-                messager.printMessage(Diagnostic.Kind.ERROR, "Type is not supported for multipart body.", body.parameter());
+                dialects.createBodyPart(elements, types, body, type)
+                    .ifPresentOrElse(
+                        paramWithException -> {
+                            partMap.add(paramWithException.parameter());
+                            exceptions.addAll(paramWithException.exceptions());
+                        },
+                        () -> messager.printMessage(Diagnostic.Kind.ERROR, "Type is not supported for multipart body.", body.parameter())
+                    );
             }
         }
         return Optional.of(new MultiPartBodyEncoding(partMap, exceptions.stream().toList()));
@@ -185,12 +189,16 @@ public class ParameterModeler {
         }
         var annotation = requestAnnotations.get(0);
 
-        if (annotation instanceof Header header) {
-            headerValidator.getHeaderSpec(header.value(), parameter).ifPresent(headers::add);
-        } else if (annotation instanceof Query query) {
-            queryValidator.getQuerySpec(query.value(), parameter).ifPresent(queries::add);
-        } else if (annotation instanceof Path path) {
-            pathValidator.getPathSpec(path.value(), parameter).ifPresent(paths::add);
+        var requestParameter = dialects.extractRequestAnnotation(annotation);
+        if (requestParameter.isEmpty()) {
+            messager.printMessage(Diagnostic.Kind.ERROR, "No dialect could parse this parameter.", parameter);
+            return;
+        }
+        var parameterValue = requestParameter.get();
+        switch (parameterValue.type()) {
+            case HEADER -> headerValidator.getHeaderSpec(parameterValue.value(), parameter).ifPresent(headers::add);
+            case QUERY -> queryValidator.getQuerySpec(parameterValue.value(), parameter).ifPresent(queries::add);
+            case PATH -> pathValidator.getPathSpec(parameterValue.value(), parameter).ifPresent(paths::add);
         }
     }
 
@@ -208,10 +216,7 @@ public class ParameterModeler {
     ) {
         var hasFormUrlEncoded = bodyAnnotations.stream()
             .anyMatch(FormUrlEncoded.class::isInstance);
-        var part = bodyAnnotations.stream()
-            .filter(Part.class::isInstance)
-            .map(Part.class::cast)
-            .findFirst();
+        var part = dialects.extractParts(bodyAnnotations);
         if (hasFormUrlEncoded && part.isPresent()) {
             messager.printMessage(Diagnostic.Kind.ERROR, "Request can't be both multipart and form encoded", parameter);
             return;
@@ -219,8 +224,8 @@ public class ParameterModeler {
 
         var parameterName = parameter.getSimpleName().toString();
         if (part.isPresent()) {
-            var partAnnotation = part.get();
-            var value = partAnnotation.value();
+            var partData = part.get();
+            var value = partData.value();
             if (value.isBlank()) {
                 value = parameterName;
             }

@@ -35,7 +35,7 @@ abstract class CommonParameterValidator {
      *
      * @param parameter the parameter to fetch info from
      * @param value     the value used for HTTP name
-     * @return empty for invalid setup, non empty for valid config
+     * @return empty for invalid setup, non-empty for valid config
      */
     protected Optional<RequestParameterSpec> extractSpec(VariableElement parameter, String value) {
         var type = isInvalidType(parameter.asType());

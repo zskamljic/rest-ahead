@@ -6,10 +6,12 @@ import com.squareup.javapoet.MethodSpec;
 import io.github.zskamljic.restahead.client.requests.MultiPartRequest;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
+import io.github.zskamljic.restahead.client.requests.parts.MultiPart;
 import io.github.zskamljic.restahead.encoding.BodyEncoding;
 import io.github.zskamljic.restahead.encoding.ConvertBodyEncoding;
 import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
 import io.github.zskamljic.restahead.encoding.MultiPartBodyEncoding;
+import io.github.zskamljic.restahead.encoding.MultiPartParameter;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
@@ -139,12 +141,30 @@ public class MethodGenerator {
                 builder.addCode("$T.builder()\n", MultiPartRequest.class);
                 for (var part : multipart.parts()) {
                     part.type().ifPresentOrElse(
-                        type -> builder.addCode("\t.addPart(new $T($S, $L))\n", type, part.httpName(), part.name()),
+                        type -> addMultipartStatement(builder, type, part),
                         () -> builder.addCode("\t.addPart($L)\n", part.name())
                     );
                 }
                 builder.addStatement("\t.buildInto($L)", Variables.REQUEST_BUILDER);
             }
+        );
+    }
+
+    /**
+     * Add a multipart statement, choosing the code to add based on extra parameters
+     *
+     * @param builder the builder to add the code to
+     * @param type    the type to use
+     * @param part    the part from which to get the data
+     */
+    private void addMultipartStatement(
+        MethodSpec.Builder builder,
+        Class<? extends MultiPart> type,
+        MultiPartParameter part
+    ) {
+        part.extraParameters().ifPresentOrElse(
+            extra -> builder.addCode("\t.addPart(new $T($S, $L, $L))\n", type, part.httpName(), part.name(), extra),
+            () -> builder.addCode("\t.addPart(new $T($S, $L))\n", type, part.httpName(), part.name())
         );
     }
 
@@ -213,7 +233,7 @@ public class MethodGenerator {
         List<RequestParameterSpec> paths
     ) {
         var pathToVariable = paths.stream()
-            .collect(Collectors.toMap(RequestParameterSpec::httpName, RequestParameterSpec::httpName));
+            .collect(Collectors.toMap(RequestParameterSpec::httpName, RequestParameterSpec::codeName));
 
         var replaceBlocks = CodeBlock.builder()
             .add(".setPath($S", path);

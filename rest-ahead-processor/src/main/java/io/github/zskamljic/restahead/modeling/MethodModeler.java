@@ -34,7 +34,7 @@ public class MethodModeler {
         this.messager = messager;
         this.dialects = dialects;
         pathValidator = new PathValidator(messager, elements, types);
-        this.parameterModeler = new ParameterModeler(messager, elements, types, pathValidator);
+        this.parameterModeler = new ParameterModeler(messager, elements, dialects, types, pathValidator);
         returnTypeModeler = new ReturnTypeModeler(messager, elements, types);
     }
 

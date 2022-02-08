@@ -1,9 +1,17 @@
 package io.github.zskamljic.restahead.polyglot;
 
+import io.github.zskamljic.restahead.annotations.Adapter;
+import io.github.zskamljic.restahead.modeling.declaration.BodyParameter;
+import io.github.zskamljic.restahead.modeling.parameters.ParameterWithExceptions;
+import io.github.zskamljic.restahead.modeling.parameters.PartData;
+import io.github.zskamljic.restahead.modeling.parameters.RequestParameter;
 import io.github.zskamljic.restahead.request.BasicRequestLine;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
@@ -28,13 +36,35 @@ public class Dialects {
     }
 
     /**
-     * Returns all verb annotations from discovered dialects
+     * Returns all verb annotations from discovered dialects.
      *
      * @return a stream of annotation classes
      */
     public Stream<Class<? extends Annotation>> verbAnnotations() {
         return dialects.stream()
             .map(Dialect::verbAnnotations)
+            .flatMap(Collection::stream);
+    }
+
+    /**
+     * Returns all request annotations from discovered dialects.
+     *
+     * @return a stream of annotation classes
+     */
+    public Stream<Class<? extends Annotation>> requestAnnotations() {
+        return dialects.stream()
+            .map(Dialect::requestAnnotations)
+            .flatMap(Collection::stream);
+    }
+
+    /**
+     * Returns all body annotations from discovered dialects.
+     *
+     * @return a stream of annotation classes
+     */
+    public Stream<Class<? extends Annotation>> bodyAnnotations() {
+        return dialects.stream()
+            .map(Dialect::bodyAnnotations)
             .flatMap(Collection::stream);
     }
 
@@ -74,9 +104,12 @@ public class Dialects {
      * @return the full set of annotations
      */
     public Set<String> supportedAnnotationTypes() {
-        return dialects.stream()
-            .map(Dialect::allAnnotations)
-            .flatMap(List::stream)
+        return Stream.concat(
+                dialects.stream()
+                    .map(Dialect::allAnnotations)
+                    .flatMap(List::stream),
+                Stream.of(Adapter.class)
+            )
             .map(Class::getCanonicalName)
             .collect(Collectors.toSet());
     }
@@ -90,5 +123,26 @@ public class Dialects {
         return dialects.stream()
             .map(dialect -> dialect.getClass().getSimpleName())
             .collect(Collectors.joining(", "));
+    }
+
+    public Optional<RequestParameter> extractRequestAnnotation(Annotation annotation) {
+        return dialects.stream()
+            .map(dialect -> dialect.extractRequestAnnotation(annotation))
+            .flatMap(Optional::stream)
+            .findFirst();
+    }
+
+    public Optional<PartData> extractParts(List<? extends Annotation> bodyAnnotations) {
+        return dialects.stream()
+            .map(dialect -> dialect.extractPart(bodyAnnotations))
+            .flatMap(Optional::stream)
+            .findFirst();
+    }
+
+    public Optional<ParameterWithExceptions> createBodyPart(Elements elements, Types types, BodyParameter body, TypeMirror type) {
+        return dialects.stream()
+            .map(dialect -> dialect.createBodyPart(elements, types, body, type))
+            .flatMap(Optional::stream)
+            .findFirst();
     }
 }

@@ -1,7 +1,14 @@
 package io.github.zskamljic.restahead.polyglot;
 
+import io.github.zskamljic.restahead.modeling.declaration.BodyParameter;
+import io.github.zskamljic.restahead.modeling.parameters.ParameterWithExceptions;
+import io.github.zskamljic.restahead.modeling.parameters.PartData;
+import io.github.zskamljic.restahead.modeling.parameters.RequestParameter;
 import io.github.zskamljic.restahead.request.BasicRequestLine;
 
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
@@ -20,11 +27,18 @@ public interface Dialect {
     List<Class<? extends Annotation>> allAnnotations();
 
     /**
-     * Return a list of utility annotations, such as Query, Header, Body etc.
+     * Return a list of request annotations, such as Query, Header, Path etc.
      *
-     * @return the list of utility annotations.
+     * @return the list of request annotations.
      */
-    List<Class<? extends Annotation>> utilityAnnotations();
+    List<Class<? extends Annotation>> requestAnnotations();
+
+    /**
+     * Return a list of body annotations, such as Body, FormName, Part etc.
+     *
+     * @return the list of body annotations.
+     */
+    List<Class<? extends Annotation>> bodyAnnotations();
 
     /**
      * Return a list of verb annotations, such as Delete, Get, Post etc.
@@ -41,4 +55,33 @@ public interface Dialect {
      * @return request line if annotation is valid and recognized, empty otherwise
      */
     Optional<BasicRequestLine> getRequestLine(Annotation annotation);
+
+    /**
+     * Attempts to extract a {@link RequestParameter} from the annotation. Can be called with annotations from other
+     * dialects. If no data can be extracted (unknown annotation, invalid data etc.) Optional.empty() can be returned.
+     *
+     * @param annotation the annotation to get the parameter from
+     * @return the parameter if parsed, empty otherwise
+     */
+    Optional<RequestParameter> extractRequestAnnotation(Annotation annotation);
+
+    /**
+     * Attempt to extract a {@link PartData} from the annotation. Can be called with annotations from other
+     * dialects. If no data can be extracted (unknown annotation, invalid data etc.) Optional.empty() can be returned.
+     *
+     * @param bodyAnnotations body annotations present on the parameter
+     * @return the extracted PartData if applicable
+     */
+    Optional<PartData> extractPart(List<? extends Annotation> bodyAnnotations);
+
+    /**
+     * Create a new body part if this dialect is familiar with the type.
+     *
+     * @param elements the elements utility to obtain references from
+     * @param types the types utility to help with type decision
+     * @param body  the body information parsed from the parameter
+     * @param type  the type of the parameter
+     * @return full parameter info or empty
+     */
+    Optional<ParameterWithExceptions> createBodyPart(Elements elements, Types types, BodyParameter body, TypeMirror type);
 }
