@@ -1,6 +1,7 @@
-package io.github.zskamljic.restahead.processor;
+package io.github.zskamljic.restahead.processor.stock;
 
 import com.google.testing.compile.JavaFileObjects;
+import io.github.zskamljic.restahead.processor.CommonProcessorTest;
 import org.junit.jupiter.api.Test;
 
 class ResponseProcessorTest extends CommonProcessorTest {

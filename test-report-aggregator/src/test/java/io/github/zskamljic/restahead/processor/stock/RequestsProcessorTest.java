@@ -1,6 +1,7 @@
-package io.github.zskamljic.restahead.processor;
+package io.github.zskamljic.restahead.processor.stock;
 
 import com.google.testing.compile.JavaFileObjects;
+import io.github.zskamljic.restahead.processor.CommonProcessorTest;
 import org.junit.jupiter.api.Test;
 
 class RequestsProcessorTest extends CommonProcessorTest {
@@ -11,24 +12,22 @@ class RequestsProcessorTest extends CommonProcessorTest {
     }
 
     @Test
-    void generateServiceFailsForAbstractClass() {
+    void generateServiceIgnoresAbstractClass() {
         commonCompilationAssertion("basic/MethodClass.java")
-            .failsToCompile()
-            .withErrorContaining("interfaces");
+            .compilesWithoutWarnings();
     }
 
     @Test
     void interfaceWithDefaultFailsToCompile() {
         commonCompilationAssertion("basic/MethodService.java")
             .failsToCompile()
-            .withErrorContaining("abstract");
+            .withErrorContaining("Default methods in interfaces");
     }
 
     @Test
-    void classWithMethodFailsToCompile() {
+    void classWithMethodIgnoresClass() {
         commonCompilationAssertion("basic/NormalClassMethod.java")
-            .failsToCompile()
-            .withErrorContaining("abstract");
+            .compilesWithoutWarnings();
     }
 
     @Test

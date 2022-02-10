@@ -38,19 +38,13 @@ public final class SpringService$Impl implements SpringService {
     }
 
     @Override
-    public final Response performPost(String part, MultipartFile file) {
+    public final Response performDelete(String header1, String header2) {
         var httpRequestBuilder = new Request.Builder()
-            .setVerb(Verb.POST)
+            .setVerb(Verb.DELETE)
             .setBaseUrl(baseUrl)
-            .setPath("/post");
-        try {
-            MultiPartRequest.builder()
-                .addPart(new FieldPart("part", part))
-                .addPart(new FilePart("file", file.getOriginalFilename(), file.getInputStream()))
-                .buildInto(httpRequestBuilder);
-        } catch (IOException exception) {
-            throw RestException.getAppropriateException(exception);
-        }
+            .setPath("/delete");
+        httpRequestBuilder.addHeader("custom", String.valueOf(header1));
+        httpRequestBuilder.addHeader("header2", String.valueOf(header2));
         var response = client.execute(httpRequestBuilder.build());
         try {
             return defaultAdapters.syncAdapter(response);
@@ -60,13 +54,12 @@ public final class SpringService$Impl implements SpringService {
     }
 
     @Override
-    public final Response performDelete(String header1, String header2) {
+    public final Response performGet(String get, String second) {
         var httpRequestBuilder = new Request.Builder()
-            .setVerb(Verb.DELETE)
+            .setVerb(Verb.GET)
             .setBaseUrl(baseUrl)
-            .setPath("/delete");
-        httpRequestBuilder.addHeader("custom", String.valueOf(header1));
-        httpRequestBuilder.addHeader("header2", String.valueOf(header2));
+            .setPath("/{get}/{hello}".replace("{get}", String.valueOf(get))
+                .replace("{hello}", String.valueOf(second)));
         var response = client.execute(httpRequestBuilder.build());
         try {
             return defaultAdapters.syncAdapter(response);
@@ -95,11 +88,19 @@ public final class SpringService$Impl implements SpringService {
     }
 
     @Override
-    public final Response performPut() {
+    public final Response performPost(String part, MultipartFile file) {
         var httpRequestBuilder = new Request.Builder()
-            .setVerb(Verb.PUT)
+            .setVerb(Verb.POST)
             .setBaseUrl(baseUrl)
-            .setPath("/put");
+            .setPath("/post");
+        try {
+            MultiPartRequest.builder()
+                .addPart(new FieldPart("part", part))
+                .addPart(new FilePart("file", file.getOriginalFilename(), file.getInputStream()))
+                .buildInto(httpRequestBuilder);
+        } catch (IOException exception) {
+            throw RestException.getAppropriateException(exception);
+        }
         var response = client.execute(httpRequestBuilder.build());
         try {
             return defaultAdapters.syncAdapter(response);
@@ -109,12 +110,11 @@ public final class SpringService$Impl implements SpringService {
     }
 
     @Override
-    public final Response performGet(String get, String second) {
+    public final Response performPut() {
         var httpRequestBuilder = new Request.Builder()
-            .setVerb(Verb.GET)
+            .setVerb(Verb.PUT)
             .setBaseUrl(baseUrl)
-            .setPath("/{get}/{hello}".replace("{get}", String.valueOf(get))
-                .replace("{hello}", String.valueOf(second)));
+            .setPath("/put");
         var response = client.execute(httpRequestBuilder.build());
         try {
             return defaultAdapters.syncAdapter(response);

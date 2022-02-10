@@ -1,5 +1,6 @@
-package io.github.zskamljic.restahead.processor;
+package io.github.zskamljic.restahead.processor.stock;
 
+import io.github.zskamljic.restahead.processor.CommonProcessorTest;
 import org.junit.jupiter.api.Test;
 
 class ParametersProcessorTest extends CommonProcessorTest {
