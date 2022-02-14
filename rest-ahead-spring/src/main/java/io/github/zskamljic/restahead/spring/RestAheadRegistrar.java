@@ -117,7 +117,7 @@ public class RestAheadRegistrar implements ImportBeanDefinitionRegistrar, Enviro
         client.ifPresent(builder::client);
         adapters.forEach(builder::addAdapter);
 
-        //noinspection unchecked TODO: check if this can be cleanly cast to prevent linter warning
+        //noinspection unchecked
         return (T) builder.build(clazz);
     }
 

@@ -20,9 +20,8 @@ import java.util.Optional;
 /**
  * Used to generate class to form encoded string conversion.
  */
-public record ClassGenerationStrategy(TypeMirror type) implements GenerationStrategy {
-    @Override
-    public MethodSpec generateMethod() {
+public record ClassGenerationStrategy(TypeMirror type) implements FormConversionStrategy {
+    public MethodSpec generate() {
         var builder = MethodSpec.methodBuilder(Variables.FORM_ENCODE)
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addParameter(TypeName.get(type), "value")
@@ -44,7 +43,7 @@ public record ClassGenerationStrategy(TypeMirror type) implements GenerationStra
      * @param mirror   the type for which to find a strategy
      * @return generation strategy if no issues were discovered, empty otherwise
      */
-    public static Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
+    public static Optional<FormConversionStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         if (!(mirror instanceof DeclaredType declaredType)) return Optional.empty();
 
         var getters = findGetters(declaredType);

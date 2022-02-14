@@ -3,7 +3,7 @@ package io.github.zskamljic.restahead.modeling;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ServiceDeclaration;
-import io.github.zskamljic.restahead.requests.VerbMapping;
+import io.github.zskamljic.restahead.polyglot.Dialects;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -30,11 +30,13 @@ public class ServiceModeler {
     private final Messager messager;
     private final Elements elements;
     private final MethodModeler methodModeler;
+    private final Dialects dialects;
 
-    public ServiceModeler(Messager messager, Elements elements, Types types) {
+    public ServiceModeler(Messager messager, Elements elements, Types types, Dialects dialects) {
         this.messager = messager;
         this.elements = elements;
-        methodModeler = new MethodModeler(messager, elements, types);
+        this.dialects = dialects;
+        methodModeler = new MethodModeler(messager, elements, types, dialects);
     }
 
     /**
@@ -80,7 +82,7 @@ public class ServiceModeler {
                 .map(ExecutableElement.class::cast)
                 .toList();
             for (var function : functions) {
-                var annotation = VerbMapping.ANNOTATION_VERBS.stream()
+                var annotation = dialects.verbAnnotations()
                     .map(function::getAnnotation)
                     .filter(Objects::nonNull)
                     .toList();
@@ -109,9 +111,19 @@ public class ServiceModeler {
         List<ExecutableElement> functions,
         List<AdapterClassDeclaration> adapters
     ) {
+        var originalFunctions = typeElement.getEnclosedElements()
+            .stream()
+            .filter(ExecutableElement.class::isInstance)
+            .map(ExecutableElement.class::cast)
+            .toList();
         var calls = functions.stream()
             .map(function -> methodModeler.getCallDeclaration(function, adapters))
             .flatMap(Optional::stream)
+            .sorted((o1, o2) -> {
+                var f1 = o1.function();
+                var f2 = o2.function();
+                return originalFunctions.indexOf(f1) - originalFunctions.indexOf(f2);
+            })
             .toList();
 
         // There were errors in creation of the service declaration
@@ -150,22 +162,20 @@ public class ServiceModeler {
                 continue;
             }
 
-            var modifiers = executableElement.getModifiers();
-            if (!modifiers.contains(Modifier.ABSTRACT)) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "Only abstract methods can be generated.", element);
-                continue;
-            }
-
             var parent = executableElement.getEnclosingElement();
             if (!(parent instanceof TypeElement declaringType)) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "Only methods in classes can be generated", element);
                 continue;
             }
 
-            if (!(declaringType.getSuperclass() instanceof NoType)) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "Only interfaces support code generation at this time", element);
+            var modifiers = executableElement.getModifiers();
+            var isAbstract = modifiers.contains(Modifier.ABSTRACT);
+            var isInterface = declaringType.getSuperclass() instanceof NoType;
+            if (!isAbstract && isInterface) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "Default methods in interfaces are not supported.", element);
                 continue;
             }
+            if (!isAbstract || !isInterface) continue;
 
             declaringElements.compute(declaringType, (typeElement, executableElements) -> {
                 if (executableElements == null) {

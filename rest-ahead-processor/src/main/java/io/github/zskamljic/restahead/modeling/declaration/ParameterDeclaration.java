@@ -1,7 +1,7 @@
 package io.github.zskamljic.restahead.modeling.declaration;
 
 import io.github.zskamljic.restahead.encoding.BodyEncoding;
-import io.github.zskamljic.restahead.requests.request.PresetQuery;
+import io.github.zskamljic.restahead.request.PresetQuery;
 
 import java.util.ArrayList;
 import java.util.List;

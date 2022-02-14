@@ -2,11 +2,11 @@ package io.github.zskamljic.restahead.modeling.validation;
 
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
-import io.github.zskamljic.restahead.requests.request.BasicRequestLine;
-import io.github.zskamljic.restahead.requests.request.PresetQuery;
-import io.github.zskamljic.restahead.requests.request.RequestLine;
-import io.github.zskamljic.restahead.requests.request.path.RequestPath;
-import io.github.zskamljic.restahead.requests.request.path.StringPath;
+import io.github.zskamljic.restahead.request.BasicRequestLine;
+import io.github.zskamljic.restahead.request.PresetQuery;
+import io.github.zskamljic.restahead.request.RequestLine;
+import io.github.zskamljic.restahead.request.path.RequestPath;
+import io.github.zskamljic.restahead.request.path.StringPath;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;

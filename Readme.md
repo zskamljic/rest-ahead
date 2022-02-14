@@ -21,6 +21,7 @@ approach.
 - [Query](#queries)
 - [Responses](#response-types)
 - [Spring Boot](#spring-boot)
+- [Dialects](#dialects)
 
 ## Introduction
 
@@ -356,6 +357,40 @@ public interface DemoService {
 `DemoService` will then be injectable wherever you use it as a bean - either constructor injection or `@Autowired`
 injection. URL property needs to be provided to have a baseUrl configured, converter property is optional and is
 required only if the service requires one, see [response types](#response-types).
+
+### Dialects
+
+The code generator allows for usage of multiple dialects (Default being RestAhead). For example, Spring dialect can be
+used, by adding the dependency:
+
+```xml
+
+<dependency>
+    <groupId>io.github.zskamljic</groupId>
+    <artifactId>rest-ahead-spring-dialect</artifactId>
+    <version>${rest.ahead.version}</version>
+</dependency>
+```
+
+It can then be used as following:
+
+```java
+interface SpringService {
+    @GetMappin("/get")
+    Response performGet(@RequestHeader String header, @RequestParam String query);
+
+    @RequestMapping(method = RequestMethod.GET, value = "/{param}")
+    HttpBinResponse get2(@PathVariable String param);
+
+    @PostMapping("/multipart")
+    HttpBinResponse postFile(@RequestPart MultiPartFile file);
+
+    @PostMapping("/customBody")
+    HttpBinResponse postFormData(@RequestPart Map<String, String> body);
+}
+```
+
+Info on how to declare a new dialect can be seen in [Dialects](Dialects.md)
 
 ## Adding to project
 

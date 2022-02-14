@@ -24,14 +24,9 @@ import java.util.stream.Stream;
 /**
  * Generates a converter for the given record.
  */
-public record RecordGenerationStrategy(TypeMirror type) implements GenerationStrategy {
-    /**
-     * The generated value, using component names as keys and their values as values.
-     *
-     * @return the generated method
-     */
-    @Override
-    public MethodSpec generateMethod() {
+public record RecordGenerationStrategy(TypeMirror type) implements FormConversionStrategy {
+
+    public MethodSpec generate() {
         var builder = MethodSpec.methodBuilder(Variables.FORM_ENCODE)
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addParameter(TypeName.get(type), "value")
@@ -52,7 +47,7 @@ public record RecordGenerationStrategy(TypeMirror type) implements GenerationStr
      * @param mirror   the type for which to find a strategy
      * @return the strategy if it can be applied, empty otherwise
      */
-    public static Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
+    public static Optional<FormConversionStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         if (!(mirror instanceof DeclaredType declaredType)) return Optional.empty();
 
         var element = declaredType.asElement();

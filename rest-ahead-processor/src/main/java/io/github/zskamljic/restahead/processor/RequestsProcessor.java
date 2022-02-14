@@ -1,18 +1,9 @@
 package io.github.zskamljic.restahead.processor;
 
-import io.github.zskamljic.restahead.annotations.Adapter;
-import io.github.zskamljic.restahead.annotations.form.FormName;
-import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
-import io.github.zskamljic.restahead.annotations.form.Part;
-import io.github.zskamljic.restahead.annotations.request.Body;
-import io.github.zskamljic.restahead.annotations.request.Header;
-import io.github.zskamljic.restahead.annotations.request.Path;
-import io.github.zskamljic.restahead.annotations.request.Query;
-import io.github.zskamljic.restahead.generation.FormConverterGenerator;
 import io.github.zskamljic.restahead.generation.ServiceGenerator;
 import io.github.zskamljic.restahead.modeling.AdapterModeler;
 import io.github.zskamljic.restahead.modeling.ServiceModeler;
-import io.github.zskamljic.restahead.requests.VerbMapping;
+import io.github.zskamljic.restahead.polyglot.Dialects;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -23,24 +14,18 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Processor entry point for HTTP annotations.
  */
 public class RequestsProcessor extends AbstractProcessor {
-    private static final List<Class<?>> NON_VERB_ANNOTATIONS = List.of(
-        Adapter.class, Body.class, Header.class, Path.class, Query.class, FormName.class, FormUrlEncoded.class, Part.class
-    );
-
-    private FormConverterGenerator formConverterGenerator;
-    private ServiceModeler serviceModeler;
-    private ServiceGenerator serviceGenerator;
-    private AdapterModeler adapterModeler;
     private Messager messager;
+    private Dialects dialects;
+    private AdapterModeler adapterModeler;
+    private ServiceGenerator serviceGenerator;
+    private ServiceModeler serviceModeler;
 
     /**
      * Initialize the implementation, extracting required fields from {@link ProcessingEnvironment}.
@@ -54,10 +39,10 @@ public class RequestsProcessor extends AbstractProcessor {
         var filer = processingEnv.getFiler();
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
-        serviceModeler = new ServiceModeler(messager, elements, types);
+        dialects = new Dialects(messager);
         adapterModeler = new AdapterModeler(messager, elements, types);
         serviceGenerator = new ServiceGenerator(messager, filer);
-        formConverterGenerator = new FormConverterGenerator(messager, filer);
+        serviceModeler = new ServiceModeler(messager, elements, types, dialects);
     }
 
     /**
@@ -73,7 +58,6 @@ public class RequestsProcessor extends AbstractProcessor {
             var adapters = adapterModeler.findAdapters(roundEnv);
             var verbs = filterVerbAnnotations(annotations);
             var serviceDeclarations = serviceModeler.collectServices(verbs, roundEnv, adapters);
-            formConverterGenerator.generateFormEncoderIfNeeded(serviceDeclarations);
             serviceDeclarations.forEach(service -> serviceGenerator.generateService(service));
         } catch (IllegalArgumentException e) {
             var stringWriter = new StringWriter();
@@ -91,11 +75,8 @@ public class RequestsProcessor extends AbstractProcessor {
      * @return the filtered set
      */
     private Set<? extends TypeElement> filterVerbAnnotations(Set<? extends TypeElement> annotations) {
-        var names = NON_VERB_ANNOTATIONS.stream()
-            .map(Class::getSimpleName)
-            .toList();
         return annotations.stream()
-            .filter(type -> !names.contains(type.getSimpleName().toString()))
+            .filter(dialects::isVerbAnnotation)
             .collect(Collectors.toSet());
     }
 
@@ -116,11 +97,6 @@ public class RequestsProcessor extends AbstractProcessor {
      */
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Stream.concat(
-                VerbMapping.ANNOTATION_VERBS.stream(),
-                NON_VERB_ANNOTATIONS.stream()
-            )
-            .map(Class::getCanonicalName)
-            .collect(Collectors.toSet());
+        return dialects.supportedAnnotationTypes();
     }
 }

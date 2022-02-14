@@ -3,7 +3,7 @@ package io.github.zskamljic.restahead.generation.methods;
 import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.validation.PathValidator;
-import io.github.zskamljic.restahead.requests.request.BasicRequestLine;
+import io.github.zskamljic.restahead.request.BasicRequestLine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
