@@ -25,45 +25,30 @@ import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * The default dialect of RestAhead.
  */
 public class RestAheadDialect implements Dialect {
-    private static final List<Class<? extends Annotation>> BODY_ANNOTATIONS = List.of(
-        Body.class, FormName.class, FormUrlEncoded.class, Part.class
-    );
-    private static final List<Class<? extends Annotation>> REQUEST_ANNOTATIONS = List.of(
-        Header.class, Path.class, Query.class
-    );
-    private static final List<Class<? extends Annotation>> VERB_ANNOTATIONS = List.of(
-        Delete.class, Get.class, Patch.class, Post.class, Put.class
-    );
-
-    private static final List<Class<? extends Annotation>> ALL_ANNOTATIONS = Stream.concat(
-        BODY_ANNOTATIONS.stream(),
-        Stream.concat(REQUEST_ANNOTATIONS.stream(), VERB_ANNOTATIONS.stream())
-    ).toList();
-
-    @Override
-    public List<Class<? extends Annotation>> allAnnotations() {
-        return ALL_ANNOTATIONS;
-    }
-
     @Override
     public List<Class<? extends Annotation>> requestAnnotations() {
-        return REQUEST_ANNOTATIONS;
+        return List.of(
+            Header.class, Path.class, Query.class
+        );
     }
 
     @Override
     public List<Class<? extends Annotation>> bodyAnnotations() {
-        return BODY_ANNOTATIONS;
+        return List.of(
+            Body.class, FormName.class, FormUrlEncoded.class, Part.class
+        );
     }
 
     @Override
     public List<Class<? extends Annotation>> verbAnnotations() {
-        return VERB_ANNOTATIONS;
+        return List.of(
+            Delete.class, Get.class, Patch.class, Post.class, Put.class
+        );
     }
 
     @Override

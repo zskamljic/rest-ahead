@@ -31,43 +31,30 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Represents the spring dialect for RestAhead.
  */
 public class SpringDialect implements Dialect {
-    private static final List<Class<? extends Annotation>> BODY_ANNOTATIONS = List.of(
-        RequestBody.class, RequestPart.class
-    );
-    private static final List<Class<? extends Annotation>> REQUEST_ANNOTATIONS = List.of(
-        RequestHeader.class, PathVariable.class, RequestParam.class
-    );
-    private static final List<Class<? extends Annotation>> VERB_ANNOTATIONS = List.of(
-        DeleteMapping.class, GetMapping.class, PatchMapping.class, PostMapping.class, PutMapping.class, RequestMapping.class
-    );
-    private static final List<Class<? extends Annotation>> ALL_ANNOTATIONS = Stream.concat(
-        BODY_ANNOTATIONS.stream(), Stream.concat(REQUEST_ANNOTATIONS.stream(), VERB_ANNOTATIONS.stream())
-    ).toList();
-
-    @Override
-    public List<Class<? extends Annotation>> allAnnotations() {
-        return ALL_ANNOTATIONS;
-    }
-
     @Override
     public List<Class<? extends Annotation>> requestAnnotations() {
-        return REQUEST_ANNOTATIONS;
+        return List.of(
+            RequestHeader.class, PathVariable.class, RequestParam.class
+        );
     }
 
     @Override
     public List<Class<? extends Annotation>> bodyAnnotations() {
-        return BODY_ANNOTATIONS;
+        return List.of(
+            RequestBody.class, RequestPart.class
+        );
     }
 
     @Override
     public List<Class<? extends Annotation>> verbAnnotations() {
-        return VERB_ANNOTATIONS;
+        return List.of(
+            DeleteMapping.class, GetMapping.class, PatchMapping.class, PostMapping.class, PutMapping.class, RequestMapping.class
+        );
     }
 
     @Override

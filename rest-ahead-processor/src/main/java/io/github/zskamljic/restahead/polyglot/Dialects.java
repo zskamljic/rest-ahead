@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  * Utility class that handles all dialects that are discovered by {@link ServiceLoader}.
  */
 public class Dialects {
-    private final List<Dialect> dialects = ServiceLoader.load(Dialect.class, RequestsProcessor.class.getClassLoader())
+    private final List<Dialect> availableDialects = ServiceLoader.load(Dialect.class, RequestsProcessor.class.getClassLoader())
         .stream()
         .map(ServiceLoader.Provider::get)
         .toList();
@@ -42,7 +42,7 @@ public class Dialects {
      * @return a stream of annotation classes
      */
     public Stream<Class<? extends Annotation>> verbAnnotations() {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(Dialect::verbAnnotations)
             .flatMap(Collection::stream);
     }
@@ -53,7 +53,7 @@ public class Dialects {
      * @return a stream of annotation classes
      */
     public Stream<Class<? extends Annotation>> requestAnnotations() {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(Dialect::requestAnnotations)
             .flatMap(Collection::stream);
     }
@@ -64,7 +64,7 @@ public class Dialects {
      * @return a stream of annotation classes
      */
     public Stream<Class<? extends Annotation>> bodyAnnotations() {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(Dialect::bodyAnnotations)
             .flatMap(Collection::stream);
     }
@@ -77,7 +77,7 @@ public class Dialects {
      * @throws IllegalArgumentException if no valid {@link BasicRequestLine} could be created
      */
     public BasicRequestLine basicRequestLine(Annotation annotation) {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(dialect -> dialect.getRequestLine(annotation))
             .flatMap(Optional::stream)
             .findFirst()
@@ -92,7 +92,7 @@ public class Dialects {
      */
     public boolean isVerbAnnotation(TypeElement typeElement) {
         var name = typeElement.getSimpleName().toString();
-        return dialects.stream()
+        return availableDialects.stream()
             .map(Dialect::verbAnnotations)
             .flatMap(Collection::stream)
             .map(Class::getSimpleName)
@@ -106,7 +106,7 @@ public class Dialects {
      */
     public Set<String> supportedAnnotationTypes() {
         return Stream.concat(
-                dialects.stream()
+                availableDialects.stream()
                     .map(Dialect::allAnnotations)
                     .flatMap(List::stream),
                 Stream.of(Adapter.class)
@@ -121,7 +121,7 @@ public class Dialects {
      * @return the comma separated list of Dialect names
      */
     private String createNameString() {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(dialect -> dialect.getClass().getSimpleName())
             .collect(Collectors.joining(", "));
     }
@@ -133,7 +133,7 @@ public class Dialects {
      * @return request or empty
      */
     public Optional<RequestParameter> extractRequestAnnotation(Annotation annotation) {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(dialect -> dialect.extractRequestAnnotation(annotation))
             .flatMap(Optional::stream)
             .findFirst();
@@ -146,7 +146,7 @@ public class Dialects {
      * @return part info or empty
      */
     public Optional<PartData> extractParts(List<? extends Annotation> bodyAnnotations) {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(dialect -> dialect.extractPart(bodyAnnotations))
             .flatMap(Optional::stream)
             .findFirst();
@@ -162,7 +162,7 @@ public class Dialects {
      * @return first processed body or empty if no dialects return a valid value
      */
     public Optional<ParameterWithExceptions> createBodyPart(Elements elements, Types types, BodyParameter body, TypeMirror type) {
-        return dialects.stream()
+        return availableDialects.stream()
             .map(dialect -> dialect.createBodyPart(elements, types, body, type))
             .flatMap(Optional::stream)
             .findFirst();

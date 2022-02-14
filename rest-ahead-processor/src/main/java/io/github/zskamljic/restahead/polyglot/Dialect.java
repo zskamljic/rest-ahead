@@ -10,6 +10,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +25,12 @@ public interface Dialect {
      *
      * @return the full list of annotations.
      */
-    List<Class<? extends Annotation>> allAnnotations();
+    default List<Class<? extends Annotation>> allAnnotations() {
+        var annotations = new ArrayList<>(requestAnnotations());
+        annotations.addAll(bodyAnnotations());
+        annotations.addAll(verbAnnotations());
+        return annotations;
+    }
 
     /**
      * Return a list of request annotations, such as Query, Header, Path etc.
@@ -78,9 +84,9 @@ public interface Dialect {
      * Create a new body part if this dialect is familiar with the type.
      *
      * @param elements the elements utility to obtain references from
-     * @param types the types utility to help with type decision
-     * @param body  the body information parsed from the parameter
-     * @param type  the type of the parameter
+     * @param types    the types utility to help with type decision
+     * @param body     the body information parsed from the parameter
+     * @param type     the type of the parameter
      * @return full parameter info or empty
      */
     Optional<ParameterWithExceptions> createBodyPart(Elements elements, Types types, BodyParameter body, TypeMirror type);

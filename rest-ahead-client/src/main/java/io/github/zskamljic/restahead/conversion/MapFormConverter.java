@@ -7,7 +7,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class MapFormConverter {
+public final class MapFormConverter {
+    private MapFormConverter() {
+    }
+
     public static <K, V> InputStream formEncode(Map<K, V> value) {
         var stringValue = value.entrySet()
             .stream()
