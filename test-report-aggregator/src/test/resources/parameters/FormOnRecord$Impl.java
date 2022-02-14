@@ -5,10 +5,13 @@ import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.exceptions.RestException;
-import io.github.zskamljic.restahead.generation.FormConverter;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.InterruptedException;
 import java.lang.Override;
 import java.lang.String;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.processing.Generated;
 
@@ -33,12 +36,34 @@ public final class FormOnRecord$Impl implements FormOnRecord {
             .setBaseUrl(baseUrl)
             .setPath("");
         httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        httpRequestBuilder.setBody(FormConverter.formEncode(body));
+        httpRequestBuilder.setBody(formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
             defaultAdapters.syncVoidAdapter(response);
         } catch (ExecutionException | InterruptedException exception) {
             throw RestException.getAppropriateException(exception);
         }
+    }
+
+    @Override
+    public final void post2(FormOnRecord.Sample body) {
+        var httpRequestBuilder = new Request.Builder()
+            .setVerb(Verb.POST)
+            .setBaseUrl(baseUrl)
+            .setPath("");
+        httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        httpRequestBuilder.setBody(formEncode(body));
+        var response = client.execute(httpRequestBuilder.build());
+        try {
+            defaultAdapters.syncVoidAdapter(response);
+        } catch (ExecutionException | InterruptedException exception) {
+            throw RestException.getAppropriateException(exception);
+        }
+    }
+
+    public static InputStream formEncode(FormOnRecord.Sample value) {
+        var stringValue = "first=" + URLEncoder.encode(String.valueOf(value.first()), StandardCharsets.UTF_8) +
+            "&2nd=" + URLEncoder.encode(String.valueOf(value.second()), StandardCharsets.UTF_8);
+        return new ByteArrayInputStream(stringValue.getBytes());
     }
 }

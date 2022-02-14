@@ -8,7 +8,7 @@ import io.github.zskamljic.restahead.encoding.ConvertBodyEncoding;
 import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
 import io.github.zskamljic.restahead.encoding.MultiPartBodyEncoding;
 import io.github.zskamljic.restahead.encoding.MultiPartParameter;
-import io.github.zskamljic.restahead.encoding.generation.GenerationStrategy;
+import io.github.zskamljic.restahead.encoding.generation.FormConversionStrategy;
 import io.github.zskamljic.restahead.modeling.declaration.BodyParameter;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
@@ -130,7 +130,7 @@ public class ParameterModeler {
             var parameter = body.parameter();
             var parameterName = parameter.getSimpleName().toString();
             if (body.type() == BodyParameter.Type.FORM) {
-                var strategy = GenerationStrategy.select(messager, elements, types, parameter.asType());
+                var strategy = FormConversionStrategy.select(messager, elements, types, parameter.asType());
                 if (strategy.isEmpty()) {
                     messager.printMessage(Diagnostic.Kind.ERROR, "Form encoding for type " + parameter.asType() + " is not supported.", parameter);
                     return Optional.empty();

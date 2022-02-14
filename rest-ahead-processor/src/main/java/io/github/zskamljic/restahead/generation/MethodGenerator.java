@@ -1,17 +1,21 @@
 package io.github.zskamljic.restahead.generation;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.github.zskamljic.restahead.client.requests.MultiPartRequest;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.client.requests.parts.MultiPart;
+import io.github.zskamljic.restahead.conversion.MapFormConverter;
 import io.github.zskamljic.restahead.encoding.BodyEncoding;
 import io.github.zskamljic.restahead.encoding.ConvertBodyEncoding;
 import io.github.zskamljic.restahead.encoding.FormBodyEncoding;
 import io.github.zskamljic.restahead.encoding.MultiPartBodyEncoding;
 import io.github.zskamljic.restahead.encoding.MultiPartParameter;
+import io.github.zskamljic.restahead.encoding.generation.ClassGenerationStrategy;
+import io.github.zskamljic.restahead.encoding.generation.FormConversionStrategy;
+import io.github.zskamljic.restahead.encoding.generation.MapConversionStrategy;
+import io.github.zskamljic.restahead.encoding.generation.RecordGenerationStrategy;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
@@ -21,7 +25,10 @@ import io.github.zskamljic.restahead.request.path.TemplatedPath;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Used to generate methods annotated with HTTP annotations.
@@ -37,9 +44,30 @@ public class MethodGenerator {
      * @return the generated methods
      */
     public List<MethodSpec> generateMethods(List<CallDeclaration> calls) {
-        return calls.stream()
-            .map(this::generateMethodBody)
-            .toList();
+        var callMethods = calls.stream()
+            .map(this::generateMethodBody);
+        var convertCalls = calls.stream()
+            .map(CallDeclaration::parameters)
+            .map(ParameterDeclaration::body)
+            .flatMap(Optional::stream)
+            .filter(FormBodyEncoding.class::isInstance)
+            .map(FormBodyEncoding.class::cast)
+            .map(FormBodyEncoding::strategy)
+            .filter(Predicate.not(MapConversionStrategy.class::isInstance))
+            .distinct()
+            .map(this::generateConverterBody);
+
+        return Stream.concat(callMethods, convertCalls).toList();
+    }
+
+    private MethodSpec generateConverterBody(FormConversionStrategy strategy) {
+        if (strategy instanceof ClassGenerationStrategy classStrategy) {
+            return classStrategy.generate();
+        } else if (strategy instanceof RecordGenerationStrategy recordStrategy) {
+            return recordStrategy.generate();
+        } else {
+            throw new IllegalStateException(strategy.getClass() + " can does not generate code.");
+        }
     }
 
     /**
@@ -78,7 +106,7 @@ public class MethodGenerator {
         if (encoding instanceof ConvertBodyEncoding convertEncoding) {
             addConvertEncoding(builder, declaredExceptions, convertEncoding.exceptions(), convertEncoding.parameterName());
         } else if (encoding instanceof FormBodyEncoding formEncoding) {
-            addFormEncoding(builder, formEncoding.parameterName());
+            addFormEncoding(builder, formEncoding);
         } else if (encoding instanceof MultiPartBodyEncoding multipart) {
             addMultipartEncoding(builder, declaredExceptions, multipart);
         }
@@ -109,16 +137,23 @@ public class MethodGenerator {
     /**
      * Adds form encoding using the generated type and adds a Content-Type header for this body.
      *
-     * @param builder       the builder to add the code to
-     * @param parameterName the name of the parameter
+     * @param builder      the builder to add the code to
+     * @param formEncoding the encoding to use for parameter
      */
-    private void addFormEncoding(MethodSpec.Builder builder, String parameterName) {
-        var className = ClassName.get(MethodGenerator.class.getPackageName(), Variables.FORM_CONVERTER);
-        builder.addStatement("$L.addHeader(\"Content-Type\", \"application/x-www-form-urlencoded\")", Variables.REQUEST_BUILDER)
-            .addStatement(
+    private void addFormEncoding(MethodSpec.Builder builder, FormBodyEncoding formEncoding) {
+        builder.addStatement("$L.addHeader(\"Content-Type\", \"application/x-www-form-urlencoded\")", Variables.REQUEST_BUILDER);
+        var strategy = formEncoding.strategy();
+        if (strategy instanceof MapConversionStrategy) {
+            builder.addStatement(
                 "$L.setBody($T.$L($L))",
-                Variables.REQUEST_BUILDER, className, Variables.FORM_ENCODE, parameterName
+                Variables.REQUEST_BUILDER, MapFormConverter.class, Variables.FORM_ENCODE, formEncoding.parameterName()
             );
+        } else {
+            builder.addStatement(
+                "$L.setBody($L($L))",
+                Variables.REQUEST_BUILDER, Variables.FORM_ENCODE, formEncoding.parameterName()
+            );
+        }
     }
 
     /**

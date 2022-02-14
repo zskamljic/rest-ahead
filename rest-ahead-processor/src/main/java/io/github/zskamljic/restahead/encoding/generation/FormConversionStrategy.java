@@ -1,7 +1,5 @@
 package io.github.zskamljic.restahead.encoding.generation;
 
-import com.squareup.javapoet.MethodSpec;
-
 import javax.annotation.processing.Messager;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -12,7 +10,7 @@ import java.util.stream.Stream;
 /**
  * Outlines the generation strategy for some type.
  */
-public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapGenerationStrategy, RecordGenerationStrategy {
+public sealed interface FormConversionStrategy permits ClassGenerationStrategy, MapConversionStrategy, RecordGenerationStrategy {
     /**
      * The type that this strategy applies to. Return from this value will be used to ensure that only one converter
      * will be generated for each type.
@@ -20,13 +18,6 @@ public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapG
      * @return the type this converter applies to
      */
     TypeMirror type();
-
-    /**
-     * Generate the method for this type and strategy.
-     *
-     * @return the generated convert method.
-     */
-    MethodSpec generateMethod();
 
     /**
      * Selects an appropriate generation strategy for given type.
@@ -37,9 +28,9 @@ public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapG
      * @param mirror   the type for which to find a strategy
      * @return the strategy or empty if none was found
      */
-    static Optional<GenerationStrategy> select(Messager messager, Elements elements, Types types, TypeMirror mirror) {
+    static Optional<FormConversionStrategy> select(Messager messager, Elements elements, Types types, TypeMirror mirror) {
         Stream<OptionalStrategyProvider> providers = Stream.of(
-            MapGenerationStrategy::getIfSupported,
+            MapConversionStrategy::getIfSupported,
             RecordGenerationStrategy::getIfSupported,
             ClassGenerationStrategy::getIfSupported
         );
@@ -53,6 +44,6 @@ public sealed interface GenerationStrategy permits ClassGenerationStrategy, MapG
      */
     @FunctionalInterface
     interface OptionalStrategyProvider {
-        Optional<GenerationStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror);
+        Optional<FormConversionStrategy> getIfSupported(Messager messager, Elements elements, Types types, TypeMirror mirror);
     }
 }

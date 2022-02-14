@@ -4,8 +4,8 @@ import io.github.zskamljic.restahead.adapter.DefaultAdapters;
 import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
+import io.github.zskamljic.restahead.conversion.MapFormConverter;
 import io.github.zskamljic.restahead.exceptions.RestException;
-import io.github.zskamljic.restahead.generation.FormConverter;
 import java.lang.Double;
 import java.lang.Integer;
 import java.lang.InterruptedException;
@@ -38,7 +38,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setBaseUrl(baseUrl)
             .setPath("");
         httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        httpRequestBuilder.setBody(FormConverter.formEncode(body));
+        httpRequestBuilder.setBody(MapFormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
             defaultAdapters.syncVoidAdapter(response);
@@ -54,7 +54,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setBaseUrl(baseUrl)
             .setPath("");
         httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        httpRequestBuilder.setBody(FormConverter.formEncode(body));
+        httpRequestBuilder.setBody(MapFormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
             defaultAdapters.syncVoidAdapter(response);
@@ -70,7 +70,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setBaseUrl(baseUrl)
             .setPath("");
         httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        httpRequestBuilder.setBody(FormConverter.formEncode(body));
+        httpRequestBuilder.setBody(MapFormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
             defaultAdapters.syncVoidAdapter(response);
@@ -86,7 +86,7 @@ public final class FormOnValidMap$Impl implements FormOnValidMap {
             .setBaseUrl(baseUrl)
             .setPath("");
         httpRequestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        httpRequestBuilder.setBody(FormConverter.formEncode(body));
+        httpRequestBuilder.setBody(MapFormConverter.formEncode(body));
         var response = client.execute(httpRequestBuilder.build());
         try {
             defaultAdapters.syncVoidAdapter(response);

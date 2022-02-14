@@ -40,10 +40,7 @@ class BodyProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("parameters/FormOnRecord.java")
             .compilesWithoutWarnings()
             .and()
-            .generatesSources(
-                JavaFileObjects.forResource("parameters/FormOnRecord$Impl.java"),
-                JavaFileObjects.forResource("parameters/record/FormConverter.java")
-            );
+            .generatesSources(JavaFileObjects.forResource("parameters/FormOnRecord$Impl.java"));
     }
 
     @Test
@@ -58,10 +55,7 @@ class BodyProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("parameters/FormOnClass.java")
             .compilesWithoutWarnings()
             .and()
-            .generatesSources(
-                JavaFileObjects.forResource("parameters/FormOnClass$Impl.java"),
-                JavaFileObjects.forResource("parameters/class/FormConverter.java")
-            );
+            .generatesSources(JavaFileObjects.forResource("parameters/FormOnClass$Impl.java"));
     }
 
     @Test

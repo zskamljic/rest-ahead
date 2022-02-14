@@ -1,6 +1,5 @@
 package io.github.zskamljic.restahead.processor;
 
-import io.github.zskamljic.restahead.generation.FormConverterGenerator;
 import io.github.zskamljic.restahead.generation.ServiceGenerator;
 import io.github.zskamljic.restahead.modeling.AdapterModeler;
 import io.github.zskamljic.restahead.modeling.ServiceModeler;
@@ -26,7 +25,6 @@ public class RequestsProcessor extends AbstractProcessor {
     private Dialects dialects;
     private AdapterModeler adapterModeler;
     private ServiceGenerator serviceGenerator;
-    private FormConverterGenerator formConverterGenerator;
     private ServiceModeler serviceModeler;
 
     /**
@@ -44,7 +42,6 @@ public class RequestsProcessor extends AbstractProcessor {
         dialects = new Dialects(messager);
         adapterModeler = new AdapterModeler(messager, elements, types);
         serviceGenerator = new ServiceGenerator(messager, filer);
-        formConverterGenerator = new FormConverterGenerator(messager, filer);
         serviceModeler = new ServiceModeler(messager, elements, types, dialects);
     }
 
@@ -61,7 +58,6 @@ public class RequestsProcessor extends AbstractProcessor {
             var adapters = adapterModeler.findAdapters(roundEnv);
             var verbs = filterVerbAnnotations(annotations);
             var serviceDeclarations = serviceModeler.collectServices(verbs, roundEnv, adapters);
-            formConverterGenerator.generateFormEncoderIfNeeded(serviceDeclarations);
             serviceDeclarations.forEach(service -> serviceGenerator.generateService(service));
         } catch (IllegalArgumentException e) {
             var stringWriter = new StringWriter();

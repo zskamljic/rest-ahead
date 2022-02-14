@@ -9,6 +9,9 @@ public interface FormOnRecord {
     @Post
     void post(@FormUrlEncoded @Body Sample body);
 
+    @Post
+    void post2(@FormUrlEncoded Sample body);
+
     record Sample(String first, @FormName("2nd") String second) {
     }
 }
