@@ -60,6 +60,12 @@ public class MethodGenerator {
         return Stream.concat(callMethods, convertCalls).toList();
     }
 
+    /**
+     * Generate the method that will handle type conversion for form parameter.
+     *
+     * @param strategy the strategy to use
+     * @return the generated method
+     */
     private MethodSpec generateConverterBody(FormConversionStrategy strategy) {
         if (strategy instanceof ClassGenerationStrategy classStrategy) {
             return classStrategy.generate();
