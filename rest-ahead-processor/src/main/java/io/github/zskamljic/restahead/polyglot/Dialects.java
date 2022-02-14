@@ -5,6 +5,7 @@ import io.github.zskamljic.restahead.modeling.declaration.BodyParameter;
 import io.github.zskamljic.restahead.modeling.parameters.ParameterWithExceptions;
 import io.github.zskamljic.restahead.modeling.parameters.PartData;
 import io.github.zskamljic.restahead.modeling.parameters.RequestParameter;
+import io.github.zskamljic.restahead.processor.RequestsProcessor;
 import io.github.zskamljic.restahead.request.BasicRequestLine;
 
 import javax.annotation.processing.Messager;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
  * Utility class that handles all dialects that are discovered by {@link ServiceLoader}.
  */
 public class Dialects {
-    private final List<Dialect> dialects = ServiceLoader.load(Dialect.class)
+    private final List<Dialect> dialects = ServiceLoader.load(Dialect.class, RequestsProcessor.class.getClassLoader())
         .stream()
         .map(ServiceLoader.Provider::get)
         .toList();
@@ -125,6 +126,12 @@ public class Dialects {
             .collect(Collectors.joining(", "));
     }
 
+    /**
+     * Get request annotation from annotation (GET, POST etc.)
+     *
+     * @param annotation the annotation
+     * @return request or empty
+     */
     public Optional<RequestParameter> extractRequestAnnotation(Annotation annotation) {
         return dialects.stream()
             .map(dialect -> dialect.extractRequestAnnotation(annotation))
@@ -132,6 +139,12 @@ public class Dialects {
             .findFirst();
     }
 
+    /**
+     * Extract parts of body from annotation
+     *
+     * @param bodyAnnotations the annotations
+     * @return part info or empty
+     */
     public Optional<PartData> extractParts(List<? extends Annotation> bodyAnnotations) {
         return dialects.stream()
             .map(dialect -> dialect.extractPart(bodyAnnotations))
@@ -139,6 +152,15 @@ public class Dialects {
             .findFirst();
     }
 
+    /**
+     * Delegate body part creation to all detected dialect, returning first valid one
+     *
+     * @param elements the elements to get type info from
+     * @param types    the types utility
+     * @param body     the body to process
+     * @param type     the type of the body
+     * @return first processed body or empty if no dialects return a valid value
+     */
     public Optional<ParameterWithExceptions> createBodyPart(Elements elements, Types types, BodyParameter body, TypeMirror type) {
         return dialects.stream()
             .map(dialect -> dialect.createBodyPart(elements, types, body, type))
