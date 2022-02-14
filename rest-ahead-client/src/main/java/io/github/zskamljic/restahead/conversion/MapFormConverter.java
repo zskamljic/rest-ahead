@@ -15,7 +15,7 @@ public final class MapFormConverter {
     }
 
     /**
-     * Encodes the given value in format [key]=[URL encoded value] separated by &
+     * Encodes the given value in format [key]=[URL encoded value] separated by &amp;
      * @param value the values to encode
      * @param <K> type of the key
      * @param <V> type of the value
