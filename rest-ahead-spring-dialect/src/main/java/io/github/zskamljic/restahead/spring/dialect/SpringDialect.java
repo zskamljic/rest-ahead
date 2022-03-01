@@ -37,7 +37,7 @@ import java.util.Set;
  */
 public class SpringDialect implements Dialect {
     @Override
-    public List<Class<? extends Annotation>> requestAnnotations() {
+    public List<Class<? extends Annotation>> parameterAnnotations() {
         return List.of(
             RequestHeader.class, PathVariable.class, RequestParam.class
         );

@@ -243,6 +243,11 @@ public class MethodGenerator {
                 );
             }
         }
+        for (var header : parameters.presetHeaders()) {
+            builder.addStatement(
+                "$L.addHeader($S, $S)", Variables.REQUEST_BUILDER, header.name(), header.value()
+            );
+        }
         for (var query : parameters.query()) {
             if (query.isIterable()) {
                 builder.beginControlFlow("for (var $L : $L)", Variables.QUERY_ITEM, query.codeName());

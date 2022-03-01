@@ -1,11 +1,13 @@
 package io.github.zskamljic.restahead.polyglot;
 
 import io.github.zskamljic.restahead.modeling.declaration.BodyParameter;
+import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.parameters.ParameterWithExceptions;
 import io.github.zskamljic.restahead.modeling.parameters.PartData;
 import io.github.zskamljic.restahead.modeling.parameters.RequestParameter;
 import io.github.zskamljic.restahead.request.BasicRequestLine;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -26,7 +28,8 @@ public interface Dialect {
      * @return the full list of annotations.
      */
     default List<Class<? extends Annotation>> allAnnotations() {
-        var annotations = new ArrayList<>(requestAnnotations());
+        var annotations = new ArrayList<>(parameterAnnotations());
+        annotations.addAll(requestAnnotations());
         annotations.addAll(bodyAnnotations());
         annotations.addAll(verbAnnotations());
         return annotations;
@@ -37,7 +40,14 @@ public interface Dialect {
      *
      * @return the list of request annotations.
      */
-    List<Class<? extends Annotation>> requestAnnotations();
+    List<Class<? extends Annotation>> parameterAnnotations();
+
+    /**
+     * Return a list of request parameters, for example Headers
+     */
+    default List<Class<? extends Annotation>> requestAnnotations() {
+        return List.of();
+    }
 
     /**
      * Return a list of body annotations, such as Body, FormName, Part etc.
@@ -90,4 +100,14 @@ public interface Dialect {
      * @return full parameter info or empty
      */
     Optional<ParameterWithExceptions> createBodyPart(Elements elements, Types types, BodyParameter body, TypeMirror type);
+
+    /**
+     * Process the request annotations if needed and store extracted data in parameters.
+     *
+     * @param function   the function to get annotations from
+     * @param parameters the parameters to store data in
+     * @throws ProcessingException if any error was discovered during processing
+     */
+    default void processRequestAnnotations(ExecutableElement function, ParameterDeclaration parameters) throws ProcessingException {
+    }
 }

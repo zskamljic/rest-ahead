@@ -1,7 +1,7 @@
 package io.github.zskamljic.restahead.modeling.declaration;
 
 import io.github.zskamljic.restahead.encoding.BodyEncoding;
-import io.github.zskamljic.restahead.request.PresetQuery;
+import io.github.zskamljic.restahead.request.PresetValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +15,15 @@ import java.util.Optional;
  * @param paths         the path parts
  * @param body          the body encoding
  * @param presetQueries the queries present in request line
+ * @param presetHeaders the headers present in request line
  */
 public record ParameterDeclaration(
     List<RequestParameterSpec> headers,
     List<RequestParameterSpec> query,
     List<RequestParameterSpec> paths,
     Optional<BodyEncoding> body,
-    List<PresetQuery> presetQueries
+    List<PresetValue> presetQueries,
+    List<PresetValue> presetHeaders
 ) {
     public ParameterDeclaration(
         List<RequestParameterSpec> headers,
@@ -29,6 +31,6 @@ public record ParameterDeclaration(
         List<RequestParameterSpec> paths,
         @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<BodyEncoding> body
     ) {
-        this(headers, query, paths, body, new ArrayList<>());
+        this(headers, query, paths, body, new ArrayList<>(), new ArrayList<>());
     }
 }

@@ -78,7 +78,7 @@ public class ParameterModeler {
         var bodies = new ArrayList<BodyParameter>();
 
         for (var parameter : parameters) {
-            var requestAnnotations = dialects.requestAnnotations()
+            var parameterAnnotations = dialects.parameterAnnotations()
                 .map(parameter::getAnnotation)
                 .filter(Objects::nonNull)
                 .toList();
@@ -87,13 +87,13 @@ public class ParameterModeler {
                 .filter(Objects::nonNull)
                 .toList();
 
-            if (!requestAnnotations.isEmpty() && !bodyAnnotations.isEmpty()) {
+            if (!parameterAnnotations.isEmpty() && !bodyAnnotations.isEmpty()) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "Invalid annotation combination present on parameter", parameter);
                 continue;
             }
 
-            if (!requestAnnotations.isEmpty()) {
-                handleRequestAnnotations(requestAnnotations, parameter, headers, queries, paths);
+            if (!parameterAnnotations.isEmpty()) {
+                handleRequestAnnotations(parameterAnnotations, parameter, headers, queries, paths);
             } else if (!bodyAnnotations.isEmpty()) {
                 handleBodyAnnotations(bodyAnnotations, parameter, bodies);
             } else {

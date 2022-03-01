@@ -57,7 +57,7 @@ class RequestTest {
     }
 
     @Test
-    void addHeaderAddsQueries() {
+    void addQueryAddsQueries() {
         var request = new Request.Builder()
             .setBaseUrl("")
             .setVerb(Verb.GET)
