@@ -61,7 +61,7 @@ class PathValidatorTest {
         "true,/p ath;"
     })
     void pathReturnsCorrectForString(boolean invalid, String path) {
-        var result = pathValidator.validatePathAndExtractQuery(
+        var result = pathValidator.extractRequestData(
             function,
             new BasicRequestLine(Verb.GET, path),
             new ParameterDeclaration(List.of(), List.of(), List.of(), Optional.empty())

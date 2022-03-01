@@ -1,5 +1,6 @@
 package io.github.zskamljic.restahead.processor.stock;
 
+import com.google.testing.compile.JavaFileObjects;
 import io.github.zskamljic.restahead.processor.CommonProcessorTest;
 import org.junit.jupiter.api.Test;
 
@@ -66,5 +67,20 @@ class HeaderProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("headers/EmptyHeader.java")
             .failsToCompile()
             .withErrorContaining("Generating header names from parameter");
+    }
+
+    @Test
+    void headersCompiles() {
+        commonCompilationAssertion("headers/HeadersService.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("headers/HeadersService$Impl.java"));
+    }
+
+    @Test
+    void headersInvalidFailsToCompile() {
+        commonCompilationAssertion("headers/HeadersServiceInvalid.java")
+            .failsToCompile()
+            .withErrorContaining("Header line must match");
     }
 }

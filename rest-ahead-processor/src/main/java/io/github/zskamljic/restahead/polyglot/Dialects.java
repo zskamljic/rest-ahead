@@ -2,6 +2,7 @@ package io.github.zskamljic.restahead.polyglot;
 
 import io.github.zskamljic.restahead.annotations.Adapter;
 import io.github.zskamljic.restahead.modeling.declaration.BodyParameter;
+import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.parameters.ParameterWithExceptions;
 import io.github.zskamljic.restahead.modeling.parameters.PartData;
 import io.github.zskamljic.restahead.modeling.parameters.RequestParameter;
@@ -9,12 +10,14 @@ import io.github.zskamljic.restahead.processor.RequestsProcessor;
 import io.github.zskamljic.restahead.request.BasicRequestLine;
 
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -48,13 +51,13 @@ public class Dialects {
     }
 
     /**
-     * Returns all request annotations from discovered dialects.
+     * Returns all parameter annotations from discovered dialects.
      *
      * @return a stream of annotation classes
      */
-    public Stream<Class<? extends Annotation>> requestAnnotations() {
+    public Stream<Class<? extends Annotation>> parameterAnnotations() {
         return availableDialects.stream()
-            .map(Dialect::requestAnnotations)
+            .map(Dialect::parameterAnnotations)
             .flatMap(Collection::stream);
     }
 
@@ -166,5 +169,25 @@ public class Dialects {
             .map(dialect -> dialect.createBodyPart(elements, types, body, type))
             .flatMap(Optional::stream)
             .findFirst();
+    }
+
+    /**
+     * Process the annotations present on the request.
+     *
+     * @param function   the function to process
+     * @param parameters the parameters to update if needed
+     */
+    public void handleRequestAnnotation(ExecutableElement function, ParameterDeclaration parameters) throws CompositeProcessingException {
+        var errors = new ArrayList<ProcessingException>();
+        for (var dialect : availableDialects) {
+            try {
+                dialect.processRequestAnnotations(function, parameters);
+            } catch (ProcessingException e) {
+                errors.add(e);
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new CompositeProcessingException(errors);
+        }
     }
 }

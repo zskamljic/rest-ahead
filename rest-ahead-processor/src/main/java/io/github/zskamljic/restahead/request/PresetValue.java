@@ -6,5 +6,5 @@ package io.github.zskamljic.restahead.request;
  * @param name  the query parameter name
  * @param value the value for the field
  */
-public record PresetQuery(String name, String value) {
+public record PresetValue(String name, String value) {
 }

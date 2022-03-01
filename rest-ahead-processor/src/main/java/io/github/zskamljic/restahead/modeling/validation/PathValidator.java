@@ -3,7 +3,7 @@ package io.github.zskamljic.restahead.modeling.validation;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 import io.github.zskamljic.restahead.request.BasicRequestLine;
-import io.github.zskamljic.restahead.request.PresetQuery;
+import io.github.zskamljic.restahead.request.PresetValue;
 import io.github.zskamljic.restahead.request.RequestLine;
 import io.github.zskamljic.restahead.request.path.RequestPath;
 import io.github.zskamljic.restahead.request.path.StringPath;
@@ -34,7 +34,7 @@ public class PathValidator extends CommonParameterValidator {
      * @param parameters  the parts in the given request
      * @return empty optional in case of errors or requestSpec if no errors are discovered
      */
-    public Optional<RequestLine> validatePathAndExtractQuery(
+    public Optional<RequestLine> extractRequestData(
         ExecutableElement function,
         BasicRequestLine requestLine,
         ParameterDeclaration parameters
@@ -43,6 +43,26 @@ public class PathValidator extends CommonParameterValidator {
             return Optional.of(new RequestLine(requestLine.verb(), new StringPath("")));
         }
 
+        var path = extractQueryDataIfNeeded(function, requestLine, parameters);
+        if (path.isEmpty()) return Optional.empty();
+
+        var actualLine = new RequestLine(requestLine.verb(), path.get());
+        return Optional.of(actualLine);
+    }
+
+    /**
+     * Attempts to extract query data from path.
+     *
+     * @param function    the function on which the annotation is present
+     * @param requestLine the request line to get data from
+     * @param parameters  the parameters to add possible query parameters to
+     * @return path if no errors are found, empty otherwise
+     */
+    private Optional<RequestPath> extractQueryDataIfNeeded(
+        ExecutableElement function,
+        BasicRequestLine requestLine,
+        ParameterDeclaration parameters
+    ) {
         var path = RequestPath.parse(requestLine.path());
         try {
             var uri = path.uri();
@@ -52,8 +72,7 @@ public class PathValidator extends CommonParameterValidator {
             messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage(), function);
             return Optional.empty();
         }
-        var actualLine = new RequestLine(requestLine.verb(), path);
-        return Optional.of(actualLine);
+        return Optional.of(path);
     }
 
     /**
@@ -73,7 +92,7 @@ public class PathValidator extends CommonParameterValidator {
                 messager.printMessage(Diagnostic.Kind.ERROR, "Malformed query", function);
                 continue;
             }
-            parameters.presetQueries().add(new PresetQuery(nameValue[0], nameValue[1]));
+            parameters.presetQueries().add(new PresetValue(nameValue[0], nameValue[1]));
         }
     }
 

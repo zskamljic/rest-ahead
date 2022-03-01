@@ -2,8 +2,10 @@ package io.github.zskamljic.restahead.modeling;
 
 import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
+import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
 import io.github.zskamljic.restahead.modeling.validation.PathValidator;
+import io.github.zskamljic.restahead.polyglot.CompositeProcessingException;
 import io.github.zskamljic.restahead.polyglot.Dialects;
 import io.github.zskamljic.restahead.request.RequestLine;
 import io.github.zskamljic.restahead.request.path.TemplatedPath;
@@ -34,7 +36,7 @@ public class MethodModeler {
         this.messager = messager;
         this.dialects = dialects;
         pathValidator = new PathValidator(messager, elements, types);
-        this.parameterModeler = new ParameterModeler(messager, elements, dialects, types, pathValidator);
+        parameterModeler = new ParameterModeler(messager, elements, dialects, types, pathValidator);
         returnTypeModeler = new ReturnTypeModeler(messager, elements, types);
     }
 
@@ -63,8 +65,12 @@ public class MethodModeler {
         var requestLine = dialects.basicRequestLine(annotation);
 
         var parameters = parameterModeler.getMethodParameters(function, requestLine.allowsBody());
-        var updatedLine = pathValidator.validatePathAndExtractQuery(function, requestLine, parameters);
+        var updatedLine = pathValidator.extractRequestData(function, requestLine, parameters);
         if (updatedLine.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (!extractRequestAnnotationData(function, parameters)) {
             return Optional.empty();
         }
 
@@ -79,6 +85,19 @@ public class MethodModeler {
 
         return returnTypeModeler.getReturnConfiguration(function, adapters)
             .map(returnType -> new CallDeclaration(function, exceptions, updatedLine.get(), parameters, returnType));
+    }
+
+    private boolean extractRequestAnnotationData(ExecutableElement function, ParameterDeclaration parameters) {
+        try {
+            dialects.handleRequestAnnotation(function, parameters);
+            return true;
+        } catch (CompositeProcessingException e) {
+            var exceptions = e.getExceptions();
+            for (var exception : exceptions) {
+                exception.report(messager);
+            }
+            return false;
+        }
     }
 
     /**
