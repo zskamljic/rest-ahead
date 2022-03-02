@@ -23,6 +23,7 @@
         <module>test-report-aggregator</module>
         <module>rest-ahead-spring</module>
         <module>rest-ahead-spring-dialect</module>
+        <module>rest-ahead-jax-rs</module>
     </modules>
 
     <properties>

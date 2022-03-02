@@ -64,7 +64,7 @@ public class RestAheadDialect implements Dialect {
     }
 
     @Override
-    public Optional<BasicRequestLine> getRequestLine(Annotation annotation) {
+    public Optional<BasicRequestLine> getRequestLine(ExecutableElement function, Annotation annotation) {
         Verb verb;
         String path;
         if (annotation instanceof Delete delete) {
@@ -89,7 +89,7 @@ public class RestAheadDialect implements Dialect {
     }
 
     @Override
-    public Optional<RequestParameter> extractRequestAnnotation(Annotation annotation) {
+    public Optional<RequestParameter> extractParameterAnnotation(Annotation annotation) {
         RequestParameter.Type type;
         String value;
         if (annotation instanceof Header header) {
@@ -141,5 +141,11 @@ public class RestAheadDialect implements Dialect {
             }
             parameters.presetHeaders().add(new PresetValue(matcher.group(1), matcher.group(2)));
         }
+    }
+
+    @Override
+    public boolean hasFormAnnotation(List<? extends Annotation> bodyAnnotations) {
+        return bodyAnnotations.stream()
+            .anyMatch(FormUrlEncoded.class::isInstance);
     }
 }

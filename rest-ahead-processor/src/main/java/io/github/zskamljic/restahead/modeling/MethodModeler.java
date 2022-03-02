@@ -62,7 +62,7 @@ public class MethodModeler {
         }
 
         var annotation = presentAnnotations.get(0);
-        var requestLine = dialects.basicRequestLine(annotation);
+        var requestLine = dialects.basicRequestLine(function, annotation);
 
         var parameters = parameterModeler.getMethodParameters(function, requestLine.allowsBody());
         var updatedLine = pathValidator.extractRequestData(function, requestLine, parameters);

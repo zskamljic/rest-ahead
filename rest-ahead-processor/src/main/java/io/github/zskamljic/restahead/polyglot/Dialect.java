@@ -67,10 +67,11 @@ public interface Dialect {
      * Attempt to extract a {@link BasicRequestLine} from the annotation. Can be called with annotations from other
      * dialects. If no data can be extracted (unknown annotation, invalid data etc.) Optional.empty() can be returned.
      *
+     * @param function   the function the annotation is present on
      * @param annotation the annotation to get the request line from
      * @return request line if annotation is valid and recognized, empty otherwise
      */
-    Optional<BasicRequestLine> getRequestLine(Annotation annotation);
+    Optional<BasicRequestLine> getRequestLine(ExecutableElement function, Annotation annotation);
 
     /**
      * Attempts to extract a {@link RequestParameter} from the annotation. Can be called with annotations from other
@@ -79,7 +80,7 @@ public interface Dialect {
      * @param annotation the annotation to get the parameter from
      * @return the parameter if parsed, empty otherwise
      */
-    Optional<RequestParameter> extractRequestAnnotation(Annotation annotation);
+    Optional<RequestParameter> extractParameterAnnotation(Annotation annotation);
 
     /**
      * Attempt to extract a {@link PartData} from the annotation. Can be called with annotations from other
@@ -109,5 +110,15 @@ public interface Dialect {
      * @throws ProcessingException if any error was discovered during processing
      */
     default void processRequestAnnotations(ExecutableElement function, ParameterDeclaration parameters) throws ProcessingException {
+    }
+
+    /**
+     * Check if any of the given annotations is a form annotation.
+     *
+     * @param bodyAnnotations the annotations to check
+     * @return true if at least one annotation specifies a form encoding
+     */
+    default boolean hasFormAnnotation(List<? extends Annotation> bodyAnnotations) {
+        return false;
     }
 }

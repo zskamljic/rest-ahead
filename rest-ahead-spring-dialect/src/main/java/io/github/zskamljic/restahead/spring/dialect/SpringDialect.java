@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -58,7 +59,7 @@ public class SpringDialect implements Dialect {
     }
 
     @Override
-    public Optional<BasicRequestLine> getRequestLine(Annotation annotation) {
+    public Optional<BasicRequestLine> getRequestLine(ExecutableElement function, Annotation annotation) {
         Verb verb;
         String path;
         if (annotation instanceof DeleteMapping deleteMapping) {
@@ -89,7 +90,7 @@ public class SpringDialect implements Dialect {
     }
 
     @Override
-    public Optional<RequestParameter> extractRequestAnnotation(Annotation annotation) {
+    public Optional<RequestParameter> extractParameterAnnotation(Annotation annotation) {
         RequestParameter.Type type;
         String value;
         if (annotation instanceof RequestHeader header) {
