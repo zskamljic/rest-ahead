@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>rest-ahead-spring-dialect</artifactId>
+    <artifactId>rest-ahead-jax-rs</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -23,9 +23,9 @@
             <version>0.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${spring.version}</version>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 

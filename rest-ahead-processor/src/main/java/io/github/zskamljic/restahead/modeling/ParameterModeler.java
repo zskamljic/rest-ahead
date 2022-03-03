@@ -1,6 +1,5 @@
 package io.github.zskamljic.restahead.modeling;
 
-import io.github.zskamljic.restahead.annotations.form.FormUrlEncoded;
 import io.github.zskamljic.restahead.client.requests.parts.FieldPart;
 import io.github.zskamljic.restahead.client.requests.parts.FilePart;
 import io.github.zskamljic.restahead.encoding.BodyEncoding;
@@ -214,8 +213,7 @@ public class ParameterModeler {
         VariableElement parameter,
         List<BodyParameter> bodies
     ) {
-        var hasFormUrlEncoded = bodyAnnotations.stream()
-            .anyMatch(FormUrlEncoded.class::isInstance);
+        var hasFormUrlEncoded = dialects.hasFormAnnotation(bodyAnnotations);
         var part = dialects.extractParts(bodyAnnotations);
         if (hasFormUrlEncoded && part.isPresent()) {
             messager.printMessage(Diagnostic.Kind.ERROR, "Request can't be both multipart and form encoded", parameter);

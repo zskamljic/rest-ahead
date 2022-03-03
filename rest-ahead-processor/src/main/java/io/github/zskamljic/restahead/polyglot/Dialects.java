@@ -75,13 +75,14 @@ public class Dialects {
     /**
      * Attempts to create a basic request line for given annotation.
      *
+     * @param function   the function on which the annotation is present
      * @param annotation the annotation with required data
      * @return the request line based on data
      * @throws IllegalArgumentException if no valid {@link BasicRequestLine} could be created
      */
-    public BasicRequestLine basicRequestLine(Annotation annotation) {
+    public BasicRequestLine basicRequestLine(ExecutableElement function, Annotation annotation) {
         return availableDialects.stream()
-            .map(dialect -> dialect.getRequestLine(annotation))
+            .map(dialect -> dialect.getRequestLine(function, annotation))
             .flatMap(Optional::stream)
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Annotation was not a valid verb: " + annotation));
@@ -137,7 +138,7 @@ public class Dialects {
      */
     public Optional<RequestParameter> extractRequestAnnotation(Annotation annotation) {
         return availableDialects.stream()
-            .map(dialect -> dialect.extractRequestAnnotation(annotation))
+            .map(dialect -> dialect.extractParameterAnnotation(annotation))
             .flatMap(Optional::stream)
             .findFirst();
     }
@@ -189,5 +190,15 @@ public class Dialects {
         if (!errors.isEmpty()) {
             throw new CompositeProcessingException(errors);
         }
+    }
+
+    /**
+     * Checks if any of the annotations is a form body annotation
+     *
+     * @param bodyAnnotations the annotations to check
+     */
+    public boolean hasFormAnnotation(List<? extends Annotation> bodyAnnotations) {
+        return availableDialects.stream()
+            .anyMatch(dialect -> dialect.hasFormAnnotation(bodyAnnotations));
     }
 }
