@@ -173,7 +173,7 @@ Note that files and paths will be read when the request reads the body - meaning
 
 ### Headers
 
-Adding headers is possible by using the `@Header` annotation. Valid parameters for headers are either primitive types,
+Adding headers is possible by using the `@Header` or `@Headers` annotation. Valid parameters for headers are either primitive types,
 their boxed counterparts, Strings, instances of UUID or collections/arrays of them.
 
 Using multiple annotations with the same value will add extra headers. The following declarations will generate requests
@@ -188,10 +188,15 @@ interface Service {
     void performGetVarargs(@Header("Some-Header") String... headers);
 
     @Get
+    @Headers({
+        "First-Header: value",
+        "Second-Header: value"
+    })
     void performGetArray(@Header("Some-Header") String[] headers);
 
     // Can also use List, Set etc.
     @Get
+    @Headers("Static-Header: header value")
     void performGetCollection(@Header("Some-Header") Collection<String> headers);
 }
 ```
@@ -360,8 +365,11 @@ required only if the service requires one, see [response types](#response-types)
 
 ### Dialects
 
-The code generator allows for usage of multiple dialects (Default being RestAhead). For example, Spring dialect can be
-used, by adding the dependency:
+The code generator allows for usage of multiple dialects (Default being RestAhead).
+
+#### Spring
+
+For example, Spring dialect can be used, by adding the dependency:
 
 ```xml
 
@@ -376,7 +384,7 @@ It can then be used as following:
 
 ```java
 interface SpringService {
-    @GetMappin("/get")
+    @GetMapping("/get")
     Response performGet(@RequestHeader String header, @RequestParam String query);
 
     @RequestMapping(method = RequestMethod.GET, value = "/{param}")
@@ -390,6 +398,28 @@ interface SpringService {
 }
 ```
 
+#### JAX-RS
+
+JAX-RS dialect can be used by adding:
+
+```xml
+<dependency>
+    <groupId>io.github.zskamljic</groupId>
+    <artifactId>rest-ahead-jax-rs</artifactId>
+    <version>${rest.ahead.version}</version>
+</dependency>
+```
+
+And it can be used as:
+
+```java
+public interface JaxRsService {
+    @GET
+    @Path(("/get/{something}"))
+    Map<String, Object> performGet(@PathParam("something") String something);
+}
+```
+
 Info on how to declare a new dialect can be seen in [Dialects](Dialects.md)
 
 ## Adding to project
@@ -397,7 +427,6 @@ Info on how to declare a new dialect can be seen in [Dialects](Dialects.md)
 Add the dependencies as following:
 
 ```xml
-
 <dependencies>
     <!-- other dependencies -->
     <dependency>
@@ -423,7 +452,6 @@ Add the dependencies as following:
 Also add the maven-compiler-plugin if not present:
 
 ```xml
-
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-compiler-plugin</artifactId>
@@ -436,7 +464,6 @@ Also add the maven-compiler-plugin if not present:
 Snapshots can be accessed by adding the snapshot repository:
 
 ```xml
-
 <repositories>
     <repository>
         <id>oss.sonatype.org-snapshot</id>
