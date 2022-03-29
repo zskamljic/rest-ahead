@@ -100,18 +100,10 @@ class LoggingInterceptorTest {
             -> https://httpbin.org/get
             """, outputs.get(0));
         var response = outputs.get(1);
-        assertTrue(response.startsWith("""
-            <- 200 https://httpbin.org/get
-            :status: 200
-            access-control-allow-credentials: true
-            access-control-allow-origin: *
-            content-length: 264
-            content-type: application/json
-            """));
-        assertTrue(response.endsWith("""
-            <- https://httpbin.org/get
-            """));
+        assertTrue(response.startsWith("<- 200 https://httpbin.org/get\n"));
+        assertTrue(response.contains("content-type: application/json"));
         assertTrue(response.contains("date:"));
+        assertTrue(response.endsWith("<- https://httpbin.org/get\n"));
     }
 
     @Test
