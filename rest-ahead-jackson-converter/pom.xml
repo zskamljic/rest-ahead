@@ -5,7 +5,7 @@
     <parent>
         <artifactId>RestAhead</artifactId>
         <groupId>io.github.zskamljic</groupId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.4.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-client</artifactId>
-            <version>0.4.0-SNAPSHOT</version>
+            <version>0.4.0</version>
         </dependency>
 
         <dependency>
