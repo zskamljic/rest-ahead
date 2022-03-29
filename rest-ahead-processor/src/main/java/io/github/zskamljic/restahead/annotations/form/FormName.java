@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * Declares that the method, when used in form body, should use the specified name.
  */
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
 public @interface FormName {
     String value();

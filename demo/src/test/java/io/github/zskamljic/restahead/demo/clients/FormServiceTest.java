@@ -3,6 +3,7 @@ package io.github.zskamljic.restahead.demo.clients;
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
 import io.github.zskamljic.restahead.client.requests.parts.FilePart;
+import io.github.zskamljic.restahead.demo.models.ExternalFormBody;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -78,5 +79,12 @@ class FormServiceTest {
         assertEquals(2, response.form().size());
         assertEquals("part1", response.form().get("part"));
         assertEquals("part2", response.form().get("two"));
+    }
+
+    @Test
+    void formRequestSendsNamedField() {
+        var response = service.postOtherModel(new ExternalFormBody("hello"));
+
+        assertEquals(Map.of("snake_case", "hello"), response.form());
     }
 }
