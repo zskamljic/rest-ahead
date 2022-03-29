@@ -6,6 +6,7 @@ import io.github.zskamljic.restahead.annotations.form.Part;
 import io.github.zskamljic.restahead.annotations.request.Body;
 import io.github.zskamljic.restahead.annotations.verbs.Post;
 import io.github.zskamljic.restahead.client.requests.parts.FilePart;
+import io.github.zskamljic.restahead.demo.models.ExternalFormBody;
 import io.github.zskamljic.restahead.demo.models.HttpBinResponse;
 
 import java.io.File;
@@ -21,6 +22,9 @@ public interface FormService {
 
     @Post("/post")
     HttpBinResponse postClass(@FormUrlEncoded @Body SampleClass body);
+
+    @Post("/post")
+    HttpBinResponse postOtherModel(@FormUrlEncoded ExternalFormBody body);
 
     @Post("/post")
     HttpBinResponse postMultiPart(
