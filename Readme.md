@@ -173,8 +173,8 @@ Note that files and paths will be read when the request reads the body - meaning
 
 ### Headers
 
-Adding headers is possible by using the `@Header` or `@Headers` annotation. Valid parameters for headers are either primitive types,
-their boxed counterparts, Strings, instances of UUID or collections/arrays of them.
+Adding headers is possible by using the `@Header` or `@Headers` annotation. Valid parameters for headers are either
+primitive types, their boxed counterparts, Strings, instances of UUID or collections/arrays of them.
 
 Using multiple annotations with the same value will add extra headers. The following declarations will generate requests
 that behave the same:
@@ -275,6 +275,21 @@ var client = new JavaHttpClient();
         .converter(new JacksonConverter())
         .build(InterceptedService.class);
 ```
+
+#### Logging interceptor
+
+Logging interceptor is provided by default. It can be built as following:
+
+```jshelllanguage
+new LoggingInterceptor.Builder()
+    .logger(System.out::println)
+    .logHeaders(true)
+    .logBody(true)
+    .joinRequestResponse(true)
+    .build();
+```
+
+Default logger used is System.out, other values default to false.
 
 ### Paths
 
@@ -403,6 +418,7 @@ interface SpringService {
 JAX-RS dialect can be used by adding:
 
 ```xml
+
 <dependency>
     <groupId>io.github.zskamljic</groupId>
     <artifactId>rest-ahead-jax-rs</artifactId>
@@ -427,6 +443,7 @@ Info on how to declare a new dialect can be seen in [Dialects](Dialects.md)
 Add the dependencies as following:
 
 ```xml
+
 <dependencies>
     <!-- other dependencies -->
     <dependency>
@@ -452,6 +469,7 @@ Add the dependencies as following:
 Also add the maven-compiler-plugin if not present:
 
 ```xml
+
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-compiler-plugin</artifactId>
@@ -464,6 +482,7 @@ Also add the maven-compiler-plugin if not present:
 Snapshots can be accessed by adding the snapshot repository:
 
 ```xml
+
 <repositories>
     <repository>
         <id>oss.sonatype.org-snapshot</id>
