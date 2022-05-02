@@ -82,7 +82,12 @@ public final class RestAhead {
          */
         public <T> T build(Class<T> service) {
             try {
-                var implementation = Class.forName(service.getPackageName() + "." + service.getSimpleName() + "$Impl")
+                var packagePrefix = service.getPackageName();
+                if (!packagePrefix.isBlank()) {
+                    packagePrefix+=".";
+                }
+
+                var implementation = Class.forName(packagePrefix + service.getSimpleName() + "$Impl")
                     .asSubclass(service);
 
                 var parameters = getRequiredParameters(implementation);
@@ -105,7 +110,8 @@ public final class RestAhead {
                 }
                 return implementation.getDeclaredConstructor(parameters)
                     .newInstance(parameterValues);
-            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
+                     InstantiationException | IllegalAccessException e) {
                 throw new RestException(e);
             }
         }
