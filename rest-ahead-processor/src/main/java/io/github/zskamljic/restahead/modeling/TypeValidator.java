@@ -27,6 +27,7 @@ public class TypeValidator {
 
     private final List<TypeMirror> allowedStringMirrors;
     private final List<TypeMirror> allowedFileMirrors;
+    private final TypeMirror enumMirror;
     private final TypeElement filePartType;
     private final TypeMirror multiPartType;
     private final Types types;
@@ -34,6 +35,7 @@ public class TypeValidator {
     public TypeValidator(Elements elements, Types types) {
         allowedStringMirrors = mirrorsForTypes(elements, STRING_REPRESENTABLE_TYPES);
         allowedFileMirrors = mirrorsForTypes(elements, BODY_TYPES);
+        enumMirror = types.erasure(elements.getTypeElement(Enum.class.getCanonicalName()).asType());
         filePartType = elements.getTypeElement(FilePart.class.getCanonicalName());
         multiPartType = elements.getTypeElement(MultiPart.class.getCanonicalName()).asType();
         this.types = types;
@@ -62,6 +64,9 @@ public class TypeValidator {
             return false;
         } catch (IllegalArgumentException exception) {
             // Type was not a primitive
+        }
+        if (types.isSubtype(typeMirror, enumMirror)) {
+            return false;
         }
 
         return allowedStringMirrors.stream()

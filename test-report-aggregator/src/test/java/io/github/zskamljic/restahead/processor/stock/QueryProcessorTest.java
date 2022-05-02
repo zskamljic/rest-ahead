@@ -41,4 +41,10 @@ class QueryProcessorTest extends CommonProcessorTest {
         commonCompilationAssertion("query/CollectionAndArray.java")
             .compilesWithoutWarnings();
     }
+
+    @Test
+    void enumCompiles() {
+        commonCompilationAssertion("query/EnumQuery.java")
+            .compilesWithoutWarnings();
+    }
 }
