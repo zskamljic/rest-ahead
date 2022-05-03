@@ -26,13 +26,6 @@
         <module>rest-ahead-jax-rs</module>
     </modules>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>sonatype-snapshot</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
@@ -41,7 +34,7 @@
         <mockito.version>4.5.1</mockito.version>
         <compiler.plugin.version>3.9.0</compiler.plugin.version>
         <surefire.version>2.22.2</surefire.version>
-        <jacoco.version>0.8.8-SNAPSHOT</jacoco.version>
+        <jacoco.version>0.8.8</jacoco.version>
 
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
