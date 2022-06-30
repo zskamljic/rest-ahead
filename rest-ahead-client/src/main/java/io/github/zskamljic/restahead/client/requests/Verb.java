@@ -6,6 +6,7 @@ package io.github.zskamljic.restahead.client.requests;
 public enum Verb {
     DELETE,
     GET,
+    HEAD,
     PATCH,
     POST,
     PUT;
@@ -17,7 +18,7 @@ public enum Verb {
      */
     public boolean allowsBody() {
         return switch (this) {
-            case GET, DELETE -> false;
+            case GET, HEAD, DELETE -> false;
             default -> true;
         };
     }

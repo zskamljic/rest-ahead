@@ -10,6 +10,7 @@ import io.github.zskamljic.restahead.annotations.request.Path;
 import io.github.zskamljic.restahead.annotations.request.Query;
 import io.github.zskamljic.restahead.annotations.verbs.Delete;
 import io.github.zskamljic.restahead.annotations.verbs.Get;
+import io.github.zskamljic.restahead.annotations.verbs.Head;
 import io.github.zskamljic.restahead.annotations.verbs.Patch;
 import io.github.zskamljic.restahead.annotations.verbs.Post;
 import io.github.zskamljic.restahead.annotations.verbs.Put;
@@ -59,7 +60,7 @@ public class RestAheadDialect implements Dialect {
     @Override
     public List<Class<? extends Annotation>> verbAnnotations() {
         return List.of(
-            Delete.class, Get.class, Patch.class, Post.class, Put.class
+            Delete.class, Get.class, Head.class, Patch.class, Post.class, Put.class
         );
     }
 
@@ -73,6 +74,9 @@ public class RestAheadDialect implements Dialect {
         } else if (annotation instanceof Get get) {
             verb = Verb.GET;
             path = get.value();
+        } else if (annotation instanceof Head head) {
+            verb = Verb.HEAD;
+            path = head.value();
         } else if (annotation instanceof Patch patch) {
             verb = Verb.PATCH;
             path = patch.value();
