@@ -51,4 +51,17 @@ class RequestsProcessorTest extends CommonProcessorTest {
             .failsToCompile()
             .withErrorContaining("Exactly one verb annotation must be present on method");
     }
+
+    @Test
+    void interfaceWithHeadCompiles() {
+        commonCompilationAssertion("basic/HeadService.java")
+            .compilesWithoutWarnings();
+    }
+
+    @Test
+    void interfaceWithHeadResponseFailsToCompile() {
+        commonCompilationAssertion("basic/HeadObjectService.java")
+            .failsToCompile()
+            .withErrorContaining("of type BodyResponse<Void>");
+    }
 }

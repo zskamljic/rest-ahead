@@ -12,6 +12,7 @@ import io.github.zskamljic.restahead.request.PresetValue;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
@@ -60,7 +61,7 @@ public class JaxRsDialect implements Dialect {
     @Override
     public List<Class<? extends Annotation>> verbAnnotations() {
         return List.of(
-            DELETE.class, GET.class, PATCH.class, POST.class, PUT.class
+            DELETE.class, GET.class, HEAD.class, PATCH.class, POST.class, PUT.class
         );
     }
 
@@ -71,6 +72,8 @@ public class JaxRsDialect implements Dialect {
             verb = Verb.DELETE;
         } else if (annotation instanceof GET) {
             verb = Verb.GET;
+        } else if (annotation instanceof HEAD) {
+            verb = Verb.HEAD;
         } else if (annotation instanceof PATCH) {
             verb = Verb.PATCH;
         } else if (annotation instanceof POST) {
