@@ -7,6 +7,7 @@ public enum Verb {
     DELETE,
     GET,
     HEAD,
+    OPTIONS,
     PATCH,
     POST,
     PUT;
@@ -18,7 +19,7 @@ public enum Verb {
      */
     public boolean allowsBody() {
         return switch (this) {
-            case GET, HEAD, DELETE -> false;
+            case DELETE, HEAD, GET, OPTIONS -> false;
             default -> true;
         };
     }

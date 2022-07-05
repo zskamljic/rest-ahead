@@ -5,10 +5,14 @@ import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.client.requests.Request;
 import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.client.responses.Response;
+import io.github.zskamljic.restahead.conversion.Converter;
+import io.github.zskamljic.restahead.conversion.OptionsConverter;
 import io.github.zskamljic.restahead.exceptions.RestException;
 import java.lang.InterruptedException;
 import java.lang.Override;
 import java.lang.String;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.processing.Generated;
 
@@ -18,11 +22,15 @@ public final class JaxRsService$Impl implements JaxRsService {
 
     private final Client client;
 
+    private final Converter converter;
+
     private final DefaultAdapters defaultAdapters;
 
-    public JaxRsService$Impl(String baseUrl, Client client, DefaultAdapters defaultAdapters) {
+    public JaxRsService$Impl(String baseUrl, Client client, Converter converter,
+                             DefaultAdapters defaultAdapters) {
         this.baseUrl = baseUrl;
         this.client = client;
+        this.converter = converter;
         this.defaultAdapters = defaultAdapters;
     }
 
@@ -52,6 +60,39 @@ public final class JaxRsService$Impl implements JaxRsService {
         var response = client.execute(httpRequestBuilder.build());
         try {
             return defaultAdapters.syncAdapter(response);
+        } catch (ExecutionException | InterruptedException exception) {
+            throw RestException.getAppropriateException(exception);
+        }
+    }
+
+    @Override
+    public final Response performHead(String get, String second) {
+        var httpRequestBuilder = new Request.Builder()
+            .setVerb(Verb.HEAD)
+            .setBaseUrl(baseUrl)
+            .setPath("/{get}/{hello}".replace("{get}", String.valueOf(get))
+                .replace("{hello}", String.valueOf(second)));
+        var response = client.execute(httpRequestBuilder.build());
+        try {
+            return defaultAdapters.syncAdapter(response);
+        } catch (ExecutionException | InterruptedException exception) {
+            throw RestException.getAppropriateException(exception);
+        }
+    }
+
+    @Override
+    public final List<Verb> performOptions(String get, String second) {
+        var httpRequestBuilder = new Request.Builder()
+            .setVerb(Verb.OPTIONS)
+            .setBaseUrl(baseUrl)
+            .setPath("/{get}/{hello}".replace("{get}", String.valueOf(get))
+                .replace("{hello}", String.valueOf(second)));
+        var response = client.execute(httpRequestBuilder.build());
+        CompletableFuture<List<Verb>> convertedResponse = response.thenApply(r -> {
+            return OptionsConverter.parseOptions(r);
+        } );
+        try {
+            return defaultAdapters.syncAdapter(convertedResponse);
         } catch (ExecutionException | InterruptedException exception) {
             throw RestException.getAppropriateException(exception);
         }

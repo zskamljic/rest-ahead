@@ -64,4 +64,19 @@ class RequestsProcessorTest extends CommonProcessorTest {
             .failsToCompile()
             .withErrorContaining("of type BodyResponse<Void>");
     }
+
+    @Test
+    void interfaceWithOptionsCompiles() {
+        commonCompilationAssertion("basic/OptionsService.java")
+            .compilesWithoutWarnings()
+            .and()
+            .generatesSources(JavaFileObjects.forResource("basic/OptionsService$Impl.java"));
+    }
+
+    @Test
+    void interfaceWithOptionsResponseFailsToCompile() {
+        commonCompilationAssertion("basic/OptionsObjectService.java")
+            .failsToCompile()
+            .withErrorContaining("of type BodyResponse<Void>, void or List<Verb>");
+    }
 }
