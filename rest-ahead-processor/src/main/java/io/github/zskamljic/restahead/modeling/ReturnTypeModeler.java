@@ -1,6 +1,7 @@
 package io.github.zskamljic.restahead.modeling;
 
 import io.github.zskamljic.restahead.adapter.DefaultAdapters;
+import io.github.zskamljic.restahead.client.requests.Verb;
 import io.github.zskamljic.restahead.client.responses.BodyAndErrorResponse;
 import io.github.zskamljic.restahead.client.responses.BodyResponse;
 import io.github.zskamljic.restahead.client.responses.Response;
@@ -8,6 +9,7 @@ import io.github.zskamljic.restahead.modeling.conversion.BodyAndErrorConversion;
 import io.github.zskamljic.restahead.modeling.conversion.BodyResponseConversion;
 import io.github.zskamljic.restahead.modeling.conversion.Conversion;
 import io.github.zskamljic.restahead.modeling.conversion.DirectConversion;
+import io.github.zskamljic.restahead.modeling.conversion.OptionsConversion;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterMethodDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ReturnAdapterCall;
@@ -42,10 +44,18 @@ public class ReturnTypeModeler {
     private final TypeMirror responseType;
     private final TypeMirror bodyResponseType;
     private final TypeMirror bodyAndErrorType;
+    private final TypeMirror verbListType;
+    private final TypeMirror voidMirror;
 
     public ReturnTypeModeler(Messager messager, Elements elements, Types types) {
         this.messager = messager;
         this.types = types;
+
+        var listType = elements.getTypeElement(List.class.getName());
+        var verbType = elements.getTypeElement(Verb.class.getName()).asType();
+        verbListType = types.getDeclaredType(listType, verbType);
+        voidMirror = elements.getTypeElement(Void.class.getName()).asType();
+
         var futureElement = elements.getTypeElement(CompletableFuture.class.getCanonicalName());
         responseType = elements.getTypeElement(Response.class.getCanonicalName())
             .asType();
@@ -61,47 +71,99 @@ public class ReturnTypeModeler {
      *
      * @param function the function from which to obtain the data
      * @param adapters the return type adapters
+     * @param verb     the verb for current call
      * @return empty in case of errors, the declaration otherwise
      */
     public Optional<ReturnDeclaration> getReturnConfiguration(
         ExecutableElement function,
-        List<AdapterClassDeclaration> adapters
+        List<AdapterClassDeclaration> adapters,
+        Verb verb
     ) {
         var returnType = function.getReturnType();
 
+        Optional<Conversion> conversion;
+        Optional<ReturnAdapterCall> adapterCall;
         if (types.isAssignable(defaultResponseType, returnType)) {
-            return Optional.of(new ReturnDeclaration(Optional.empty(), Optional.empty()));
+            conversion = Optional.empty();
+            adapterCall = Optional.empty();
         } else if (types.isSubtype(types.erasure(returnType), futureType)) {
             var convertedType = ((DeclaredType) returnType).getTypeArguments().get(0);
-            var conversion = selectConversion(convertedType);
-            return Optional.of(new ReturnDeclaration(Optional.of(conversion), Optional.empty()));
+            conversion = Optional.of(selectConversion(convertedType, verb));
+            adapterCall = Optional.empty();
         } else {
-            var selectedAdapter = findCorrectAdapter(adapters, returnType);
-            if (selectedAdapter.isEmpty()) {
+            adapterCall = findCorrectAdapter(adapters, returnType);
+            if (adapterCall.isEmpty()) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "No adapter to convert element from " + defaultResponseType + " to " + returnType, function);
                 return Optional.empty();
             }
 
-            var adaptedConvertType = findAdaptedConvertType(returnType, selectedAdapter.get());
-            ReturnDeclaration returnDeclaration;
+            var adaptedConvertType = findAdaptedConvertType(returnType, adapterCall.get());
             if (types.isSameType(adaptedConvertType, responseType) || adaptedConvertType.getKind() == TypeKind.VOID) {
-                returnDeclaration = new ReturnDeclaration(Optional.empty(), selectedAdapter);
+                conversion = Optional.empty();
             } else {
-                var conversion = selectConversion(adaptedConvertType);
-                returnDeclaration = new ReturnDeclaration(Optional.of(conversion), selectedAdapter);
+                conversion = Optional.of(selectConversion(adaptedConvertType, verb));
             }
-            return Optional.of(returnDeclaration);
         }
+
+        if (hasInvalidReturnType(verb, conversion.orElse(null), adapterCall.orElse(null), function)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new ReturnDeclaration(conversion, adapterCall));
+    }
+
+    /**
+     * Checks if the discovered return type is allowed for requests (for example, HEAD should not have a body)
+     *
+     * @param verb        the verb used in the request
+     * @param conversion  the conversion required for this endpoint
+     * @param adapterCall the adapter call for this endpoint
+     * @param function    the function that the error should be reported on
+     * @return whether the return type is valid for request
+     */
+    private boolean hasInvalidReturnType(Verb verb, Conversion conversion, ReturnAdapterCall adapterCall, ExecutableElement function) {
+        if (verb != Verb.HEAD && verb != Verb.OPTIONS || conversion == null) return false;
+
+        if (adapterCall != null && adapterCall.adapterMethod().returnType().getKind() == TypeKind.VOID) {
+            return false;
+        }
+
+        TypeMirror mirror;
+        if (conversion instanceof BodyResponseConversion body) {
+            mirror = body.targetType();
+        } else if (conversion instanceof DirectConversion direct) {
+            mirror = direct.targetType();
+        } else {
+            return !(conversion instanceof OptionsConversion);
+        }
+
+        if (types.isSameType(voidMirror, mirror)) {
+            return false;
+        }
+
+        if (verb == Verb.OPTIONS && types.isAssignable(mirror, verbListType)) {
+            return false;
+        }
+
+        if (verb == Verb.HEAD) {
+            messager.printMessage(Diagnostic.Kind.ERROR, "HEAD request responses should be of type BodyResponse<Void> or void", function);
+        } else {
+            messager.printMessage(Diagnostic.Kind.ERROR, "OPTIONS request responses should be of type BodyResponse<Void>, void or List<Verb>", function);
+        }
+        return true;
     }
 
     /**
      * Select the conversion to use for specified type.
      *
      * @param convertedType the type being converted
+     * @param verb          the verb for endpoint
      * @return appropriate strategy for type conversion
      */
-    private Conversion selectConversion(TypeMirror convertedType) {
-        if (types.isSameType(types.erasure(convertedType), bodyResponseType)) {
+    private Conversion selectConversion(TypeMirror convertedType, Verb verb) {
+        if (verb == Verb.OPTIONS && types.isAssignable(convertedType, verbListType)) {
+            return new OptionsConversion(verbListType);
+        } else if (types.isSameType(types.erasure(convertedType), bodyResponseType)) {
             var argument = ((DeclaredType) convertedType).getTypeArguments().get(0);
             return new BodyResponseConversion(argument);
         } else if (types.isSameType(types.erasure(convertedType), bodyAndErrorType)) {

@@ -5,11 +5,13 @@ import com.squareup.javapoet.MethodSpec;
 import io.github.zskamljic.restahead.client.responses.BodyAndErrorResponse;
 import io.github.zskamljic.restahead.client.responses.BodyResponse;
 import io.github.zskamljic.restahead.conversion.GenericReference;
+import io.github.zskamljic.restahead.conversion.OptionsConverter;
 import io.github.zskamljic.restahead.exceptions.RequestFailedException;
 import io.github.zskamljic.restahead.modeling.conversion.BodyAndErrorConversion;
 import io.github.zskamljic.restahead.modeling.conversion.BodyResponseConversion;
 import io.github.zskamljic.restahead.modeling.conversion.Conversion;
 import io.github.zskamljic.restahead.modeling.conversion.DirectConversion;
+import io.github.zskamljic.restahead.modeling.conversion.OptionsConversion;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -37,6 +39,8 @@ public class ConversionGenerator {
             generateBodyResponseConversion(builder, bodyResponseConversion.targetType());
         } else if (conversion instanceof BodyAndErrorConversion bodyAndErrorConversion) {
             generateBodyAndErrorConversion(builder, bodyAndErrorConversion.bodyType(), bodyAndErrorConversion.errorType());
+        } else if (conversion instanceof OptionsConversion optionsConversion) {
+            generateOptionsConversion(builder, optionsConversion.verbListType());
         }
     }
 
@@ -102,6 +106,14 @@ public class ConversionGenerator {
             bodyType,
             builder
         );
+    }
+
+    private void generateOptionsConversion(MethodSpec.Builder builder, TypeMirror typeMirror) {
+        builder.addCode(CodeBlock.builder()
+            .beginControlFlow("$T<$T> $L = $L.thenApply(r ->", CompletableFuture.class, typeMirror, Variables.CONVERTED_NAME, Variables.RESPONSE)
+            .add("return $T.parseOptions($L);\n", OptionsConverter.class, "r")
+            .endControlFlow(")")
+            .build());
     }
 
     /**

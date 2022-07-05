@@ -21,6 +21,8 @@ public class JavaHttpClient extends Client {
         switch (request.getVerb()) {
             case DELETE -> requestBuilder.DELETE();
             case GET -> requestBuilder.GET();
+            case HEAD -> requestBuilder.method("HEAD", HttpRequest.BodyPublishers.noBody());
+            case OPTIONS -> requestBuilder.method("OPTIONS", HttpRequest.BodyPublishers.noBody());
             case PATCH -> requestBuilder.method("PATCH", selectBodyPublisher(request));
             case POST -> requestBuilder.POST(selectBodyPublisher(request));
             case PUT -> requestBuilder.PUT(selectBodyPublisher(request));
