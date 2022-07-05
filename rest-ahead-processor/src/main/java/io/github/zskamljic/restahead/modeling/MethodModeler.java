@@ -1,12 +1,9 @@
 package io.github.zskamljic.restahead.modeling;
 
-import io.github.zskamljic.restahead.client.requests.Verb;
-import io.github.zskamljic.restahead.modeling.conversion.BodyResponseConversion;
 import io.github.zskamljic.restahead.modeling.declaration.AdapterClassDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.CallDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.ParameterDeclaration;
 import io.github.zskamljic.restahead.modeling.declaration.RequestParameterSpec;
-import io.github.zskamljic.restahead.modeling.declaration.ReturnDeclaration;
 import io.github.zskamljic.restahead.modeling.validation.PathValidator;
 import io.github.zskamljic.restahead.polyglot.CompositeProcessingException;
 import io.github.zskamljic.restahead.polyglot.Dialects;
@@ -15,7 +12,6 @@ import io.github.zskamljic.restahead.request.path.TemplatedPath;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -35,7 +31,6 @@ public class MethodModeler {
     private final PathValidator pathValidator;
     private final ReturnTypeModeler returnTypeModeler;
     private final Dialects dialects;
-    private final Types types;
 
     public MethodModeler(Messager messager, Elements elements, Types types, Dialects dialects) {
         this.messager = messager;
@@ -112,32 +107,6 @@ public class MethodModeler {
             }
             return false;
         }
-    }
-
-    /**
-     * Checks if the discovered return type is allowed for requests (for example, HEAD should not have a body)
-     *
-     * @param verb                the verb used in the request
-     * @param returnConfiguration the discovered return type
-     * @param function            the function that the error should be reported on
-     * @return whether the return type is valid for request
-     */
-    private boolean hasValidReturnType(Verb verb, ReturnDeclaration returnConfiguration, ExecutableElement function) {
-        if (verb != Verb.HEAD) return true;
-
-        var adapterCall = returnConfiguration.adapterCall();
-        var conversion = returnConfiguration.targetConversion();
-
-        var isVoidAdapter = adapterCall.isPresent() && adapterCall.get().adapterMethod().returnType().getKind() == TypeKind.VOID;
-        var isVoidBodyResponse = conversion.isPresent() &&
-            conversion.get() instanceof BodyResponseConversion body &&
-            Void.class.getCanonicalName().equals(body.targetType().toString());
-        if (isVoidAdapter || isVoidBodyResponse) {
-            return true;
-        }
-
-        messager.printMessage(Diagnostic.Kind.ERROR, "HEAD request responses should be of type BodyResponse<Void> or void", function);
-        return false;
     }
 
     /**
