@@ -47,8 +47,7 @@ Calls can then be performed simply by calling the instance of the interface:
 var response = service.performGet();
 ```
 
-Samples of services can be found in `demo` project [here](demo/src/main/java/io/github/zskamljic/restahead/demo/clients)
-, examples of obtaining their instances are
+Samples of services can be found in `demo` project [here](demo/src/main/java/io/github/zskamljic/restahead/demo/clients), examples of obtaining their instances are
 in [this directory](demo/src/test/java/io/github/zskamljic/restahead/demo/clients).
 
 ## Options
@@ -60,10 +59,10 @@ project.
 
 Out of the box the following types are supported:
 
-- void
-- Response
-- Future&lt;Response&gt;
-- CompletableFuture&lt;Response&gt;
+- `void`
+- `Response`
+- `Future<Response>`
+- `CompletableFuture<Response>`
 
 Other types require you to specify an instance of Converter (rest-ahead-jackson-converter contains an implementation for
 Jackson library). This will allow you to use virtually any type that the converter can construct.
@@ -146,7 +145,7 @@ Such bodies do not require a converter, one will be generated for the given type
 
 Supported types:
 
-- Map<String, String> and inherited classes
+- `Map<String, String>` and inherited classes
 - Records composed of primitives, boxed values, String or UUID
 - Classes with public, non-static getters returning only primitives, boxed values, String or UUID
 
@@ -436,7 +435,7 @@ public interface JaxRsService {
 }
 ```
 
-Info on how to declare a new dialect can be seen in [Dialects](Dialects.md)
+Info on how to declare a new dialect can be seen in [Dialects](Dialects.md).
 
 ## Adding to project
 
