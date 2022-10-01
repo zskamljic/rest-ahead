@@ -12,7 +12,23 @@ import java.util.concurrent.CompletableFuture;
  * Implementation of {@link Client} using {@link HttpClient} present in JDK.
  */
 public class JavaHttpClient extends Client {
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient;
+
+    /**
+     * Construct an instance using default client.
+     */
+    public JavaHttpClient() {
+        httpClient = HttpClient.newHttpClient();
+    }
+
+    /**
+     * Use the specified client for requests.
+     *
+     * @param client the client to use
+     */
+    public JavaHttpClient(HttpClient client) {
+        httpClient = client;
+    }
 
     @Override
     public CompletableFuture<Response> performRequest(Request request) {
