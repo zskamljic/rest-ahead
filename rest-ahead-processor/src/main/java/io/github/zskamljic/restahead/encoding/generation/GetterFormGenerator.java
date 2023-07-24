@@ -35,9 +35,8 @@ public class GetterFormGenerator {
         outputBuilder.append("var stringValue = ");
 
         var parameters = new ArrayList<>();
-        var iterator = properties.iterator();
         var addedProperty = false;
-        while (iterator.hasNext()) {
+        for (var iterator = properties.iterator(); iterator.hasNext();) {
             var accessor = iterator.next();
             var property = accessorToName(accessor, defaultNameMapper);
             var getter = accessor.getSimpleName().toString();

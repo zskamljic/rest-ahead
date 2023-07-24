@@ -28,10 +28,8 @@ class RestAheadTest {
 
     @Test
     void buildThrowsForMissingConverter() {
-        assertThrows(IllegalStateException.class, () -> {
-            RestAhead.builder("https://httpbin.org")
-                .build(ConverterGet.class);
-        });
+        assertThrows(IllegalStateException.class, () -> RestAhead.builder("https://httpbin.org")
+            .build(ConverterGet.class));
     }
 
     interface SimpleGet {
