@@ -4,14 +4,30 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.testcontainers.containers.GenericContainer;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class LocalServerExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback {
-    private final LocalHttpBinServer server = new LocalHttpBinServer();
+    private final GenericContainer<?> container = new GenericContainer<>("kennethreitz/httpbin");
     private String url;
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) throws Exception {
-        url = "http://localhost:" + server.start();
+    public void beforeAll(ExtensionContext extensionContext) {
+        int port = 0;
+        while (port == 0) {
+            try (var socket = new ServerSocket(ThreadLocalRandom.current().nextInt(1025, 65536))) {
+                port = socket.getLocalPort();
+            } catch (IOException ignored) {
+                // Port taken
+            }
+        }
+        container.setPortBindings(List.of(port + ":80"));
+        url = "http://localhost:" + port;
+        container.start();
     }
 
     @Override
@@ -33,6 +49,6 @@ public class LocalServerExtension implements BeforeAllCallback, BeforeEachCallba
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        server.stop();
+        container.stop();
     }
 }
