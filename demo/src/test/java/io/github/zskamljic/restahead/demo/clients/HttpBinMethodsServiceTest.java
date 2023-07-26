@@ -1,27 +1,33 @@
 package io.github.zskamljic.restahead.demo.clients;
 
+import io.github.zskamljic.LocalServerExtension;
+import io.github.zskamljic.LocalUrl;
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
 import io.github.zskamljic.restahead.demo.models.HttpBinResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(LocalServerExtension.class)
 class HttpBinMethodsServiceTest {
     private static final String QUERY_NAME = "q";
     private static final String QUERY = "query";
     private static final String HEADER_NAME = "Test-Header";
     private static final String HEADER = "Header";
 
+    @LocalUrl
+    private String localUrl;
     private HttpBinMethodsService service;
 
     @BeforeEach
     void setUp() {
-        service = RestAhead.builder("https://httpbin.org/")
+        service = RestAhead.builder(localUrl)
             .converter(new JacksonConverter())
             .build(HttpBinMethodsService.class);
     }

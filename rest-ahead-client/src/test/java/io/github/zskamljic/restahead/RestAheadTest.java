@@ -1,17 +1,24 @@
 package io.github.zskamljic.restahead;
 
+import io.github.zskamljic.LocalServerExtension;
+import io.github.zskamljic.LocalUrl;
 import io.github.zskamljic.restahead.client.Client;
 import io.github.zskamljic.restahead.conversion.Converter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
+@ExtendWith(LocalServerExtension.class)
 class RestAheadTest {
+    @LocalUrl
+    private String localUrl;
+
     @Test
     void buildCreatesInstanceForClientOnly() {
-        var instance = RestAhead.builder("https://httpbin.org")
+        var instance = RestAhead.builder(localUrl)
             .build(SimpleGet.class);
 
         assertNotNull(instance);
@@ -19,7 +26,7 @@ class RestAheadTest {
 
     @Test
     void buildCreatesInstanceForConverter() {
-        var instance = RestAhead.builder("https://httpbin.org")
+        var instance = RestAhead.builder(localUrl)
             .converter(mock(Converter.class))
             .build(ConverterGet.class);
 
@@ -28,10 +35,8 @@ class RestAheadTest {
 
     @Test
     void buildThrowsForMissingConverter() {
-        assertThrows(IllegalStateException.class, () -> {
-            RestAhead.builder("https://httpbin.org")
-                .build(ConverterGet.class);
-        });
+        assertThrows(IllegalStateException.class, () -> RestAhead.builder(localUrl)
+            .build(ConverterGet.class));
     }
 
     interface SimpleGet {
