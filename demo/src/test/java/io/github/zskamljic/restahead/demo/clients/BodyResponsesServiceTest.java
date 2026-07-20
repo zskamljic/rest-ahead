@@ -1,19 +1,26 @@
 package io.github.zskamljic.restahead.demo.clients;
 
+import io.github.zskamljic.restahead.HttpBinRunner;
+import io.github.zskamljic.restahead.HttpBinUrl;
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(HttpBinRunner.class)
 class BodyResponsesServiceTest {
+    @HttpBinUrl
+    private static String url;
+
     private BodyResponsesService service;
 
     @BeforeEach
     void setUp() {
-        service = RestAhead.builder("https://httpbin.org/")
+        service = RestAhead.builder(url)
             .converter(new JacksonConverter())
             .build(BodyResponsesService.class);
     }

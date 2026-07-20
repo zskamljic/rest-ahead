@@ -1,16 +1,23 @@
 package io.github.zskamljic.restahead.demo.clients;
 
+import io.github.zskamljic.restahead.HttpBinRunner;
+import io.github.zskamljic.restahead.HttpBinUrl;
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@ExtendWith(HttpBinRunner.class)
 class BodyServiceTest {
+    @HttpBinUrl
+    private static String url;
+
     private BodyService service;
 
     private static final Map<String, Object> DEMO_BODY = Map.of(
@@ -22,7 +29,7 @@ class BodyServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = RestAhead.builder("https://httpbin.org/")
+        service = RestAhead.builder(url)
             .converter(new JacksonConverter())
             .build(BodyService.class);
     }

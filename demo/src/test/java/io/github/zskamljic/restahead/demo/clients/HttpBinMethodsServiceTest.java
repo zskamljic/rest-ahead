@@ -1,28 +1,42 @@
 package io.github.zskamljic.restahead.demo.clients;
 
+import io.github.zskamljic.restahead.HttpBinRunner;
+import io.github.zskamljic.restahead.HttpBinUrl;
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
 import io.github.zskamljic.restahead.demo.models.HttpBinResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import tools.jackson.core.StreamReadFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(HttpBinRunner.class)
 class HttpBinMethodsServiceTest {
     private static final String QUERY_NAME = "q";
     private static final String QUERY = "query";
     private static final String HEADER_NAME = "Test-Header";
     private static final String HEADER = "Header";
 
+    @HttpBinUrl
+    private static String url;
+
     private HttpBinMethodsService service;
 
     @BeforeEach
     void setUp() {
-        service = RestAhead.builder("https://httpbin.org/")
-            .converter(new JacksonConverter())
+        var mapper = JsonMapper.builder()
+            .configure(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION, true)
+            .build();
+        var converter = new JacksonConverter(mapper);
+
+        service = RestAhead.builder(url)
+            .converter(converter)
             .build(HttpBinMethodsService.class);
     }
 
@@ -59,11 +73,11 @@ class HttpBinMethodsServiceTest {
     void performAssertions(HttpBinResponse response, boolean hasBody) {
         assertNotNull(response.headers());
         assertTrue(response.headers().containsKey(HEADER_NAME));
-        assertEquals(HEADER, response.headers().get(HEADER_NAME));
+        assertEquals(HEADER, response.headers().get(HEADER_NAME).get(0));
 
         assertNotNull(response.args());
         assertTrue(response.args().containsKey(QUERY_NAME));
-        assertEquals(QUERY, response.args().get(QUERY_NAME));
+        assertEquals(QUERY, response.args().get(QUERY_NAME).get(0));
 
         if (hasBody) {
             assertNotNull(response.data());

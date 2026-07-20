@@ -12,8 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public class ConfigCombinations {
-    private static final String BASE_URL = "https://httpbin.org/";
-
     public static class PassThroughInterceptor implements Interceptor {
         @Override
         public CompletableFuture<Response> intercept(Chain chain, Request request) {
@@ -21,25 +19,25 @@ public class ConfigCombinations {
         }
     }
 
-    @RestAheadService(url = BASE_URL, client = DummyClient.class)
+    @RestAheadService(url = "${placeholder.url}", client = DummyClient.class)
     interface ClientOnlyService {
         @Get("/get")
         Response get();
     }
 
-    @RestAheadService(url = BASE_URL, client = DummyClient.class, interceptors = PassThroughInterceptor.class)
+    @RestAheadService(url = "${placeholder.url}", client = DummyClient.class, interceptors = PassThroughInterceptor.class)
     interface ClientAndInterceptorService {
         @Get("/get")
         Response get();
     }
 
-    @RestAheadService(url = BASE_URL, interceptors = PassThroughInterceptor.class)
+    @RestAheadService(url = "${placeholder.url}", interceptors = PassThroughInterceptor.class)
     interface InterceptorService {
         @Get("/get")
         Response get();
     }
 
-    @RestAheadService(url = BASE_URL, adapters = SupplierAdapter.class)
+    @RestAheadService(url = "${placeholder.url}", adapters = SupplierAdapter.class)
     interface AdapterService {
         @Get("/get")
         Supplier<Response> get();

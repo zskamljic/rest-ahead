@@ -5,7 +5,7 @@
     <parent>
         <artifactId>RestAhead</artifactId>
         <groupId>io.github.zskamljic</groupId>
-        <version>0.5.0-SNAPSHOT</version>
+        <version>0.6.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -20,37 +20,37 @@
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>demo</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-client</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-jackson-converter</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-processor</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-spring</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-spring-dialect</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.github.zskamljic</groupId>
             <artifactId>rest-ahead-jax-rs</artifactId>
-            <version>0.5.0-SNAPSHOT</version>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Testing dependencies -->
@@ -128,7 +128,18 @@
                 <jdk>[9,)</jdk>
             </activation>
             <properties>
-                <argLine>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</argLine>
+                <argLine>
+                    --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
+                    --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                    --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
+                    --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
+                </argLine>
             </properties>
         </profile>
     </profiles>

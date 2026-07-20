@@ -1,10 +1,14 @@
 package io.github.zskamljic.restahead.demo.spring;
 
+import io.github.zskamljic.restahead.HttpBinRunner;
+import io.github.zskamljic.restahead.HttpBinUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,7 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
+@ExtendWith(HttpBinRunner.class)
 class ConfigCombinationsTest {
+    @HttpBinUrl
+    private static String url;
+
     @Autowired
     private ConfigCombinations.ClientOnlyService clientOnlyService;
 
@@ -32,6 +40,11 @@ class ConfigCombinationsTest {
     @AfterEach
     void tearDown() {
         DummyClient.requests.clear();
+    }
+
+    @DynamicPropertySource
+    static void dynamicProperties(DynamicPropertyRegistry registry) {
+        registry.add("placeholder.url", () -> url);
     }
 
     @Test

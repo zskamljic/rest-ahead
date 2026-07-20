@@ -1,25 +1,32 @@
 package io.github.zskamljic.restahead.demo.clients;
 
+import io.github.zskamljic.restahead.HttpBinRunner;
+import io.github.zskamljic.restahead.HttpBinUrl;
 import io.github.zskamljic.restahead.JacksonConverter;
 import io.github.zskamljic.restahead.RestAhead;
 import io.github.zskamljic.restahead.exceptions.RequestFailedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(HttpBinRunner.class)
 class AuthorizationServiceTest {
     private static final String TOKEN = "token";
     private static final String USERNAME = "user";
     private static final String PASSWORD = "password";
 
+    @HttpBinUrl
+    private static String url;
+
     private AuthorizationService service;
 
     @BeforeEach
     void setUp() {
-        service = RestAhead.builder("https://httpbin.org/")
+        service = RestAhead.builder(url)
             .converter(new JacksonConverter())
             .build(AuthorizationService.class);
     }
