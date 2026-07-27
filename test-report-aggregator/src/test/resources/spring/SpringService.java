@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
+@RequestMapping("/")
 interface SpringService {
     @DeleteMapping("/delete")
     Response performDelete(

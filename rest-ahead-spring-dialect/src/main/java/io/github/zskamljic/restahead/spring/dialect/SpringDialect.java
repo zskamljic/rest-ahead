@@ -61,28 +61,35 @@ public class SpringDialect implements Dialect {
     @Override
     public Optional<BasicRequestLine> getRequestLine(ExecutableElement function, Annotation annotation) {
         Verb verb;
-        String path;
+        String path = "";
+        var interfaceMapping = function.getAnnotation(RequestMapping.class);
+        if (interfaceMapping != null) {
+            path += interfaceMapping.value();
+            if (path.endsWith("/")) {
+                path = path.substring(0, path.length() - 1);
+            }
+        }
         if (annotation instanceof DeleteMapping deleteMapping) {
             verb = Verb.DELETE;
-            path = deleteMapping.value()[0];
+            path += prefixedPath(deleteMapping.value()[0]);
         } else if (annotation instanceof GetMapping getMapping) {
             verb = Verb.GET;
-            path = getMapping.value()[0];
+            path += prefixedPath(getMapping.value()[0]);
         } else if (annotation instanceof PatchMapping patchMapping) {
             verb = Verb.PATCH;
-            path = patchMapping.value()[0];
+            path += prefixedPath(patchMapping.value()[0]);
         } else if (annotation instanceof PostMapping postMapping) {
             verb = Verb.POST;
-            path = postMapping.value()[0];
+            path += prefixedPath(postMapping.value()[0]);
         } else if (annotation instanceof PutMapping putMapping) {
             verb = Verb.PUT;
-            path = putMapping.value()[0];
+            path += prefixedPath(putMapping.value()[0]);
         } else if (annotation instanceof RequestMapping requestMapping) {
             var requestVerb = getVerb(requestMapping.method());
             if (requestVerb.isEmpty()) return Optional.empty();
 
             verb = requestVerb.get();
-            path = requestMapping.value()[0];
+            path += prefixedPath(requestMapping.value()[0]);
         } else {
             return Optional.empty();
         }
@@ -155,5 +162,16 @@ public class SpringDialect implements Dialect {
             default -> null;
         };
         return Optional.ofNullable(verb);
+    }
+
+    /**
+     * Used to prefix path item with / if absent.
+     *
+     * @param item the item to possibly prefix
+     * @return the prefixed path item
+     */
+    private String prefixedPath(String item) {
+        if (item.startsWith("/")) return item;
+        else return "/" + item;
     }
 }
